@@ -31,71 +31,68 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .app-shell { min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 256px; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 20px; display: flex; flex-direction: column; z-index: 10; }
 .brand { display: flex; align-items: center; gap: 14px; margin: 0 4px 34px; }
-.brand-logo {
-  position: relative;
-  width: 42px;
-  height: 42px;
+.brand-logo-svg {
   flex-shrink: 0;
-  display: grid;
-  place-items: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(107,41,72,.32);
+  animation: logoEntrance 0.5s cubic-bezier(.34,1.56,.64,1) both, logoBreath 4s ease-in-out 0.5s infinite;
   cursor: default;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.brand-logo-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 14px 14px 4px 14px;
-  background: linear-gradient(135deg, var(--primary) 0%, #a0305a 60%, var(--terracotta) 100%);
-  box-shadow: 0 4px 14px rgba(107,41,72,.35);
-  animation: logoBreath 3.5s ease-in-out infinite;
-}
-.brand-logo-ring--2 {
-  inset: -3px;
-  opacity: 0;
-  background: linear-gradient(135deg, var(--primary), var(--terracotta));
-  animation: logoPulse 3.5s ease-in-out infinite;
-  z-index: -1;
-}
-.brand-logo-letter {
-  position: relative;
-  z-index: 1;
-  color: white;
-  font-family: "Fraunces", Georgia, serif;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  text-shadow: 0 1px 4px rgba(0,0,0,.25);
-  animation: logoLetterSlide 0.6s cubic-bezier(.34,1.56,.64,1) both;
+.brand-logo-svg:hover {
+  transform: scale(1.08) rotate(-2deg);
+  box-shadow: 0 8px 28px rgba(107,41,72,.45);
 }
 .brand-name {
   font-family: "Fraunces", Georgia, serif;
   font-size: 22px;
   color: var(--ink);
   letter-spacing: -0.3px;
-  animation: logoLetterSlide 0.7s cubic-bezier(.34,1.56,.64,1) both;
+  animation: fadeInUp 0.6s ease both 0.15s;
+}
+@keyframes logoEntrance {
+  from { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 @keyframes logoBreath {
-  0%, 100% { box-shadow: 0 4px 14px rgba(107,41,72,.35); transform: scale(1); }
-  50% { box-shadow: 0 6px 22px rgba(107,41,72,.55); transform: scale(1.04); }
+  0%, 100% { box-shadow: 0 4px 16px rgba(107,41,72,.32); }
+  50%       { box-shadow: 0 8px 28px rgba(107,41,72,.5); }
 }
-@keyframes logoPulse {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 0.18; transform: scale(1.35); }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes logoLetterSlide {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
 }
 .primary, .secondary { border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; min-height: 44px; }
-.primary { background: var(--primary); color: white; }
-.primary:hover { background: var(--primary-active); }
+.primary { background: var(--primary); color: white; transition: background .18s ease, transform .12s ease, box-shadow .18s ease; }
+.primary:hover { background: var(--primary-active); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(107,41,72,.28); }
+.primary:active { transform: translateY(0); box-shadow: none; }
 .primary:disabled { opacity: .6; cursor: wait; }
 .secondary { background: transparent; color: var(--primary); border: 1px solid var(--border); }
 .add-button { width: 100%; margin-bottom: 26px; }
-.sidebar nav { display: grid; gap: 5px; }
-.sidebar nav a { text-decoration: none; color: var(--muted); padding: 11px 14px; border-radius: 10px; display: flex; align-items: center; gap: 13px; font-weight: 700; transition: all .18s ease; }
+.sidebar nav { display: grid; gap: 4px; }
+.sidebar nav a { text-decoration: none; color: var(--muted); padding: 11px 14px; border-radius: 10px; display: flex; align-items: center; gap: 13px; font-weight: 700; transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease; }
 .sidebar nav a span { width: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sidebar nav a:hover { background: var(--muted-surface); color: var(--primary); transform: translateX(2px); }
-.sidebar nav a.active { background: var(--muted-surface); color: var(--primary); }
+.sidebar nav a:hover { background: var(--muted-surface); color: var(--primary); transform: translateX(3px); }
+.sidebar nav a.active { background: var(--muted-surface); color: var(--primary); box-shadow: inset 3px 0 0 var(--primary); }
+/* Stagger sidebar items */
+.sidebar nav a:nth-child(1) { animation: slideInLeft .4s ease both .1s; }
+.sidebar nav a:nth-child(2) { animation: slideInLeft .4s ease both .17s; }
+.sidebar nav a:nth-child(3) { animation: slideInLeft .4s ease both .24s; }
+.sidebar nav a:nth-child(4) { animation: slideInLeft .4s ease both .31s; }
+.sidebar nav a:nth-child(5) { animation: slideInLeft .4s ease both .38s; }
 .sidebar-foot { margin-top: auto; display: grid; gap: 14px; padding: 16px 12px 0; border-top: 1px solid var(--border); }
 .sidebar-foot a { color: var(--muted); font-weight: 700; text-decoration: none; }
 .sidebar-foot small { color: var(--muted); }
@@ -151,7 +148,8 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .allocation-alert .button-row { flex-wrap: nowrap; margin-top: 0; }
 .error-banner button, .text-button { border: 0; background: transparent; color: var(--primary); font-weight: 700; text-decoration: underline; }
 .dashboard-grid { margin-top: 24px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); gap: 20px; }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px 14px 5px 14px; padding: 24px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px 14px 5px 14px; padding: 24px; animation: scaleIn .4s ease both; transition: box-shadow .2s ease, transform .2s ease; }
+.panel:hover { box-shadow: 0 6px 24px rgba(43,33,30,.07); }
 .panel > header { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
 .panel h2 { margin-bottom: 0; font-size: 22px; }
 .bars { height: 240px; display: flex; align-items: stretch; justify-content: center; gap: clamp(26px, 6vw, 72px); border-bottom: 1px solid var(--border); padding-top: 20px; }
