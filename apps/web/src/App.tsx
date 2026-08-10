@@ -1,0 +1,698 @@
+import {
+  formatDop,
+  type BudgetLimit,
+  type ExpenseCategory,
+  type Goal,
+  type GoalContribution,
+  type Movement,
+  type MovementStatus,
+  type MovementType,
+  type Summary
+} from "@ahorra/domain";
+import { FormEvent, startTransition, useEffect, useState, type ReactNode } from "react";
+import { useAuth } from "./features/auth/AuthProvider";
+import { apiFetch } from "./lib/api";
+
+type Space = { id: string; name: string; type: "PERSONAL" | "BUSINESS" };
+
+const emptySummary: Summary = {
+  incomeCents: 0,
+  expenseCents: 0,
+  contributionCents: 0,
+  availableBeforeSavingsCents: 0,
+  availableAfterSavingsCents: 0,
+  projectedAvailableCents: 0,
+  expenseByCategory: []
+};
+
+const incomeCategories = ["Sueldo", "Trabajo independiente", "Ventas", "Remesas", "Otros ingresos"];
+const expenseCategories = ["Vivienda", "Alimentacion", "Transporte", "Servicios", "Salud", "Educacion", "Otros gastos"];
+
+function currentMonth(): string {
+  return dominicanDate().slice(0, 7);
+}
+
+function today(): string {
+  return dominicanDate();
+}
+
+function dominicanDate(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Santo_Domingo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+}
+
+function monthLabel(month: string): string {
+  const [year, value] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat("es-DO", { month: "long", year: "numeric" }).format(
+    new Date(year!, value! - 1, 1)
+  );
+}
+
+async function readJson<T>(response: Response): Promise<T> {
+  if (!response.ok) throw new Error("No pudimos cargar la informacion.");
+  return response.json() as Promise<T>;
+}
+
+function usePathname() {
+  const [pathname, setPathname] = useState(window.location.pathname);
+  useEffect(() => {
+    const update = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", update);
+    return () => window.removeEventListener("popstate", update);
+  }, []);
+  return pathname;
+}
+
+function navigate(path: string) {
+  if (window.location.pathname === path) return;
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+function RouteLink({ to, className, children }: { to: string; className?: string; children: ReactNode }) {
+  return <a href={to} className={className} onClick={(event) => { event.preventDefault(); navigate(to); }}>{children}</a>;
+}
+
+export default function App() {
+  const auth = useAuth();
+  const accessToken = auth.session?.access_token;
+  const pathname = usePathname();
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [spaceId, setSpaceId] = useState("");
+  const [month, setMonth] = useState(currentMonth());
+  const [summary, setSummary] = useState(emptySummary);
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [formType, setFormType] = useState<MovementType>("EXPENSE");
+  const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
+  const [budgetLimits, setBudgetLimits] = useState<BudgetLimit[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [customCategories, setCustomCategories] = useState<ExpenseCategory[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    setSpaces([]);
+    setSpaceId("");
+    setSummary(emptySummary);
+    setMovements([]);
+    setBudgetLimits([]);
+    setGoals([]);
+    setCustomCategories([]);
+  }, [auth.user?.id]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    const controller = new AbortController();
+    void apiFetch(accessToken, "/api/spaces", { signal: controller.signal })
+      .then((response) => readJson<Space[]>(response))
+      .then((nextSpaces) => {
+        setSpaces(nextSpaces);
+        setSpaceId((current) => {
+          if (nextSpaces.some((space) => space.id === current)) return current;
+          return nextSpaces.find((space) => space.type === "PERSONAL")?.id ?? nextSpaces[0]?.id ?? "";
+        });
+      })
+      .catch((reason: unknown) => {
+        if (!(reason instanceof DOMException && reason.name === "AbortError")) {
+          setError("No pudimos cargar tus espacios.");
+        }
+      });
+    return () => controller.abort();
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || !spaceId) {
+      setLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setLoading(true);
+    setError("");
+
+    Promise.all([
+      apiFetch(accessToken, `/api/summary?spaceId=${encodeURIComponent(spaceId)}&month=${month}`, { signal: controller.signal }).then((response) => readJson<Summary>(response)),
+      apiFetch(accessToken, `/api/movements?spaceId=${encodeURIComponent(spaceId)}&month=${month}`, { signal: controller.signal }).then((response) => readJson<Movement[]>(response))
+    ])
+      .then(([nextSummary, nextMovements]) => {
+        startTransition(() => {
+          setSummary(nextSummary);
+          setMovements(nextMovements);
+        });
+      })
+      .catch((reason: unknown) => {
+        if (!(reason instanceof DOMException && reason.name === "AbortError")) {
+          setError(reason instanceof Error ? reason.message : "Ocurrio un error inesperado.");
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [accessToken, spaceId, month, refreshKey]);
+
+  useEffect(() => {
+    if (!accessToken || !spaceId) return;
+    const controller = new AbortController();
+    Promise.all([
+      apiFetch(accessToken, `/api/budget?spaceId=${encodeURIComponent(spaceId)}&month=${month}`, { signal: controller.signal }).then((response) => readJson<BudgetLimit[]>(response)),
+      apiFetch(accessToken, `/api/goals?spaceId=${encodeURIComponent(spaceId)}`, { signal: controller.signal }).then((response) => readJson<Goal[]>(response)),
+      apiFetch(accessToken, `/api/categories?spaceId=${encodeURIComponent(spaceId)}`, { signal: controller.signal }).then((response) => readJson<ExpenseCategory[]>(response))
+    ]).then(([limits, nextGoals, nextCategories]) => {
+      setBudgetLimits(limits);
+      setGoals(nextGoals);
+      setCustomCategories(nextCategories);
+    }).catch((reason: unknown) => {
+      if (!(reason instanceof DOMException && reason.name === "AbortError")) setError("No pudimos cargar todos los modulos.");
+    });
+    return () => controller.abort();
+  }, [accessToken, spaceId, month, refreshKey]);
+
+  function openForm(type: MovementType) {
+    setFormType(type);
+    setEditingMovement(null);
+    setFormOpen(true);
+  }
+
+  function editMovement(movement: Movement) {
+    setFormType(movement.type);
+    setEditingMovement(movement);
+    setFormOpen(true);
+  }
+
+  if (!accessToken) {
+    return <main className="auth-setup-error"><h1>Necesitas iniciar sesion</h1><p>No se cargaron datos financieros sin una sesion valida.</p></main>;
+  }
+
+  return (
+    <div className="app-shell">
+      <a className="skip-link" href="#main">Saltar al contenido</a>
+      <Sidebar pathname={pathname} onAdd={() => openForm("EXPENSE")} />
+
+      <main id="main" className="main-content">
+        <header className="topbar">
+          <label className="space-picker">
+            <span>Espacio</span>
+            <select value={spaceId} onChange={(event) => setSpaceId(event.target.value)}>
+              {spaces.map((space) => <option key={space.id} value={space.id}>{space.name}</option>)}
+            </select>
+          </label>
+          <label className="month-picker">
+            <span>Periodo</span>
+            <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+          </label>
+          <button className="primary desktop-add" onClick={() => openForm("EXPENSE")}>+ Agregar</button>
+          {auth.user && <div className="session-user"><span>{auth.user.email}</span><button onClick={() => void auth.signOut()}>Cerrar sesion</button></div>}
+        </header>
+
+        {pathname === "/" || pathname === "/inicio" ? <>
+        <section className="hero" aria-labelledby="available-title">
+          <div>
+            <p className="eyebrow">Disponible despues de ahorro</p>
+            <h1 id="available-title">{loading ? "Calculando..." : formatDop(summary.availableAfterSavingsCents)}</h1>
+            <p>Para {monthLabel(month)} segun tus registros</p>
+            {!loading && <div className="balance-bridge"><span>Antes de ahorro: <strong>{formatDop(summary.availableBeforeSavingsCents)}</strong></span><span>Ahorro separado: <strong>{formatDop(summary.contributionCents)}</strong></span></div>}
+          </div>
+          <div className="hero-stats">
+            <Stat label="Ingresos" value={summary.incomeCents} tone="income" />
+            <Stat label="Gastos" value={summary.expenseCents} tone="expense" />
+            <Stat label="Ahorro" value={summary.contributionCents} tone="savings" />
+          </div>
+          <div className="estimate-note">
+            <span aria-hidden="true">i</span>
+            <p>No es un saldo bancario. Se calcula con la informacion que registras manualmente.</p>
+          </div>
+        </section>
+
+        {!loading && summary.availableAfterSavingsCents < 0 && <section className="allocation-alert" role="status"><div><span aria-hidden="true">!</span><div><strong>Tu plan supera el dinero disponible por {formatDop(Math.abs(summary.availableAfterSavingsCents))}</strong><p>Despues de los gastos quedaban {formatDop(summary.availableBeforeSavingsCents)}, pero separaste {formatDop(summary.contributionCents)} para ahorro. Ajusta gastos o el aporte de este periodo.</p></div></div><div className="button-row"><button className="secondary" onClick={() => navigate("/movimientos")}>Revisar gastos</button><button className="primary" onClick={() => navigate("/metas")}>Ajustar metas</button></div></section>}
+
+        {error && <div className="error-banner" role="alert">{error} <button onClick={() => setRefreshKey((value) => value + 1)}>Reintentar</button></div>}
+
+        {!loading && movements.length === 0 ? (
+          <EmptyState onIncome={() => openForm("INCOME")} onExpense={() => openForm("EXPENSE")} />
+        ) : (
+          <div className="dashboard-grid">
+            <CashFlowChart summary={summary} />
+            <CategoryChart summary={summary} />
+            <RecentMovements movements={movements} onEdit={editMovement} onViewAll={() => navigate("/movimientos")} />
+            <Projection summary={summary} />
+          </div>
+        )}
+        </> : pathname === "/movimientos" ? (
+          <MovementsPage movements={movements} onAdd={openForm} onEdit={editMovement} />
+        ) : pathname === "/presupuesto" ? (
+          <BudgetPage accessToken={accessToken} spaceId={spaceId} month={month} summary={summary} limits={budgetLimits} customCategories={customCategories.map((category) => category.name)} onSaved={() => setRefreshKey((value) => value + 1)} />
+        ) : pathname === "/metas" ? (
+          <GoalsPage accessToken={accessToken} spaceId={spaceId} goals={goals} onSaved={() => setRefreshKey((value) => value + 1)} />
+        ) : pathname === "/reportes" ? (
+          <ReportsPage summary={summary} movements={movements} month={month} />
+        ) : pathname === "/configuracion" ? (
+          <SettingsPage spaces={spaces} spaceId={spaceId} />
+        ) : (
+          <NotFoundPage />
+        )}
+      </main>
+
+      <button className="floating-add" aria-label="Agregar movimiento" onClick={() => openForm("EXPENSE")}>+</button>
+      <BottomNav pathname={pathname} />
+
+      {formOpen && (
+        <MovementDialog
+          accessToken={accessToken}
+          initialType={formType}
+          movement={editingMovement ?? undefined}
+          expenseOptions={[...new Set([...expenseCategories, ...customCategories.map((category) => category.name)])]}
+          spaceId={spaceId}
+          availableCents={summary.availableAfterSavingsCents}
+          onClose={() => setFormOpen(false)}
+          onSaved={() => {
+            setFormOpen(false);
+            setRefreshKey((value) => value + 1);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function Sidebar({ pathname, onAdd }: { pathname: string; onAdd: () => void }) {
+  const items = [
+    ["/", "⌂", "Inicio"],
+    ["/movimientos", "↕", "Movimientos"],
+    ["/presupuesto", "▤", "Presupuesto"],
+    ["/metas", "◇", "Metas"],
+    ["/reportes", "⌁", "Reportes"]
+  ];
+  return (
+    <aside className="sidebar">
+      <div className="brand"><span>R</span><strong>Rumbo</strong></div>
+      <button className="primary add-button" onClick={onAdd}>+ Agregar</button>
+      <nav aria-label="Navegacion principal">
+        {items.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={(pathname === path || (path === "/" && pathname === "/inicio")) ? "active" : ""}><span>{icon}</span> {label}</RouteLink>)}
+      </nav>
+      <div className="sidebar-foot"><RouteLink to="/configuracion">Configuracion</RouteLink><small>MVP en construccion · v0.2</small></div>
+    </aside>
+  );
+}
+
+function BottomNav({ pathname }: { pathname: string }) {
+  const items = [["/", "⌂", "Inicio"], ["/movimientos", "↕", "Movimientos"], ["/presupuesto", "▤", "Presupuesto"], ["/metas", "◇", "Metas"], ["/reportes", "⌁", "Reportes"]];
+  return (
+    <nav className="bottom-nav" aria-label="Navegacion movil">
+      {items.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={pathname === path ? "active" : ""}><span>{icon}</span>{label}</RouteLink>)}
+    </nav>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return <div className={`stat ${tone}`}><span>{label}</span><strong>{formatDop(value)}</strong></div>;
+}
+
+function EmptyState({ onIncome, onExpense }: { onIncome: () => void; onExpense: () => void }) {
+  return (
+    <section className="empty-state">
+      <div className="empty-illustration" aria-hidden="true"><span>RD$</span><i /></div>
+      <div>
+        <p className="eyebrow">Comienza con lo esencial</p>
+        <h2>Todavia no podemos calcular tu disponible</h2>
+        <p>Registra tu sueldo o primer ingreso y luego anade tus gastos. Veras como cambia el dinero que te queda.</p>
+        <div className="button-row">
+          <button className="primary" onClick={onIncome}>Registrar ingreso</button>
+          <button className="secondary" onClick={onExpense}>Registrar gasto</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CashFlowChart({ summary }: { summary: Summary }) {
+  const values = [summary.incomeCents, summary.expenseCents, summary.contributionCents];
+  const max = Math.max(...values, 1);
+  return (
+    <section className="panel cash-chart">
+      <header><div><p className="eyebrow">Flujo del periodo</p><h2>Lo que entra, sale y apartas</h2></div><button className="text-button">Ver reporte</button></header>
+      <div className="bars" role="img" aria-label={`Ingresos ${formatDop(values[0]!)}, gastos ${formatDop(values[1]!)}, ahorro ${formatDop(values[2]!)}`}>
+        {values.map((value, index) => (
+          <div className="bar-item" key={index}>
+            <strong>{formatDop(value)}</strong>
+            <div className="bar-track"><div className={`bar-fill bar-${index}`} style={{ height: `${Math.max((value / max) * 100, value ? 8 : 0)}%` }} /></div>
+            <span>{["Ingresos", "Gastos", "Ahorro"][index]}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CategoryChart({ summary }: { summary: Summary }) {
+  const max = summary.expenseByCategory[0]?.amountCents ?? 1;
+  return (
+    <section className="panel category-chart">
+      <header><div><p className="eyebrow">Gastos</p><h2>En que se fue el dinero</h2></div></header>
+      {summary.expenseByCategory.length === 0 ? <p className="muted">Registra un gasto para ver tus categorias.</p> : (
+        <div className="category-list">
+          {summary.expenseByCategory.slice(0, 5).map((item) => (
+            <div className="category-row" key={item.category}>
+              <div><span>{item.category}</span><strong>{formatDop(item.amountCents)}</strong></div>
+              <div className="horizontal-track"><span style={{ width: `${(item.amountCents / max) * 100}%` }} /></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RecentMovements({ movements, onEdit, onViewAll }: { movements: Movement[]; onEdit: (movement: Movement) => void; onViewAll: () => void }) {
+  return (
+    <section id="movements" className="panel movements-panel">
+      <header><div><p className="eyebrow">Actividad reciente</p><h2>Tus ultimos movimientos</h2></div><button className="text-button" onClick={onViewAll}>Ver todos</button></header>
+      <div className="movement-list">
+        {movements.slice(0, 6).map((movement) => (
+          <article key={movement.id} className="movement-row">
+            <span className={`movement-icon ${movement.type.toLowerCase()}`}>{movement.type === "INCOME" ? "+" : movement.type === "EXPENSE" ? "−" : "◇"}</span>
+            <div><strong>{movement.description}</strong><span>{movement.category} · {new Intl.DateTimeFormat("es-DO", { day: "2-digit", month: "short" }).format(new Date(`${movement.effectiveDate}T12:00:00`))}</span></div>
+            <div className="movement-actions">
+              <strong className={movement.type === "INCOME" ? "amount-income" : ""}>{movement.type === "INCOME" ? "+" : "−"}{formatDop(movement.amountCents)}</strong>
+              {movement.type !== "CONTRIBUTION" && <button aria-label={`Editar ${movement.description}`} onClick={() => onEdit(movement)}>Editar</button>}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Projection({ summary }: { summary: Summary }) {
+  const changed = summary.projectedAvailableCents !== summary.availableAfterSavingsCents;
+  return (
+    <section className="panel projection-panel">
+      <p className="eyebrow">Mirada al cierre</p>
+      <h2>{formatDop(summary.projectedAvailableCents)}</h2>
+      <p>{changed ? "Disponible proyectado al incluir movimientos programados." : "Agrega movimientos programados para anticipar como cerrara el periodo."}</p>
+      <div className="projection-line"><span /><i /></div>
+      <small>Registrado ahora</small><small>Proyeccion</small>
+    </section>
+  );
+}
+
+function PageTitle({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
+  return <header className="page-title"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></div>{action}</header>;
+}
+
+function MovementsPage({ movements, onAdd, onEdit }: { movements: Movement[]; onAdd: (type: MovementType) => void; onEdit: (movement: Movement) => void }) {
+  const pageSize = 15;
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("ALL");
+  const [status, setStatus] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const filtered = movements.filter((movement) =>
+    (type === "ALL" || movement.type === type) &&
+    (status === "ALL" || movement.status === status) &&
+    `${movement.description} ${movement.category}`.toLowerCase().includes(query.toLowerCase())
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const firstResult = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const lastResult = Math.min(currentPage * pageSize, filtered.length);
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  useEffect(() => setPage(1), [query, type, status]);
+  useEffect(() => setPage((value) => Math.min(value, totalPages)), [totalPages]);
+
+  return <>
+    <PageTitle eyebrow="Control del periodo" title="Movimientos" description="Consulta, filtra y corrige todo lo que registraste." action={<div className="button-row"><button className="secondary" onClick={() => onAdd("INCOME")}>+ Ingreso</button><button className="primary" onClick={() => onAdd("EXPENSE")}>+ Gasto</button></div>} />
+    <section className="panel module-panel">
+      <div className="filters-row">
+        <label>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Descripcion o categoria" /></label>
+        <label>Tipo<select value={type} onChange={(event) => setType(event.target.value)}><option value="ALL">Todos</option><option value="INCOME">Ingresos</option><option value="EXPENSE">Gastos</option><option value="CONTRIBUTION">Aportes</option></select></label>
+        <label>Estado<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="ALL">Todos</option><option value="REGISTERED">Registrados</option><option value="SCHEDULED">Programados</option></select></label>
+        <span className="result-count">{filtered.length} resultados</span>
+      </div>
+      {filtered.length === 0 ? <div className="module-empty"><h2>No hay movimientos con estos filtros</h2><button className="text-button" onClick={() => { setQuery(""); setType("ALL"); setStatus("ALL"); }}>Limpiar filtros</button></div> : <><div className="data-table-wrap"><table className="data-table"><thead><tr><th>Fecha</th><th>Descripcion</th><th>Categoria</th><th>Tipo</th><th>Estado</th><th className="number">Monto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{paginated.map((movement) => <tr key={movement.id}><td>{movement.effectiveDate.split("-").reverse().join("/")}</td><td><strong>{movement.description}</strong></td><td>{movement.category}</td><td>{movement.type === "INCOME" ? "Ingreso" : movement.type === "EXPENSE" ? "Gasto" : "Aporte"}</td><td><span className={`status-pill ${movement.status.toLowerCase()}`}>{movement.status === "REGISTERED" ? "Registrado" : "Programado"}</span></td><td className={`number ${movement.type === "INCOME" ? "amount-income" : ""}`}>{movement.type === "INCOME" ? "+" : "-"}{formatDop(movement.amountCents)}</td><td>{movement.type !== "CONTRIBUTION" && <button className="table-action" onClick={() => onEdit(movement)}>Editar</button>}</td></tr>)}</tbody></table></div><footer className="pagination"><p>Mostrando <strong>{firstResult}-{lastResult}</strong> de <strong>{filtered.length}</strong></p><div><button className="secondary" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Anterior</button><span>Pagina <strong>{currentPage}</strong> de {totalPages}</span><button className="secondary" disabled={currentPage === totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>Siguiente</button></div></footer></>}
+    </section>
+  </>;
+}
+
+function BudgetPage({ accessToken, spaceId, month, summary, limits, customCategories, onSaved }: { accessToken: string; spaceId: string; month: string; summary: Summary; limits: BudgetLimit[]; customCategories: string[]; onSaved: () => void }) {
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryError, setCategoryError] = useState("");
+  const categories = [...new Set([...expenseCategories, ...customCategories, ...summary.expenseByCategory.map((item) => item.category)])];
+
+  useEffect(() => {
+    setValues(Object.fromEntries(limits.map((limit) => [limit.category, limit.limitCents > 0 ? String(limit.limitCents / 100) : ""])));
+  }, [limits]);
+
+  const totalLimit = categories.reduce((total, category) => total + Math.round(Number(values[category] || 0) * 100), 0);
+
+  async function saveBudget() {
+    setSaving(true);
+    setMessage("");
+    try {
+      await Promise.all(categories.map(async (category) => {
+        const response = await apiFetch(accessToken, "/api/budget", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ spaceId, month, category, limitCents: Math.max(0, Math.round(Number(values[category] || 0) * 100)) }) });
+        if (!response.ok) throw new Error();
+      }));
+      setMessage("Presupuesto guardado correctamente.");
+      onSaved();
+    } catch {
+      setMessage("No pudimos guardar el presupuesto.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function createCategory(event: FormEvent) {
+    event.preventDefault();
+    setCategoryError("");
+    const response = await apiFetch(accessToken, "/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spaceId, name: categoryName })
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({ message: "No pudimos crear la categoria." })) as { message?: string };
+      setCategoryError(body.message ?? "No pudimos crear la categoria.");
+      return;
+    }
+    setCategoryName("");
+    setAddingCategory(false);
+    setMessage("Categoria agregada correctamente.");
+    onSaved();
+  }
+
+  return <>
+    <PageTitle eyebrow="Plan del periodo" title="Presupuesto" description={`Define cuanto quieres gastar durante ${monthLabel(month)}.`} action={<div className="button-row"><button className="secondary" onClick={() => setAddingCategory(true)}>+ Nueva categoria</button><button className="primary" onClick={() => void saveBudget()} disabled={saving}>{saving ? "Guardando..." : "Guardar presupuesto"}</button></div>} />
+    {addingCategory && <form className="category-creator" onSubmit={(event) => void createCategory(event)}><label>Nombre de la categoria<input autoFocus value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Ej. Mascotas" minLength={2} maxLength={80} required /></label><div><button type="button" className="secondary" onClick={() => { setAddingCategory(false); setCategoryError(""); }}>Cancelar</button><button className="primary">Agregar categoria</button></div>{categoryError && <p role="alert">{categoryError}</p>}</form>}
+    <div className="summary-strip"><Stat label="Ingresos" value={summary.incomeCents} tone="income" /><Stat label="Presupuestado" value={totalLimit} tone="savings" /><Stat label="Gastado" value={summary.expenseCents} tone="expense" /><Stat label="Disponible" value={summary.availableAfterSavingsCents} tone="income" /></div>
+    <p className="budget-formula">Disponible = ingresos - gastos - ahorro separado. El presupuesto por categoria sirve como limite, no como saldo.</p>
+    {message && <p className="save-message" role="status">{message}</p>}
+    <section className="panel module-panel budget-editor">
+      <header><div><p className="eyebrow">Categorias</p><h2>Limites del mes</h2></div><span>Plan por categoria</span></header>
+      {categories.map((category) => {
+        const spent = summary.expenseByCategory.find((item) => item.category === category)?.amountCents ?? 0;
+        const limit = Math.round(Number(values[category] || 0) * 100);
+        const percent = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+        const remaining = limit - spent;
+        return <div className="budget-row" key={category}><div className="budget-category"><strong>{category}</strong><span>{spent > 0 ? `${formatDop(spent)} gastados` : "Sin gastos registrados"}</span></div><div className="budget-usage">{limit > 0 ? <><div className="budget-progress"><span style={{ width: `${Math.min(percent, 100)}%` }} className={percent > 100 ? "over" : ""} /></div><div className="budget-status"><span>{formatDop(spent)} de {formatDop(limit)}</span><strong className={remaining < 0 ? "danger-text" : ""}>{remaining >= 0 ? `${formatDop(remaining)} disponibles` : `Excedido por ${formatDop(Math.abs(remaining))}`}</strong></div></> : <span className="no-limit-message">Define un limite para comparar este gasto.</span>}</div><label className="limit-field"><span>Limite mensual</span><div className="compact-money"><span>RD$</span><input type="number" min="0" step="0.01" inputMode="decimal" value={values[category] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [category]: event.target.value }))} placeholder="Ej. 10000" /></div></label></div>;
+      })}
+    </section>
+  </>;
+}
+
+function GoalsPage({ accessToken, spaceId, goals, onSaved }: { accessToken: string; spaceId: string; goals: Goal[]; onSaved: () => void }) {
+  const [creating, setCreating] = useState(false);
+  const [contributingTo, setContributingTo] = useState<string | null>(null);
+  const [viewingContributions, setViewingContributions] = useState<string | null>(null);
+  const [contributions, setContributions] = useState<Record<string, GoalContribution[]>>({});
+  const [editingContribution, setEditingContribution] = useState<GoalContribution | null>(null);
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState("");
+  const [initial, setInitial] = useState("");
+  const [targetDate, setTargetDate] = useState("");
+  const [contribution, setContribution] = useState("");
+  const [editedAmount, setEditedAmount] = useState("");
+  const [editedDate, setEditedDate] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function createGoal(event: FormEvent) {
+    event.preventDefault(); setSaving(true);
+    const response = await apiFetch(accessToken, "/api/goals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ spaceId, name, targetCents: Math.round(Number(target) * 100), initialAmountCents: Math.round(Number(initial || 0) * 100), targetDate: targetDate || null, priority: "MEDIUM" }) });
+    setSaving(false);
+    if (response.ok) { setCreating(false); setName(""); setTarget(""); setInitial(""); setTargetDate(""); onSaved(); }
+  }
+
+  async function addContribution(goalId: string) {
+    setSaving(true);
+    const response = await apiFetch(accessToken, `/api/goals/${goalId}/contributions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amountCents: Math.round(Number(contribution) * 100), effectiveDate: today() }) });
+    setSaving(false);
+    if (response.ok) { setContribution(""); setContributingTo(null); onSaved(); if (viewingContributions === goalId) await loadContributions(goalId); }
+  }
+
+  async function loadContributions(goalId: string) {
+    const response = await apiFetch(accessToken, `/api/goals/${goalId}/contributions`);
+    if (!response.ok) return;
+    const items = await response.json() as GoalContribution[];
+    setContributions((current) => ({ ...current, [goalId]: items }));
+  }
+
+  async function toggleContributions(goalId: string) {
+    if (viewingContributions === goalId) {
+      setViewingContributions(null);
+      setEditingContribution(null);
+      return;
+    }
+    setViewingContributions(goalId);
+    await loadContributions(goalId);
+  }
+
+  function beginContributionEdit(item: GoalContribution) {
+    setEditingContribution(item);
+    setEditedAmount(String(item.amountCents / 100));
+    setEditedDate(item.effectiveDate);
+  }
+
+  async function saveContribution(goalId: string) {
+    if (!editingContribution || Number(editedAmount) <= 0) return;
+    setSaving(true);
+    const response = await apiFetch(accessToken, `/api/goals/${goalId}/contributions/${editingContribution.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountCents: Math.round(Number(editedAmount) * 100), effectiveDate: editedDate })
+    });
+    setSaving(false);
+    if (response.ok) {
+      setEditingContribution(null);
+      await loadContributions(goalId);
+      onSaved();
+    }
+  }
+
+  return <>
+    <PageTitle eyebrow="Objetivos" title="Metas de ahorro" description="Convierte lo que quieres lograr en un avance visible." action={<button className="primary" onClick={() => setCreating(true)}>+ Nueva meta</button>} />
+    {creating && <form className="panel inline-form" onSubmit={(event) => void createGoal(event)}><header><div><p className="eyebrow">Nueva meta</p><h2>Que quieres alcanzar?</h2></div><button type="button" className="close-button" onClick={() => setCreating(false)}>×</button></header><div className="form-grid"><label>Nombre<input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Fondo de emergencia" /></label><label>Monto objetivo<div className="compact-money"><span>RD$</span><input required inputMode="decimal" value={target} onChange={(event) => setTarget(event.target.value)} /></div></label><label>Ya tengo ahorrado <small>Opcional</small><div className="compact-money"><span>RD$</span><input inputMode="decimal" value={initial} onChange={(event) => setInitial(event.target.value)} /></div></label><label>Fecha objetivo <small>Opcional</small><input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} /></label></div><div className="dialog-actions"><button type="button" className="secondary" onClick={() => setCreating(false)}>Cancelar</button><button className="primary" disabled={saving}>Crear meta</button></div></form>}
+    {goals.length === 0 ? <div className="module-empty large"><h2>Aun no tienes metas</h2><p>Define una cantidad y una fecha para calcular tu avance.</p><button className="primary" onClick={() => setCreating(true)}>Crear primera meta</button></div> : <div className="goals-grid">{goals.map((goal) => {
+      const progress = Math.round((goal.savedCents / goal.targetCents) * 100);
+      const goalContributions = contributions[goal.id] ?? [];
+      return <article className="panel goal-card" key={goal.id}><div className="goal-top"><span className={`status-pill ${goal.status.toLowerCase()}`}>{goal.status === "COMPLETED" ? "Completada" : goal.status === "PAUSED" ? "Pausada" : "Activa"}</span><span>{progress}%</span></div><h2>{goal.name}</h2><p><strong>{formatDop(goal.savedCents)}</strong> de {formatDop(goal.targetCents)}</p><div className="goal-progress"><span style={{ width: `${Math.min(progress, 100)}%` }} /></div><div className="goal-meta"><span>Faltan {formatDop(Math.max(0, goal.targetCents - goal.savedCents))}</span><span>{goal.targetDate ? new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" }).format(new Date(`${goal.targetDate}T12:00:00`)) : "Sin fecha"}</span></div>{contributingTo === goal.id ? <div className="contribution-form"><div className="compact-money"><span>RD$</span><input autoFocus inputMode="decimal" value={contribution} onChange={(event) => setContribution(event.target.value)} placeholder="0" /></div><button className="primary" disabled={saving || Number(contribution) <= 0} onClick={() => void addContribution(goal.id)}>Guardar</button><button className="secondary" onClick={() => setContributingTo(null)}>Cancelar</button></div> : <div className="goal-actions">{goal.status !== "COMPLETED" && <button className="primary" onClick={() => setContributingTo(goal.id)}>Registrar aporte</button>}<button className="secondary" onClick={() => void toggleContributions(goal.id)}>{viewingContributions === goal.id ? "Ocultar aportes" : "Ver y editar aportes"}</button></div>}{viewingContributions === goal.id && <div className="contribution-history"><h3>Historial de aportes</h3>{goalContributions.length === 0 ? <p>No hay aportes registrados.</p> : goalContributions.map((item) => <div className="contribution-row" key={item.id}>{editingContribution?.id === item.id ? <><div className="compact-money"><span>RD$</span><input aria-label="Monto del aporte" autoFocus type="number" min="0.01" step="0.01" value={editedAmount} onChange={(event) => setEditedAmount(event.target.value)} /></div><input aria-label="Fecha del aporte" type="date" value={editedDate} onChange={(event) => setEditedDate(event.target.value)} /><button className="primary" disabled={saving} onClick={() => void saveContribution(goal.id)}>Guardar cambios</button><button className="secondary" onClick={() => setEditingContribution(null)}>Cancelar</button></> : <><div><strong>{formatDop(item.amountCents)}</strong><span>{new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" }).format(new Date(`${item.effectiveDate}T12:00:00`))} · {item.movementId ? "Aporte registrado" : "Saldo inicial"}</span></div><button className="table-action" onClick={() => beginContributionEdit(item)}>Editar</button></>}</div>)}</div>}</article>;
+    })}</div>}
+  </>;
+}
+
+function ReportsPage({ summary, movements, month }: { summary: Summary; movements: Movement[]; month: string }) {
+  function exportCsv() {
+    const rows = [["fecha", "descripcion", "categoria", "tipo", "estado", "monto_DOP"], ...movements.map((movement) => [movement.effectiveDate, movement.description, movement.category, movement.type, movement.status, String(movement.amountCents / 100)])];
+    const csv = rows.map((row) => row.map((cell) => {
+      const safeCell = /^[=+\-@]/.test(cell) ? `'${cell}` : cell;
+      return `"${safeCell.replaceAll('"', '""')}"`;
+    }).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a"); link.href = url; link.download = `reporte_${month}.csv`; link.click(); URL.revokeObjectURL(url);
+  }
+  const savingsRate = summary.incomeCents > 0 ? Math.round((summary.contributionCents / summary.incomeCents) * 100) : null;
+  return <>
+    <PageTitle eyebrow="Analisis" title="Reportes" description={`Resumen financiero de ${monthLabel(month)}.`} action={<button className="primary" onClick={exportCsv}>Exportar CSV</button>} />
+    <div className="report-kpis"><div><span>Ingresos</span><strong>{formatDop(summary.incomeCents)}</strong></div><div><span>Gastos</span><strong>{formatDop(summary.expenseCents)}</strong></div><div><span>Ahorro</span><strong>{formatDop(summary.contributionCents)}</strong></div><div><span>Tasa de ahorro</span><strong>{savingsRate === null ? "No calculable" : `${savingsRate}%`}</strong></div></div>
+    <div className="reports-grid"><CashFlowChart summary={summary} /><CategoryChart summary={summary} /><section className="panel report-detail"><header><div><p className="eyebrow">Detalle</p><h2>Datos del reporte</h2></div></header><div className="data-table-wrap"><table className="data-table"><thead><tr><th>Fecha</th><th>Descripcion</th><th>Categoria</th><th className="number">Monto</th></tr></thead><tbody>{movements.map((movement) => <tr key={movement.id}><td>{movement.effectiveDate}</td><td>{movement.description}</td><td>{movement.category}</td><td className="number">{movement.type === "INCOME" ? "+" : "-"}{formatDop(movement.amountCents)}</td></tr>)}</tbody></table></div></section></div>
+  </>;
+}
+
+function SettingsPage({ spaces, spaceId }: { spaces: Space[]; spaceId: string }) {
+  return <><PageTitle eyebrow="Preferencias" title="Configuracion" description="Administra los espacios y ajustes generales de tu planificacion." /><div className="settings-grid"><section className="panel"><p className="eyebrow">Espacios</p><h2>Personal y negocio</h2><div className="settings-list">{spaces.map((space) => <div key={space.id}><span className="space-avatar">{space.type === "PERSONAL" ? "P" : "N"}</span><div><strong>{space.name}</strong><span>{space.type === "PERSONAL" ? "Finanzas personales" : "Emprendimiento"}</span></div>{space.id === spaceId && <span className="status-pill active">Activo</span>}</div>)}</div></section><section className="panel"><p className="eyebrow">Formato regional</p><h2>Republica Dominicana</h2><dl className="settings-definition"><div><dt>Moneda</dt><dd>DOP · Peso dominicano</dd></div><div><dt>Zona horaria</dt><dd>America/Santo_Domingo</dd></div><div><dt>Formato de fecha</dt><dd>DD/MM/AAAA</dd></div></dl></section><section className="panel privacy-card"><p className="eyebrow">Privacidad</p><h2>Tus registros son manuales</h2><p>Rumbo no esta conectado a tus cuentas bancarias y no mueve dinero.</p></section></div></>;
+}
+
+function NotFoundPage() {
+  return <div className="module-empty large"><h1>Esta pagina no existe</h1><button className="primary" onClick={() => navigate("/")}>Volver al inicio</button></div>;
+}
+
+function MovementDialog({ accessToken, initialType, movement, expenseOptions, spaceId, availableCents, onClose, onSaved }: { accessToken: string; initialType: MovementType; movement?: Movement; expenseOptions: string[]; spaceId: string; availableCents: number; onClose: () => void; onSaved: () => void }) {
+  const [type, setType] = useState<MovementType>(initialType);
+  const [status, setStatus] = useState<MovementStatus>(movement?.status ?? "REGISTERED");
+  const [amount, setAmount] = useState(movement ? String(movement.amountCents / 100) : "");
+  const [category, setCategory] = useState(movement?.category ?? (initialType === "INCOME" ? incomeCategories[0]! : expenseCategories[0]!));
+  const [description, setDescription] = useState(movement?.description ?? "");
+  const [date, setDate] = useState(movement?.effectiveDate ?? today());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const amountCents = Math.round(Number(amount || 0) * 100);
+  const previousImpact = movement?.status === "REGISTERED"
+    ? movement.type === "INCOME" ? movement.amountCents : -movement.amountCents
+    : 0;
+  const nextImpact = status === "REGISTERED"
+    ? type === "INCOME" ? amountCents : -amountCents
+    : 0;
+  const impact = availableCents - previousImpact + nextImpact;
+  const categories = type === "INCOME" ? incomeCategories : expenseOptions;
+
+  function changeType(next: MovementType) {
+    setType(next);
+    setCategory(next === "INCOME" ? incomeCategories[0]! : expenseOptions[0]!);
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      setError("Introduce un monto mayor que cero.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+
+    try {
+      const response = await apiFetch(accessToken, movement ? `/api/movements/${movement.id}` : "/api/movements", {
+        method: movement ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          spaceId,
+          type,
+          status,
+          amountCents,
+          effectiveDate: date,
+          description: description.trim() || category,
+          category
+        })
+      });
+      if (!response.ok) throw new Error("No pudimos guardar el movimiento.");
+      onSaved();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "No pudimos guardar el movimiento.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="movement-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <header><div><p className="eyebrow">{movement ? "Editar movimiento" : "Nuevo movimiento"}</p><h2 id="dialog-title">{movement ? `Editar ${type === "INCOME" ? "ingreso" : "gasto"}` : type === "INCOME" ? "Registrar ingreso" : "Registrar gasto"}</h2></div><button className="close-button" aria-label="Cerrar" onClick={onClose}>×</button></header>
+        <form onSubmit={submit}>
+          <div className="type-tabs">
+            <button type="button" className={type === "EXPENSE" ? "active" : ""} onClick={() => changeType("EXPENSE")}>Gasto</button>
+            <button type="button" className={type === "INCOME" ? "active" : ""} onClick={() => changeType("INCOME")}>Ingreso</button>
+          </div>
+          <label>Monto <span>*</span><div className="money-input"><span>RD$</span><input autoFocus inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" /></div></label>
+          <div className="form-row">
+            <label>Categoria <span>*</span><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label>Fecha <span>*</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
+          </div>
+          <label>Descripcion <small>Opcional</small><input value={description} onChange={(event) => setDescription(event.target.value)} placeholder={type === "INCOME" ? "Ej. sueldo de agosto" : "Ej. compra del supermercado"} /></label>
+          <fieldset><legend>Estado</legend><label><input type="radio" checked={status === "REGISTERED"} onChange={() => setStatus("REGISTERED")} /> Registrado</label><label><input type="radio" checked={status === "SCHEDULED"} onChange={() => setStatus("SCHEDULED")} /> Programado</label></fieldset>
+          {amountCents > 0 && status === "REGISTERED" && <div className="impact-card"><span>Disponible despues de guardar</span><strong>{formatDop(impact)}</strong></div>}
+          {error && <p className="form-error" role="alert">{error}</p>}
+          <div className="dialog-actions"><button type="button" className="secondary" onClick={onClose}>Cancelar</button><button className="primary" disabled={saving}>{saving ? "Guardando..." : movement ? "Guardar cambios" : `Guardar ${type === "INCOME" ? "ingreso" : "gasto"}`}</button></div>
+        </form>
+      </section>
+    </div>
+  );
+}

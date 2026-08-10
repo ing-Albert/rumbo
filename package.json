@@ -1,0 +1,19 @@
+{
+  "name": "ahorra-rd",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ahorra/domain && npm run build -w @ahorra/api && npm run build -w @ahorra/web",
+    "dev": "npm run build -w @ahorra/domain && concurrently -n API,WEB -c magenta,cyan \"npm run dev -w @ahorra/api\" \"npm run dev -w @ahorra/web\"",
+    "setup:supabase": "node scripts/setup-supabase.mjs",
+    "test": "npm run build -w @ahorra/domain && npm run test -w @ahorra/domain && npm run test -w @ahorra/api && npm run test -w @ahorra/web",
+    "typecheck": "npm run build -w @ahorra/domain && npm run typecheck -w @ahorra/api && npm run typecheck -w @ahorra/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@ahorra/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "db:check": "tsx src/database/postgres/check.ts",
+    "db:migrate": "tsx src/database/postgres/migrate.ts",
+    "db:security": "tsx src/database/postgres/security-check.ts",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ahorra/domain": "*",
+    "@fastify/cors": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.1",
+    "jose": "^6.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/pg": "^8.15.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
