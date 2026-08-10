@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "../../lib/supabase";
+import { FullScreenLoader } from "./AuthProvider";
 
 type AuthMode = "SIGN_IN" | "SIGN_UP" | "RECOVERY";
 
@@ -61,6 +62,10 @@ export function AuthScreen() {
     setMode(nextMode);
     setError("");
     setMessage("");
+  }
+
+  if (loading) {
+    return <FullScreenLoader />;
   }
 
   return (
