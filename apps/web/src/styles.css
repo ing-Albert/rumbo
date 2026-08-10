@@ -105,7 +105,13 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .topbar select:hover, .topbar input:hover { border-color: var(--primary); }
 .topbar-brand { display: none; align-items: center; gap: 10px; font-family: "Fraunces", Georgia, serif; font-size: 22px; color: var(--ink); }
 .topbar-brand span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px 10px 3px 10px; background: linear-gradient(135deg, var(--primary), var(--terracotta)); color: white; font-size: 19px; font-weight: bold; }
-.user-menu-container { position: relative; margin-left: auto; }
+.user-menu-container { position: relative; }
+/* In sidebar: full width, no margin-left auto */
+.sidebar-user-menu { width: 100%; }
+.sidebar-user-menu .user-profile-button { width: 100%; border-radius: 12px; padding: 8px 12px 8px 8px; }
+.sidebar-user-menu .user-dropdown-card { right: auto; left: 0; top: auto; bottom: calc(100% + 8px); }
+/* In topbar (mobile only): hidden on desktop */
+.topbar-user-menu { display: none; margin-left: auto; }
 .user-profile-button { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); padding: 5px 12px 5px 6px; border-radius: 30px; cursor: pointer; transition: all .2s ease; box-shadow: 0 2px 6px rgba(43,33,30,.04); }
 .user-profile-button:hover, .user-profile-button.active { border-color: var(--primary); box-shadow: 0 4px 14px rgba(107,41,72,.12); background: #fffcf8; }
 .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--terracotta) 100%); color: white; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; box-shadow: inset 0 1px 1px rgba(255,255,255,.3); }
@@ -328,6 +334,7 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
   .topbar-pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .topbar-pickers label { width: 100%; }
   .topbar-pickers select, .topbar-pickers input { width: 100%; }
+  .topbar-user-menu { display: flex; }
   .user-menu-container { margin-left: 0; }
   .hero { grid-template-columns: 1fr; gap: 24px; }
   .hero-stats { max-width: 520px; }

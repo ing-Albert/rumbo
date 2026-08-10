@@ -194,7 +194,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">Saltar al contenido</a>
-      <Sidebar pathname={pathname} onAdd={() => openForm("EXPENSE")} />
+      <Sidebar pathname={pathname} user={auth.user} onSignOut={() => void auth.signOut()} onAdd={() => openForm("EXPENSE")} />
 
       <main id="main" className="main-content">
         <header className="topbar">
@@ -203,7 +203,8 @@ export default function App() {
               <span>R</span>
               <strong>Rumbo</strong>
             </div>
-            {auth.user && <UserMenu user={auth.user} onSignOut={() => void auth.signOut()} />}
+            {/* UserMenu visible only on mobile in the topbar */}
+            {auth.user && <UserMenu user={auth.user} onSignOut={() => void auth.signOut()} className="topbar-user-menu" />}
           </div>
           <div className="topbar-pickers">
             <label className="space-picker">
@@ -311,7 +312,7 @@ function LogoutIcon() {
   return <LogOut size={15} aria-hidden="true" />;
 }
 
-function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?: Record<string, any> }; onSignOut: () => void }) {
+function UserMenu({ user, onSignOut, className = "" }: { user: { email?: string; user_metadata?: Record<string, any> }; onSignOut: () => void; className?: string }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const userName = getUserName(user);
@@ -328,7 +329,7 @@ function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?:
   }, []);
 
   return (
-    <div className="user-menu-container" ref={menuRef}>
+    <div className={`user-menu-container ${className}`} ref={menuRef}>
       <button
         className={`user-profile-button ${open ? "active" : ""}`}
         onClick={() => setOpen((prev) => !prev)}
@@ -397,7 +398,7 @@ function RumboLogo({ size = 42 }: { size?: number }) {
   );
 }
 
-function Sidebar({ pathname, onAdd }: { pathname: string; onAdd: () => void }) {
+function Sidebar({ pathname, user, onSignOut, onAdd }: { pathname: string; user: { email?: string; user_metadata?: Record<string, any> } | null; onSignOut: () => void; onAdd: () => void }) {
   return (
     <aside className="sidebar">
       <RumboLogo />
@@ -405,7 +406,11 @@ function Sidebar({ pathname, onAdd }: { pathname: string; onAdd: () => void }) {
       <nav aria-label="Navegacion principal">
         {NAV_ITEMS.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={(pathname === path || (path === "/" && pathname === "/inicio")) ? "active" : ""}><span>{icon}</span> {label}</RouteLink>)}
       </nav>
-      <div className="sidebar-foot"><RouteLink to="/configuracion">Configuracion</RouteLink><small>v0.2</small></div>
+      <div className="sidebar-foot">
+        <RouteLink to="/configuracion">Configuracion</RouteLink>
+        {user && <UserMenu user={user} onSignOut={onSignOut} className="sidebar-user-menu" />}
+        <small>v0.2</small>
+      </div>
     </aside>
   );
 }
