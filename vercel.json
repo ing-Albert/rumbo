@@ -2,8 +2,5 @@
   "buildCommand": "npm run build -w @ahorra/domain && npm run build -w @ahorra/web",
   "outputDirectory": "apps/web/dist",
   "installCommand": "rm -f package-lock.json && npm install",
-  "framework": "vite",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/serverless" }
-  ]
+  "framework": "vite"
 }
