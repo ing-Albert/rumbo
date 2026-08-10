@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install && npm run build -w @ahorra/domain && npm run build -w @ahorra/web",
+  "buildCommand": "npm run build -w @ahorra/domain && npm run build -w @ahorra/web",
   "outputDirectory": "apps/web/dist",
   "installCommand": "rm -f package-lock.json && npm install",
   "framework": "vite"
