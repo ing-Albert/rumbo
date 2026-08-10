@@ -1,3 +1,4 @@
+import { Home, ArrowUpDown, LayoutGrid, Target, BarChart2, LogOut, ChevronDown, TrendingUp, TrendingDown, Gem } from "lucide-react";
 import {
   formatDop,
   type BudgetLimit,
@@ -307,13 +308,7 @@ function getUserInitial(name: string): string {
 }
 
 function LogoutIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  );
+  return <LogOut size={15} aria-hidden="true" />;
 }
 
 function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?: Record<string, any> }; onSignOut: () => void }) {
@@ -346,9 +341,7 @@ function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?:
           <span className="user-name">{userName}</span>
           <span className="user-subtext">Mi cuenta</span>
         </div>
-        <svg className={`chevron-icon ${open ? "open" : ""}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown className={`chevron-icon ${open ? "open" : ""}`} size={14} aria-hidden="true" />
       </button>
 
       {open && (
@@ -376,31 +369,44 @@ function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?:
   );
 }
 
+const NAV_ITEMS: [string, React.ReactNode, string][] = [
+  ["/", <Home size={18} />, "Inicio"],
+  ["/movimientos", <ArrowUpDown size={18} />, "Movimientos"],
+  ["/presupuesto", <LayoutGrid size={18} />, "Presupuesto"],
+  ["/metas", <Target size={18} />, "Metas"],
+  ["/reportes", <BarChart2 size={18} />, "Reportes"],
+];
+
+function RumboLogo() {
+  return (
+    <div className="brand">
+      <div className="brand-logo" aria-hidden="true">
+        <div className="brand-logo-ring" />
+        <div className="brand-logo-ring brand-logo-ring--2" />
+        <span className="brand-logo-letter">R</span>
+      </div>
+      <strong className="brand-name">Rumbo</strong>
+    </div>
+  );
+}
+
 function Sidebar({ pathname, onAdd }: { pathname: string; onAdd: () => void }) {
-  const items = [
-    ["/", "⌂", "Inicio"],
-    ["/movimientos", "↕", "Movimientos"],
-    ["/presupuesto", "▤", "Presupuesto"],
-    ["/metas", "◇", "Metas"],
-    ["/reportes", "⌁", "Reportes"]
-  ];
   return (
     <aside className="sidebar">
-      <div className="brand"><span>R</span><strong>Rumbo</strong></div>
+      <RumboLogo />
       <button className="primary add-button" onClick={onAdd}>+ Agregar</button>
       <nav aria-label="Navegacion principal">
-        {items.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={(pathname === path || (path === "/" && pathname === "/inicio")) ? "active" : ""}><span>{icon}</span> {label}</RouteLink>)}
+        {NAV_ITEMS.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={(pathname === path || (path === "/" && pathname === "/inicio")) ? "active" : ""}><span>{icon}</span> {label}</RouteLink>)}
       </nav>
-      <div className="sidebar-foot"><RouteLink to="/configuracion">Configuracion</RouteLink><small>MVP en construccion · v0.2</small></div>
+      <div className="sidebar-foot"><RouteLink to="/configuracion">Configuracion</RouteLink><small>v0.2</small></div>
     </aside>
   );
 }
 
 function BottomNav({ pathname }: { pathname: string }) {
-  const items = [["/", "⌂", "Inicio"], ["/movimientos", "↕", "Movimientos"], ["/presupuesto", "▤", "Presupuesto"], ["/metas", "◇", "Metas"], ["/reportes", "⌁", "Reportes"]];
   return (
     <nav className="bottom-nav" aria-label="Navegacion movil">
-      {items.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={pathname === path ? "active" : ""}><span>{icon}</span>{label}</RouteLink>)}
+      {NAV_ITEMS.map(([path, icon, label]) => <RouteLink key={path} to={path!} className={(pathname === path || (path === "/" && pathname === "/inicio")) ? "active" : ""}><span>{icon}</span>{label}</RouteLink>)}
     </nav>
   );
 }
@@ -471,7 +477,7 @@ function RecentMovements({ movements, onEdit, onViewAll }: { movements: Movement
       <div className="movement-list">
         {movements.slice(0, 6).map((movement) => (
           <article key={movement.id} className="movement-row">
-            <span className={`movement-icon ${movement.type.toLowerCase()}`}>{movement.type === "INCOME" ? "+" : movement.type === "EXPENSE" ? "−" : "◇"}</span>
+            <span className={`movement-icon ${movement.type.toLowerCase()}`}>{movement.type === "INCOME" ? <TrendingUp size={16}/> : movement.type === "EXPENSE" ? <TrendingDown size={16}/> : <Gem size={16}/>}</span>
             <div><strong>{movement.description}</strong><span>{movement.category} · {new Intl.DateTimeFormat("es-DO", { day: "2-digit", month: "short" }).format(new Date(`${movement.effectiveDate}T12:00:00`))}</span></div>
             <div className="movement-actions">
               <strong className={movement.type === "INCOME" ? "amount-income" : ""}>{movement.type === "INCOME" ? "+" : "−"}{formatDop(movement.amountCents)}</strong>

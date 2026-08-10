@@ -30,8 +30,61 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .skip-link:focus { top: 16px; }
 .app-shell { min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 256px; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 20px; display: flex; flex-direction: column; z-index: 10; }
-.brand { display: flex; align-items: center; gap: 12px; font-family: "Fraunces", Georgia, serif; font-size: 25px; margin: 0 8px 34px; }
-.brand span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px 12px 4px 12px; background: var(--primary); color: white; }
+.brand { display: flex; align-items: center; gap: 14px; margin: 0 4px 34px; }
+.brand-logo {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+.brand-logo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px 14px 4px 14px;
+  background: linear-gradient(135deg, var(--primary) 0%, #a0305a 60%, var(--terracotta) 100%);
+  box-shadow: 0 4px 14px rgba(107,41,72,.35);
+  animation: logoBreath 3.5s ease-in-out infinite;
+}
+.brand-logo-ring--2 {
+  inset: -3px;
+  opacity: 0;
+  background: linear-gradient(135deg, var(--primary), var(--terracotta));
+  animation: logoPulse 3.5s ease-in-out infinite;
+  z-index: -1;
+}
+.brand-logo-letter {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 4px rgba(0,0,0,.25);
+  animation: logoLetterSlide 0.6s cubic-bezier(.34,1.56,.64,1) both;
+}
+.brand-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  animation: logoLetterSlide 0.7s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes logoBreath {
+  0%, 100% { box-shadow: 0 4px 14px rgba(107,41,72,.35); transform: scale(1); }
+  50% { box-shadow: 0 6px 22px rgba(107,41,72,.55); transform: scale(1.04); }
+}
+@keyframes logoPulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.18; transform: scale(1.35); }
+}
+@keyframes logoLetterSlide {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .primary, .secondary { border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; min-height: 44px; }
 .primary { background: var(--primary); color: white; }
 .primary:hover { background: var(--primary-active); }
@@ -39,9 +92,10 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .secondary { background: transparent; color: var(--primary); border: 1px solid var(--border); }
 .add-button { width: 100%; margin-bottom: 26px; }
 .sidebar nav { display: grid; gap: 5px; }
-.sidebar nav a { text-decoration: none; color: var(--muted); padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 13px; font-weight: 700; }
-.sidebar nav a span { width: 22px; text-align: center; font-size: 20px; }
-.sidebar nav a:hover, .sidebar nav a.active { background: var(--muted-surface); color: var(--primary); }
+.sidebar nav a { text-decoration: none; color: var(--muted); padding: 11px 14px; border-radius: 10px; display: flex; align-items: center; gap: 13px; font-weight: 700; transition: all .18s ease; }
+.sidebar nav a span { width: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sidebar nav a:hover { background: var(--muted-surface); color: var(--primary); transform: translateX(2px); }
+.sidebar nav a.active { background: var(--muted-surface); color: var(--primary); }
 .sidebar-foot { margin-top: auto; display: grid; gap: 14px; padding: 16px 12px 0; border-top: 1px solid var(--border); }
 .sidebar-foot a { color: var(--muted); font-weight: 700; text-decoration: none; }
 .sidebar-foot small { color: var(--muted); }
@@ -53,7 +107,7 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .topbar select, .topbar input { border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 8px 14px; border-radius: 10px; min-height: 42px; font-weight: 600; box-shadow: 0 1px 3px rgba(43,33,30,.03); transition: border-color .2s; }
 .topbar select:hover, .topbar input:hover { border-color: var(--primary); }
 .topbar-brand { display: none; align-items: center; gap: 10px; font-family: "Fraunces", Georgia, serif; font-size: 22px; color: var(--ink); }
-.topbar-brand span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px 10px 3px 10px; background: var(--primary); color: white; font-size: 19px; font-weight: bold; }
+.topbar-brand span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px 10px 3px 10px; background: linear-gradient(135deg, var(--primary), var(--terracotta)); color: white; font-size: 19px; font-weight: bold; }
 .user-menu-container { position: relative; margin-left: auto; }
 .user-profile-button { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); padding: 5px 12px 5px 6px; border-radius: 30px; cursor: pointer; transition: all .2s ease; box-shadow: 0 2px 6px rgba(43,33,30,.04); }
 .user-profile-button:hover, .user-profile-button.active { border-color: var(--primary); box-shadow: 0 4px 14px rgba(107,41,72,.12); background: #fffcf8; }
@@ -121,7 +175,7 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .movement-row > div span { color: var(--muted); font-size: 14px; }
 .movement-actions { justify-items: end; }
 .movement-actions button { border: 0; background: transparent; color: var(--primary); padding: 3px 0; font-weight: 700; text-decoration: underline; }
-.movement-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--muted-surface); color: var(--terracotta); font-size: 20px; font-weight: 700; }
+.movement-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--muted-surface); color: var(--terracotta); }
 .movement-icon.income { color: var(--success); background: #e7f4ee; }
 .amount-income { color: var(--success); }
 .projection-panel { background: var(--muted-surface); }
