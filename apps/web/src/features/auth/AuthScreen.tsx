@@ -36,7 +36,7 @@ export function AuthScreen() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { 
+            data: {
               display_name: displayName.trim(),
               username: displayName.trim()
             }
@@ -73,8 +73,8 @@ export function AuthScreen() {
       <section className="auth-story">
         <div className="brand auth-brand">
           <svg className="brand-logo-svg" width="56" height="56" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ boxShadow: 'none', animation: 'logoEntrance 0.5s cubic-bezier(.34,1.56,.64,1) both' }}>
-            <path d="M126 354V158h92c63 0 105 31 105 87 0 35-17 61-48 75l90 34h-94l-66-29v29h-79zm79-97h19c24 0 37-9 37-28s-13-27-37-27h-19v55z" fill="#FFF8F0"/>
-            <circle cx="365" cy="152" r="42" fill="#E3A72F"/>
+            <path d="M126 354V158h92c63 0 105 31 105 87 0 35-17 61-48 75l90 34h-94l-66-29v29h-79zm79-97h19c24 0 37-9 37-28s-13-27-37-27h-19v55z" fill="#FFF8F0" />
+            <circle cx="365" cy="152" r="42" fill="#E3A72F" />
           </svg>
           <strong className="brand-name" style={{ fontSize: '32px' }}>Rumbo</strong>
         </div>
@@ -89,13 +89,13 @@ export function AuthScreen() {
         <form onSubmit={(event) => void submit(event)}>
           {mode === "SIGN_UP" && <label>Nombre de usuario<input autoComplete="username" placeholder="Ej. JuanPerez" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
           <label>Correo electronico<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-          {mode !== "RECOVERY" && <label>Contrasena<input type="password" minLength={8} autoComplete={mode === "SIGN_UP" ? "new-password" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} /><small>Minimo 8 caracteres.</small></label>}
+          {mode !== "RECOVERY" && <label>Contraseña<input type="password" minLength={8} autoComplete={mode === "SIGN_UP" ? "new-password" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} /><small>Minimo 8 caracteres.</small></label>}
           {error && <p className="auth-error" role="alert">{error}</p>}
           {message && <p className="auth-message" role="status">{message}</p>}
           <button className="primary auth-submit" disabled={loading}>{loading ? "Procesando..." : mode === "SIGN_IN" ? "Iniciar sesion" : mode === "SIGN_UP" ? "Crear cuenta" : "Enviar instrucciones"}</button>
         </form>
         <div className="auth-links">
-          {mode === "SIGN_IN" && <><button onClick={() => changeMode("RECOVERY")}>Olvide mi contrasena</button><button onClick={() => changeMode("SIGN_UP")}>Crear una cuenta</button></>}
+          {mode === "SIGN_IN" && <><button onClick={() => changeMode("RECOVERY")}>Olvide mi contraseña</button><button onClick={() => changeMode("SIGN_UP")}>Crear una cuenta</button></>}
           {mode !== "SIGN_IN" && <button onClick={() => changeMode("SIGN_IN")}>Volver a iniciar sesion</button>}
         </div>
         <p className="auth-privacy">Al continuar aceptas los terminos y confirmas que leiste el aviso de privacidad.</p>
