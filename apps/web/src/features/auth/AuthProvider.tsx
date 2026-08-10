@@ -73,12 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const [minDelayDone, setMinDelayDone] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinDelayDone(true), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!auth.configured) {
     return <main className="auth-setup-error"><h1>Falta configurar Supabase</h1><p>La aplicacion se cerro de forma segura porque no encontro la configuracion de autenticacion.</p></main>;
   }
 
-  if (auth.loading) {
+  if (auth.loading || !minDelayDone) {
     return (
       <main className="auth-loading" aria-live="polite">
         <svg className="auth-loading-logo" width="64" height="64" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
