@@ -35,7 +35,10 @@ export function AuthScreen() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { display_name: displayName.trim() }
+            data: { 
+              display_name: displayName.trim(),
+              username: displayName.trim()
+            }
           }
         });
         if (signUpError) throw signUpError;
@@ -73,7 +76,7 @@ export function AuthScreen() {
         <p className="eyebrow">{mode === "SIGN_IN" ? "Bienvenido de nuevo" : mode === "SIGN_UP" ? "Crea tu cuenta" : "Recupera el acceso"}</p>
         <h2>{mode === "SIGN_IN" ? "Entra a tu plan" : mode === "SIGN_UP" ? "Comienza tu rumbo" : "Te enviaremos instrucciones"}</h2>
         <form onSubmit={(event) => void submit(event)}>
-          {mode === "SIGN_UP" && <label>Nombre<input autoComplete="name" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
+          {mode === "SIGN_UP" && <label>Nombre de usuario<input autoComplete="username" placeholder="Ej. JuanPerez" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
           <label>Correo electronico<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           {mode !== "RECOVERY" && <label>Contrasena<input type="password" minLength={8} autoComplete={mode === "SIGN_UP" ? "new-password" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} /><small>Minimo 8 caracteres.</small></label>}
           {error && <p className="auth-error" role="alert">{error}</p>}

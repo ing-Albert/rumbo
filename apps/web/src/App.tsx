@@ -9,7 +9,7 @@ import {
   type MovementType,
   type Summary
 } from "@ahorra/domain";
-import { FormEvent, startTransition, useEffect, useState, type ReactNode } from "react";
+import { FormEvent, startTransition, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "./features/auth/AuthProvider";
 import { apiFetch } from "./lib/api";
 
@@ -197,53 +197,56 @@ export default function App() {
 
       <main id="main" className="main-content">
         <header className="topbar">
-          <label className="space-picker">
-            <span>Espacio</span>
-            <select value={spaceId} onChange={(event) => setSpaceId(event.target.value)}>
-              {spaces.map((space) => <option key={space.id} value={space.id}>{space.name}</option>)}
-            </select>
-          </label>
-          <label className="month-picker">
-            <span>Periodo</span>
-            <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
-          </label>
-          <button className="primary desktop-add" onClick={() => openForm("EXPENSE")}>+ Agregar</button>
-          {auth.user && <div className="session-user"><span>{auth.user.email}</span><button onClick={() => void auth.signOut()}>Cerrar sesion</button></div>}
+          <div className="topbar-header-row">
+            <div className="topbar-brand">
+              <span>R</span>
+              <strong>Rumbo</strong>
+            </div>
+            {auth.user && <UserMenu user={auth.user} onSignOut={() => void auth.signOut()} />}
+          </div>
+          <div className="topbar-pickers">
+            <label className="space-picker">
+              <span>Espacio</span>
+              <select value={spaceId} onChange={(event) => setSpaceId(event.target.value)}>
+                {spaces.map((space) => <option key={space.id} value={space.id}>{space.name}</option>)}
+              </select>
+            </label>
+            <label className="month-picker">
+              <span>Periodo</span>
+              <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+            </label>
+          </div>
         </header>
 
         {pathname === "/" || pathname === "/inicio" ? <>
-        <section className="hero" aria-labelledby="available-title">
-          <div>
-            <p className="eyebrow">Disponible despues de ahorro</p>
-            <h1 id="available-title">{loading ? "Calculando..." : formatDop(summary.availableAfterSavingsCents)}</h1>
-            <p>Para {monthLabel(month)} segun tus registros</p>
-            {!loading && <div className="balance-bridge"><span>Antes de ahorro: <strong>{formatDop(summary.availableBeforeSavingsCents)}</strong></span><span>Ahorro separado: <strong>{formatDop(summary.contributionCents)}</strong></span></div>}
-          </div>
-          <div className="hero-stats">
-            <Stat label="Ingresos" value={summary.incomeCents} tone="income" />
-            <Stat label="Gastos" value={summary.expenseCents} tone="expense" />
-            <Stat label="Ahorro" value={summary.contributionCents} tone="savings" />
-          </div>
-          <div className="estimate-note">
-            <span aria-hidden="true">i</span>
-            <p>No es un saldo bancario. Se calcula con la informacion que registras manualmente.</p>
-          </div>
-        </section>
+          <section className="hero" aria-labelledby="available-title">
+            <div>
+              <p className="eyebrow">Disponible despues de ahorro</p>
+              <h1 id="available-title">{loading ? "Calculando..." : formatDop(summary.availableAfterSavingsCents)}</h1>
+              <p>Para {monthLabel(month)} segun tus registros</p>
+              {!loading && <div className="balance-bridge"><span>Antes de ahorro: <strong>{formatDop(summary.availableBeforeSavingsCents)}</strong></span><span>Ahorro separado: <strong>{formatDop(summary.contributionCents)}</strong></span></div>}
+            </div>
+            <div className="hero-stats">
+              <Stat label="Ingresos" value={summary.incomeCents} tone="income" />
+              <Stat label="Gastos" value={summary.expenseCents} tone="expense" />
+              <Stat label="Ahorro" value={summary.contributionCents} tone="savings" />
+            </div>
+          </section>
 
-        {!loading && summary.availableAfterSavingsCents < 0 && <section className="allocation-alert" role="status"><div><span aria-hidden="true">!</span><div><strong>Tu plan supera el dinero disponible por {formatDop(Math.abs(summary.availableAfterSavingsCents))}</strong><p>Despues de los gastos quedaban {formatDop(summary.availableBeforeSavingsCents)}, pero separaste {formatDop(summary.contributionCents)} para ahorro. Ajusta gastos o el aporte de este periodo.</p></div></div><div className="button-row"><button className="secondary" onClick={() => navigate("/movimientos")}>Revisar gastos</button><button className="primary" onClick={() => navigate("/metas")}>Ajustar metas</button></div></section>}
+          {!loading && summary.availableAfterSavingsCents < 0 && <section className="allocation-alert" role="status"><div><span aria-hidden="true">!</span><div><strong>Tu plan supera el dinero disponible por {formatDop(Math.abs(summary.availableAfterSavingsCents))}</strong><p>Despues de los gastos quedaban {formatDop(summary.availableBeforeSavingsCents)}, pero separaste {formatDop(summary.contributionCents)} para ahorro. Ajusta gastos o el aporte de este periodo.</p></div></div><div className="button-row"><button className="secondary" onClick={() => navigate("/movimientos")}>Revisar gastos</button><button className="primary" onClick={() => navigate("/metas")}>Ajustar metas</button></div></section>}
 
-        {error && <div className="error-banner" role="alert">{error} <button onClick={() => setRefreshKey((value) => value + 1)}>Reintentar</button></div>}
+          {error && <div className="error-banner" role="alert">{error} <button onClick={() => setRefreshKey((value) => value + 1)}>Reintentar</button></div>}
 
-        {!loading && movements.length === 0 ? (
-          <EmptyState onIncome={() => openForm("INCOME")} onExpense={() => openForm("EXPENSE")} />
-        ) : (
-          <div className="dashboard-grid">
-            <CashFlowChart summary={summary} />
-            <CategoryChart summary={summary} />
-            <RecentMovements movements={movements} onEdit={editMovement} onViewAll={() => navigate("/movimientos")} />
-            <Projection summary={summary} />
-          </div>
-        )}
+          {!loading && movements.length === 0 ? (
+            <EmptyState onIncome={() => openForm("INCOME")} onExpense={() => openForm("EXPENSE")} />
+          ) : (
+            <div className="dashboard-grid">
+              <CashFlowChart summary={summary} />
+              <CategoryChart summary={summary} />
+              <RecentMovements movements={movements} onEdit={editMovement} onViewAll={() => navigate("/movimientos")} />
+              <Projection summary={summary} />
+            </div>
+          )}
         </> : pathname === "/movimientos" ? (
           <MovementsPage movements={movements} onAdd={openForm} onEdit={editMovement} />
         ) : pathname === "/presupuesto" ? (
@@ -276,6 +279,98 @@ export default function App() {
             setRefreshKey((value) => value + 1);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function getUserName(user: { email?: string; user_metadata?: Record<string, any> } | null): string {
+  if (!user) return "Usuario";
+  const meta = user.user_metadata;
+  if (meta?.username && typeof meta.username === "string" && meta.username.trim()) return meta.username.trim();
+  if (meta?.full_name && typeof meta.full_name === "string" && meta.full_name.trim()) return meta.full_name.trim();
+  if (meta?.name && typeof meta.name === "string" && meta.name.trim()) return meta.name.trim();
+  if (user.email) {
+    const raw = user.email.split("@")[0] || "Usuario";
+    return raw
+      .split(/[._-]/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+  return "Usuario";
+}
+
+function getUserInitial(name: string): string {
+  if (!name) return "U";
+  return name.charAt(0).toUpperCase();
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function UserMenu({ user, onSignOut }: { user: { email?: string; user_metadata?: Record<string, any> }; onSignOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const userName = getUserName(user);
+  const initial = getUserInitial(userName);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="user-menu-container" ref={menuRef}>
+      <button
+        className={`user-profile-button ${open ? "active" : ""}`}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        title={userName}
+      >
+        <div className="user-avatar">{initial}</div>
+        <div className="user-details">
+          <span className="user-name">{userName}</span>
+          <span className="user-subtext">Mi cuenta</span>
+        </div>
+        <svg className={`chevron-icon ${open ? "open" : ""}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="user-dropdown-card" role="menu">
+          <div className="dropdown-user-header">
+            <div className="dropdown-avatar">{initial}</div>
+            <div className="dropdown-user-info">
+              <strong>{userName}</strong>
+              <small>{user.email || "Usuario"}</small>
+            </div>
+          </div>
+          <div className="dropdown-divider" />
+          <button
+            className="dropdown-logout-btn"
+            onClick={() => { setOpen(false); void onSignOut(); }}
+            role="menuitem"
+            aria-label="Cerrar sesion"
+          >
+            <LogoutIcon />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       )}
     </div>
   );

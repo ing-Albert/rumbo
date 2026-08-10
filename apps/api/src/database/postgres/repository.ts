@@ -305,14 +305,14 @@ class PostgresFinanceRepository implements UserFinanceRepository {
         category: string;
         limit_cents: DatabaseNumber;
       }>(
-        `select limit.id, limit.space_id, to_char(budget.month, 'YYYY-MM') as month,
-                category.name as category, limit.limit_cents
-         from public.budget_limits limit
+        `select bl.id, bl.space_id, to_char(budget.month, 'YYYY-MM') as month,
+                category.name as category, bl.limit_cents
+         from public.budget_limits bl
          join public.budgets budget
-           on budget.id = limit.budget_id and budget.user_id = limit.user_id
+           on budget.id = bl.budget_id and budget.user_id = bl.user_id
          join public.categories category
-           on category.id = limit.category_id and category.user_id = limit.user_id
-         where limit.user_id = $1 and limit.space_id = $2 and budget.month = $3::date
+           on category.id = bl.category_id and category.user_id = bl.user_id
+         where bl.user_id = $1 and bl.space_id = $2 and budget.month = $3::date
          order by lower(category.name)`,
         [this.userId, spaceId, `${month}-01`]
       );
