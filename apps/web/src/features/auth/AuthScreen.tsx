@@ -66,7 +66,14 @@ export function AuthScreen() {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <div className="brand auth-brand"><span>R</span><strong>Rumbo</strong></div>
+        <div className="brand auth-brand">
+          <div className="brand-logo" aria-hidden="true">
+            <div className="brand-logo-ring" />
+            <div className="brand-logo-ring brand-logo-ring--2" />
+            <span className="brand-logo-letter">R</span>
+          </div>
+          <strong className="brand-name">Rumbo</strong>
+        </div>
         <p className="eyebrow">Planificacion clara</p>
         <h1>Organiza lo que entra, lo que sale y lo que quieres alcanzar.</h1>
         <p>Tus espacios Personal y Negocio permanecen separados y bajo tu control.</p>
