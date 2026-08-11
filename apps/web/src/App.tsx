@@ -660,7 +660,9 @@ function BudgetPage({ accessToken, spaceId, month, summary, limits, customCatego
         const limit = Math.round(Number(values[category] || 0) * 100);
         const percent = limit > 0 ? Math.round((spent / limit) * 100) : 0;
         const remaining = limit - spent;
-        const customCat = customCategories.find((c) => c.name === category);
+        const customCat = !expenseCategories.includes(category)
+          ? customCategories.find((c) => c.name === category)
+          : undefined;
         return (
           <div className="budget-row" key={category}>
             <div className="budget-category">

@@ -264,9 +264,9 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
 .budget-row { display: grid; grid-template-columns: minmax(190px, .7fr) minmax(260px, 1.4fr) minmax(190px, .65fr); gap: 28px; align-items: center; padding: 20px 22px; border-bottom: 1px solid #eadfd5; }
 .budget-row:last-child { border-bottom: 0; }
 .budget-category { display: grid; gap: 5px; }
-.budget-category-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.budget-category-header strong { flex: 1; }
-.category-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.budget-category-header { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.budget-category-header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.category-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .budget-category span { color: var(--muted); font-size: 14px; }
 .budget-usage { display: grid; gap: 8px; }
 .budget-progress { height: 10px; background: var(--muted-surface); border-radius: 10px; overflow: hidden; }
