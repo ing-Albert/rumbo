@@ -666,7 +666,6 @@ function BudgetPage({ accessToken, spaceId, month, summary, limits, customCatego
   return <>
     <PageTitle eyebrow="Plan del periodo" title="Presupuesto" description={`Define cuanto quieres gastar durante ${monthLabel(month)}.`} action={<div className="button-row"><button className="secondary" onClick={() => setAddingCategory(true)}>+ Nueva categoria</button><button className="primary" onClick={() => void saveBudget()} disabled={saving}>{saving ? "Guardando..." : "Guardar presupuesto"}</button></div>} />
     {addingCategory && <form className="category-creator" onSubmit={(event) => void createCategory(event)}><label>Nombre de la categoria<input autoFocus value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Ej. Mascotas" minLength={2} maxLength={80} required /></label><div><button type="button" className="secondary" onClick={() => { setAddingCategory(false); setCategoryError(""); }}>Cancelar</button><button className="primary">Agregar categoria</button></div>{categoryError && <p role="alert">{categoryError}</p>}</form>}
-    {editingCategory && <form className="category-creator" onSubmit={(event) => void saveEdit(event)}><label>Editar nombre<input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} minLength={2} maxLength={80} required /></label><div><button type="button" className="secondary" onClick={() => setEditingCategory(null)}>Cancelar</button><button className="primary">Guardar nombre</button></div>{editError && <p role="alert">{editError}</p>}</form>}
     <div className="summary-strip"><Stat label="Ingresos" value={summary.incomeCents} tone="income" /><Stat label="Presupuestado" value={totalLimit} tone="savings" /><Stat label="Gastado" value={summary.expenseCents} tone="expense" /><Stat label="Disponible" value={summary.availableAfterSavingsCents} tone="income" /></div>
     <p className="budget-formula">Disponible = ingresos - gastos - ahorro separado. El presupuesto por categoria sirve como limite, no como saldo.</p>
     {message && <p className="save-message" role="status">{message}</p>}
@@ -684,12 +683,23 @@ function BudgetPage({ accessToken, spaceId, month, summary, limits, customCatego
           <div className="budget-row" key={category}>
             <div className="budget-category">
               <div className="budget-category-header">
-                <strong>{category}</strong>
-                {customCat && (
-                  <div className="category-actions">
-                    <button className="table-action" onClick={() => startEdit(customCat)} title="Editar"><Pencil size={16} /></button>
-                    <button className="table-action danger" onClick={() => { if (window.confirm(`¿Eliminar la categoria "${category}"?`)) void deleteCategory(customCat); }} disabled={deletingId === customCat.id} title="Eliminar">{deletingId === customCat.id ? "..." : <Trash2 size={16} />}</button>
-                  </div>
+                {editingCategory?.id === customCat?.id ? (
+                  <form onSubmit={(event) => void saveEdit(event)} style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
+                    <input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} minLength={2} maxLength={80} required style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', flex: 1, minWidth: '120px' }} />
+                    <button className="primary" style={{ padding: '6px 10px', fontSize: '12px' }}>Guardar</button>
+                    <button type="button" className="secondary" style={{ padding: '6px 10px', fontSize: '12px' }} onClick={() => setEditingCategory(null)}>Cancelar</button>
+                    {editError && <span className="danger-text" style={{ fontSize: '12px', width: '100%' }}>{editError}</span>}
+                  </form>
+                ) : (
+                  <>
+                    <strong>{category}</strong>
+                    {customCat && (
+                      <div className="category-actions">
+                        <button className="table-action" onClick={() => startEdit(customCat)} title="Editar"><Pencil size={16} /></button>
+                        <button className="table-action danger" onClick={() => { if (window.confirm(`¿Eliminar la categoria "${category}"?`)) void deleteCategory(customCat); }} disabled={deletingId === customCat.id} title="Eliminar">{deletingId === customCat.id ? "..." : <Trash2 size={16} />}</button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               <span>{spent > 0 ? `${formatDop(spent)} gastados` : "Sin gastos registrados"}</span>
