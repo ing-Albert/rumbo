@@ -12,6 +12,7 @@ export function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -63,6 +64,7 @@ export function AuthScreen() {
     setMode(nextMode);
     setError("");
     setMessage("");
+    setShowPassword(false);
   }
 
   if (loading) {
@@ -90,7 +92,16 @@ export function AuthScreen() {
         <form onSubmit={(event) => void submit(event)}>
           {mode === "SIGN_UP" && <label>Nombre de usuario<input autoComplete="username" placeholder="Ej. JuanPerez" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
           <label>Correo electronico<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-          {mode !== "RECOVERY" && <label>Contraseña<input type="password" minLength={8} autoComplete={mode === "SIGN_UP" ? "new-password" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} /><small>Minimo 8 caracteres.</small></label>}
+          {mode !== "RECOVERY" && (
+            <label>
+              Contraseña
+              <div className="password-wrapper">
+                <input type={showPassword ? "text" : "password"} minLength={8} autoComplete={mode === "SIGN_UP" ? "new-password" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Ocultar" : "Mostrar"}</button>
+              </div>
+              <small>Minimo 8 caracteres.</small>
+            </label>
+          )}
           {error && <p className="auth-error" role="alert">{error}</p>}
           {message && <p className="auth-message" role="status">{message}</p>}
           <button className="primary auth-submit" disabled={loading}>{loading ? "Procesando..." : mode === "SIGN_IN" ? "Iniciar sesion" : mode === "SIGN_UP" ? "Crear cuenta" : "Enviar instrucciones"}</button>
