@@ -250,7 +250,7 @@ export default function App() {
             </div>
           )}
         </> : pathname === "/movimientos" ? (
-          <MovementsPage movements={movements} onAdd={openForm} onEdit={editMovement} />
+          <MovementsPage movements={movements} onAdd={openForm} onEdit={editMovement} minDate={auth.user?.created_at ? auth.user.created_at.substring(0, 10) : undefined} />
         ) : pathname === "/presupuesto" ? (
           <BudgetPage accessToken={accessToken} spaceId={spaceId} month={month} summary={summary} limits={budgetLimits} customCategories={customCategories} onSaved={() => setRefreshKey((value) => value + 1)} />
         ) : pathname === "/metas" ? (
@@ -535,7 +535,7 @@ function PageTitle({ eyebrow, title, description, action }: { eyebrow: string; t
   return <header className="page-title"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{description}</p></div>{action}</header>;
 }
 
-function MovementsPage({ movements, onAdd, onEdit }: { movements: Movement[]; onAdd: (type: MovementType) => void; onEdit: (movement: Movement) => void }) {
+function MovementsPage({ movements, onAdd, onEdit, minDate }: { movements: Movement[]; onAdd: (type: MovementType) => void; onEdit: (movement: Movement) => void; minDate?: string }) {
   const pageSize = 15;
   const [query, setQuery] = useState("");
   const [type, setType] = useState("ALL");
@@ -612,8 +612,8 @@ function MovementsPage({ movements, onAdd, onEdit }: { movements: Movement[]; on
         ))}
         {period === "RANGE" && (
           <div className="period-range-inputs">
-            <label>Desde<input type="date" value={rangeFrom} onChange={(e) => setRangeFrom(e.target.value)} /></label>
-            <label>Hasta<input type="date" value={rangeTo} min={rangeFrom} onChange={(e) => setRangeTo(e.target.value)} /></label>
+            <label>Desde<input type="date" value={rangeFrom} min={minDate} max={today()} onChange={(e) => setRangeFrom(e.target.value)} /></label>
+            <label>Hasta<input type="date" value={rangeTo} min={rangeFrom || minDate} max={today()} onChange={(e) => setRangeTo(e.target.value)} /></label>
           </div>
         )}
       </div>
