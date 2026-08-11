@@ -736,7 +736,7 @@ function BudgetPage({ accessToken, spaceId, month, summary, limits, customCatego
           <div className="budget-row" key={category}>
             <div className="budget-category">
               <div className="budget-category-header">
-                {editingCategory?.id === customCat?.id ? (
+                {editingCategory && customCat && editingCategory.id === customCat.id ? (
                   <form onSubmit={(event) => void saveEdit(event)} style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
                     <input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} minLength={2} maxLength={80} required style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', flex: 1, minWidth: '120px' }} />
                     <button className="primary" style={{ padding: '6px 10px', fontSize: '12px' }}>Guardar</button>
