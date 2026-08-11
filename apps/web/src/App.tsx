@@ -13,6 +13,7 @@ import {
 import { FormEvent, startTransition, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "./features/auth/AuthProvider";
 import { apiFetch } from "./lib/api";
+import { supabase } from "./lib/supabase";
 
 type Space = { id: string; name: string; type: "PERSONAL" | "BUSINESS" };
 
@@ -806,6 +807,7 @@ function SettingsPage({ spaces, spaceId, user, onSaved }: { spaces: Space[]; spa
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
+    if (!supabase) return;
     setSavingProfile(true);
     const { error } = await supabase.auth.updateUser({
       data: { display_name: profileName, username: profileName }
