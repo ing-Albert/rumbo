@@ -51,8 +51,9 @@ export function AuthScreen() {
 
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
-    } catch {
-      setError("No pudimos completar la solicitud. Revisa los datos e intentalo de nuevo.");
+    } catch (err: any) {
+      console.error("Authentication error:", err);
+      setError(err?.message || "No pudimos completar la solicitud. Revisa los datos e intentalo de nuevo.");
     } finally {
       setLoading(false);
     }
