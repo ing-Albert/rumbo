@@ -200,7 +200,7 @@ export default function App() {
         <header className="topbar">
           <div className="topbar-header-row">
             <div className="topbar-brand">
-              <RumboLogo size={36} />
+              <RumboLogo size={48} />
             </div>
             {/* UserMenu visible only on mobile in the topbar */}
             {auth.user && <UserMenu user={auth.user} onSignOut={() => void auth.signOut()} className="topbar-user-menu" />}
