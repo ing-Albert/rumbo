@@ -605,7 +605,7 @@ function MovementsPage({ movements, onAdd, onEdit, minDate }: { movements: Movem
           <button
             key={p}
             className={`period-chip${period === p ? " active" : ""}`}
-            onClick={() => setPeriod(p)}
+            onClick={() => { setPeriod(p); if (p !== "RANGE") { setRangeFrom(""); setRangeTo(""); } }}
           >
             {periodLabels[p]}
           </button>
