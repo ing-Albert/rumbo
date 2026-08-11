@@ -214,7 +214,7 @@ export default function App() {
             </label>
             <label className="month-picker">
               <span>Periodo</span>
-              <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+              <input type="month" value={month} min={auth.user?.created_at ? auth.user.created_at.substring(0, 7) : undefined} onChange={(event) => setMonth(event.target.value)} />
             </label>
           </div>
         </header>
