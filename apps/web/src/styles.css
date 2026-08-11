@@ -332,7 +332,7 @@ h1, h2 { font-family: "Fraunces", Georgia, serif; }
   .topbar-header-row { width: 100%; display: flex; align-items: center; justify-content: space-between; }
   .topbar-brand { display: flex; align-items: center; }
   .topbar-brand .brand { margin: 0; }
-  .topbar-brand .brand-name { font-size: 20px; }
+  .topbar-brand .brand-name { font-size: 24px; margin-left: 4px; }
   .topbar-pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .topbar-pickers label { width: 100%; }
   .topbar-pickers select, .topbar-pickers input { width: 100%; }
