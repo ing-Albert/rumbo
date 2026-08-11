@@ -606,4 +606,36 @@ class PostgresFinanceRepository implements UserFinanceRepository {
         : undefined;
     });
   }
+
+  async updateExpenseCategory(id: string, name: string): Promise<ExpenseCategory | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query<{
+        id: string;
+        space_id: string;
+        name: string;
+        created_at: DatabaseDate;
+      }>(
+        `update public.categories set name = $1
+         where id = $2 and user_id = $3 and archived_at is null
+         returning id, space_id, name, created_at`,
+        [name, id, this.userId]
+      );
+      const row = result.rows[0];
+      return row
+        ? { id: row.id, spaceId: row.space_id, name: row.name, createdAt: timestamp(row.created_at) }
+        : undefined;
+    });
+  }
+
+  async deleteExpenseCategory(id: string): Promise<boolean> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query(
+        `update public.categories set archived_at = now()
+         where id = $1 and user_id = $2 and archived_at is null
+         returning id`,
+        [id, this.userId]
+      );
+      return result.rowCount ? result.rowCount > 0 : false;
+    });
+  }
 }

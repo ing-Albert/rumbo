@@ -42,6 +42,10 @@ export const createExpenseCategorySchema = z.object({
   name: z.string().trim().min(2).max(80)
 });
 
+export const updateExpenseCategorySchema = z.object({
+  name: z.string().trim().min(2).max(80)
+});
+
 export type MovementType = (typeof movementTypes)[number];
 export type MovementStatus = (typeof movementStatuses)[number];
 export type CreateMovement = z.infer<typeof createMovementSchema>;
@@ -49,6 +53,7 @@ export type BudgetLimitInput = z.infer<typeof budgetLimitSchema>;
 export type CreateGoal = z.infer<typeof createGoalSchema>;
 export type GoalContributionInput = z.infer<typeof goalContributionSchema>;
 export type CreateExpenseCategory = z.infer<typeof createExpenseCategorySchema>;
+export type UpdateExpenseCategory = z.infer<typeof updateExpenseCategorySchema>;
 
 export interface Movement extends CreateMovement {
   id: string;

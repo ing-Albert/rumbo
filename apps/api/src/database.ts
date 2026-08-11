@@ -370,6 +370,23 @@ export class AppDatabase implements UserFinanceRepository {
     }
   }
 
+  updateExpenseCategory(id: string, name: string): ExpenseCategory | undefined {
+    try {
+      const result = this.database
+        .prepare(`UPDATE expense_categories SET name = ? WHERE id = ? RETURNING id, space_id AS spaceId, name, created_at AS createdAt`)
+        .get(name, id) as ExpenseCategory | undefined;
+      return result;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) return undefined;
+      throw error;
+    }
+  }
+
+  deleteExpenseCategory(id: string): boolean {
+    const result = this.database.prepare(`DELETE FROM expense_categories WHERE id = ?`).run(id);
+    return result.changes > 0;
+  }
+
   private migrate(): void {
     this.database.exec(`
       CREATE TABLE IF NOT EXISTS spaces (

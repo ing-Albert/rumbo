@@ -3,6 +3,7 @@ import {
   calculateSummary,
   createGoalSchema,
   createExpenseCategorySchema,
+  updateExpenseCategorySchema,
   createMovementSchema,
   entityIdSchema,
   goalContributionSchema,
@@ -263,6 +264,26 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
     const category = await database.createExpenseCategory(parsed.data);
     if (!category) return reply.code(409).send({ message: "Ya existe una categoria con ese nombre." });
     return reply.code(201).send(category);
+  });
+
+  app.put<{ Params: { id: string } }>("/api/categories/:id", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID de categoria invalido." });
+    const parsed = updateExpenseCategorySchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ message: "Escribe un nombre valido." });
+    const database = repositoryFor(request);
+    const updated = await database.updateExpenseCategory(idResult.data, parsed.data.name);
+    if (!updated) return reply.code(404).send({ message: "Categoria no encontrada o nombre duplicado." });
+    return updated;
+  });
+
+  app.delete<{ Params: { id: string } }>("/api/categories/:id", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID de categoria invalido." });
+    const database = repositoryFor(request);
+    const deleted = await database.deleteExpenseCategory(idResult.data);
+    if (!deleted) return reply.code(404).send({ message: "Categoria no encontrada." });
+    return reply.code(204).send();
   });
 
   app.addHook("onClose", async () => persistence.close());

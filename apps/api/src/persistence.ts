@@ -38,6 +38,8 @@ export interface UserFinanceRepository {
   ): Awaitable<GoalContribution | undefined>;
   listExpenseCategories(spaceId: string): Awaitable<ExpenseCategory[]>;
   createExpenseCategory(input: CreateExpenseCategory): Awaitable<ExpenseCategory | undefined>;
+  updateExpenseCategory(id: string, name: string): Awaitable<ExpenseCategory | undefined>;
+  deleteExpenseCategory(id: string): Awaitable<boolean>;
 }
 
 export interface FinancePersistence {
