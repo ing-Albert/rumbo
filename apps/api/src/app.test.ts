@@ -1,47 +1,59 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { Pool } from "pg";
 import { buildApp } from "./app.js";
-import { AppDatabase, PERSONAL_SPACE_ID } from "./database.js";
 import type { AuthVerifier } from "./auth/supabase-verifier.js";
-import type { FinancePersistence, UserFinanceRepository } from "./persistence.js";
+import {
+  createNonClosingPersistence,
+  createTestPool,
+  createTestUser,
+  deleteTestUsers,
+  personalSpaceId
+} from "./database/postgres/test-support.js";
 
 const apps: ReturnType<typeof buildApp>[] = [];
 const authenticated = { authorization: "Bearer valid-token" };
 const secondUser = { authorization: "Bearer second-token" };
 
+let pool: Pool;
+let userOneId: string;
+let userTwoId: string;
+let userOneEmail: string;
+let PERSONAL_SPACE_ID: string;
+
 const authVerifier: AuthVerifier = {
   async verify(token) {
-    if (token === "valid-token") return { id: "user-1", email: "usuario@example.com" };
-    if (token === "second-token") return { id: "user-2", email: "otro@example.com" };
+    if (token === "valid-token") return { id: userOneId, email: userOneEmail };
+    if (token === "second-token") return { id: userTwoId, email: "otro@example.com" };
     throw new Error("invalid");
   }
 };
 
-class TestPersistence implements FinancePersistence {
-  private readonly users = new Map<string, AppDatabase>();
-
-  forUser(userId: string): UserFinanceRepository {
-    let database = this.users.get(userId);
-    if (!database) {
-      database = new AppDatabase(":memory:");
-      this.users.set(userId, database);
-    }
-    return database;
-  }
-
-  close(): void {
-    for (const database of this.users.values()) database.close();
-    this.users.clear();
-  }
-}
-
 function createTestApp() {
-  const app = buildApp(new TestPersistence(), { authVerifier });
+  const app = buildApp(createNonClosingPersistence(pool), { authVerifier });
   apps.push(app);
   return app;
 }
 
+beforeAll(() => {
+  pool = createTestPool();
+});
+
+afterAll(async () => {
+  await pool?.end();
+});
+
+beforeEach(async () => {
+  const suffix = randomUUID();
+  userOneEmail = `test-${suffix}-one@example.test`;
+  userOneId = await createTestUser(pool, userOneEmail);
+  userTwoId = await createTestUser(pool, `test-${suffix}-two@example.test`);
+  PERSONAL_SPACE_ID = await personalSpaceId(pool, userOneId);
+});
+
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
+  await deleteTestUsers(pool, [userOneId, userTwoId]);
 });
 
 describe("movements API", () => {
@@ -66,7 +78,7 @@ describe("movements API", () => {
       headers: { authorization: "Bearer valid-token" }
     });
     expect(authenticatedUser.statusCode).toBe(200);
-    expect(authenticatedUser.json()).toEqual({ id: "user-1", email: "usuario@example.com" });
+    expect(authenticatedUser.json()).toEqual({ id: userOneId, email: userOneEmail });
   });
 
   it("creates a movement and updates the summary", async () => {
@@ -264,6 +276,41 @@ describe("movements API", () => {
       headers: authenticated
     });
     expect(goals.json()[0].savedCents).toBe(150_000);
+  });
+
+  it("marks a goal as completed once contributions reach the target", async () => {
+    const app = createTestApp();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/goals",
+      headers: authenticated,
+      payload: {
+        spaceId: PERSONAL_SPACE_ID,
+        name: "Vacaciones",
+        targetCents: 300_000,
+        initialAmountCents: 0,
+        targetDate: null,
+        priority: "MEDIUM"
+      }
+    });
+    expect(created.statusCode).toBe(201);
+
+    const contributed = await app.inject({
+      method: "POST",
+      url: `/api/goals/${created.json().id}/contributions`,
+      headers: authenticated,
+      payload: { amountCents: 300_000, effectiveDate: "2026-08-07" }
+    });
+    expect(contributed.statusCode).toBe(201);
+    expect(contributed.json().status).toBe("COMPLETED");
+
+    const goals = await app.inject({
+      method: "GET",
+      url: `/api/goals?spaceId=${PERSONAL_SPACE_ID}`,
+      headers: authenticated
+    });
+    expect(goals.json()[0].status).toBe("COMPLETED");
   });
 
   it("creates custom expense categories without duplicates", async () => {
