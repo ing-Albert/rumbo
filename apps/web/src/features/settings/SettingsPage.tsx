@@ -50,7 +50,7 @@ export function SettingsPage({
         <section className="panel">
           <p className="eyebrow">Mi Perfil</p>
           <h2>Datos del usuario</h2>
-          <div className="settings-definition" style={{ marginTop: 20 }}>
+          <div className="settings-definition settings-definition-block">
             <div>
               <dt>Correo electronico</dt>
               <dd>{user?.email}</dd>
@@ -59,13 +59,7 @@ export function SettingsPage({
               <dt>Nombre visible</dt>
               <dd>
                 {!editingProfile ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
-                  >
+                  <div className="field-row">
                     <span>{getUserName(user)}</span>
                     <button
                       className="table-action"
@@ -79,10 +73,7 @@ export function SettingsPage({
                     </button>
                   </div>
                 ) : (
-                  <form
-                    onSubmit={(event) => void saveProfile(event)}
-                    style={{ display: "flex", gap: 10 }}
-                  >
+                  <form onSubmit={(event) => void saveProfile(event)} className="inline-edit-form">
                     <input
                       autoFocus
                       value={profileName}
@@ -90,12 +81,7 @@ export function SettingsPage({
                       required
                       minLength={2}
                       maxLength={50}
-                      style={{
-                        padding: "8px 12px",
-                        border: "1px solid var(--border)",
-                        borderRadius: 8,
-                        width: "100%"
-                      }}
+                      className="inline-edit-input"
                     />
                     <button type="submit" className="primary" disabled={savingProfile}>
                       {savingProfile ? "..." : "Guardar"}

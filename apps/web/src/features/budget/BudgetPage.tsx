@@ -232,16 +232,7 @@ export function BudgetPage({
               <div className="budget-category">
                 <div className="budget-category-header">
                   {editingCategory && customCat && editingCategory.id === customCat.id ? (
-                    <form
-                      onSubmit={(event) => void saveEdit(event)}
-                      style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "center",
-                        width: "100%",
-                        flexWrap: "wrap"
-                      }}
-                    >
+                    <form onSubmit={(event) => void saveEdit(event)} className="inline-edit-form">
                       <input
                         autoFocus
                         value={editName}
@@ -249,29 +240,18 @@ export function BudgetPage({
                         minLength={2}
                         maxLength={80}
                         required
-                        style={{
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid var(--border)",
-                          flex: 1,
-                          minWidth: "120px"
-                        }}
+                        className="inline-edit-input"
                       />
-                      <button className="primary" style={{ padding: "6px 10px", fontSize: "12px" }}>
-                        Guardar
-                      </button>
+                      <button className="primary inline-edit-actions">Guardar</button>
                       <button
                         type="button"
-                        className="secondary"
-                        style={{ padding: "6px 10px", fontSize: "12px" }}
+                        className="secondary inline-edit-actions"
                         onClick={() => setEditingCategory(null)}
                       >
                         Cancelar
                       </button>
                       {editError && (
-                        <span className="danger-text" style={{ fontSize: "12px", width: "100%" }}>
-                          {editError}
-                        </span>
+                        <span className="danger-text inline-edit-error">{editError}</span>
                       )}
                     </form>
                   ) : (
