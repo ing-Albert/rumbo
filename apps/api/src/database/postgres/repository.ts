@@ -52,7 +52,8 @@ interface ContributionRow {
 
 function safeInteger(value: DatabaseNumber): number {
   const number = typeof value === "number" ? value : Number(value);
-  if (!Number.isSafeInteger(number)) throw new Error("PostgreSQL devolvio un monto fuera del rango seguro.");
+  if (!Number.isSafeInteger(number))
+    throw new Error("PostgreSQL devolvio un monto fuera del rango seguro.");
   return number;
 }
 
@@ -120,7 +121,11 @@ function dominicanDate(): string {
   }).format(new Date());
 }
 
-async function ownedSpaceExists(client: PoolClient, userId: string, spaceId: string): Promise<boolean> {
+async function ownedSpaceExists(
+  client: PoolClient,
+  userId: string,
+  spaceId: string
+): Promise<boolean> {
   const result = await client.query(
     `select 1 from public.spaces
      where id = $1 and user_id = $2 and archived_at is null`,
@@ -155,7 +160,11 @@ async function resolveCategory(
   return category.rows[0]?.id ?? null;
 }
 
-async function findGoal(client: PoolClient, userId: string, goalId: string): Promise<Goal | undefined> {
+async function findGoal(
+  client: PoolClient,
+  userId: string,
+  goalId: string
+): Promise<Goal | undefined> {
   const result = await client.query<GoalRow>(
     `select g.id, g.space_id, g.name, g.target_cents, g.target_date,
             g.priority, g.status, g.created_at,
@@ -418,7 +427,10 @@ class PostgresFinanceRepository implements UserFinanceRepository {
     });
   }
 
-  async addGoalContribution(goalId: string, input: GoalContributionInput): Promise<Goal | undefined> {
+  async addGoalContribution(
+    goalId: string,
+    input: GoalContributionInput
+  ): Promise<Goal | undefined> {
     return withUserTransaction(this.pool, this.userId, async (client) => {
       const goal = await client.query<{
         id: string;
@@ -602,7 +614,12 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
       const row = result.rows[0];
       return row
-        ? { id: row.id, spaceId: row.space_id, name: row.name, createdAt: timestamp(row.created_at) }
+        ? {
+            id: row.id,
+            spaceId: row.space_id,
+            name: row.name,
+            createdAt: timestamp(row.created_at)
+          }
         : undefined;
     });
   }
@@ -622,7 +639,12 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
       const row = result.rows[0];
       return row
-        ? { id: row.id, spaceId: row.space_id, name: row.name, createdAt: timestamp(row.created_at) }
+        ? {
+            id: row.id,
+            spaceId: row.space_id,
+            name: row.name,
+            createdAt: timestamp(row.created_at)
+          }
         : undefined;
     });
   }

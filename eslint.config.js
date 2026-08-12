@@ -12,44 +12,44 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/coverage/**",
       "apps/web/dev-dist/**",
-      "supabase/migrations/**",
-    ],
+      "supabase/migrations/**"
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     files: ["apps/api/src/**/*.ts", "scripts/**/*.mjs", "*.mjs", "*.js"],
     languageOptions: {
-      globals: { ...globals.node },
-    },
+      globals: { ...globals.node }
+    }
   },
   {
     files: ["apps/web/src/**/*.{ts,tsx}"],
     plugins: {
       react,
-      "react-hooks": reactHooks,
+      "react-hooks": reactHooks
     },
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: {
-        ecmaFeatures: { jsx: true },
-      },
+        ecmaFeatures: { jsx: true }
+      }
     },
     settings: {
-      react: { version: "detect" },
+      react: { version: "detect" }
     },
     rules: {
       ...react.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-    },
+      "react-hooks/exhaustive-deps": "warn"
+    }
   },
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-    },
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }]
+    }
   },
-  eslintConfigPrettier,
+  eslintConfigPrettier
 );

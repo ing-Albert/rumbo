@@ -32,33 +32,33 @@ La identidad evitara los recursos genericos de fintech: fondos azul oscuro, tarj
 
 ### Colores base
 
-| Token | Color | Uso |
-| --- | --- | --- |
-| `background` | `#FFF8F0` | Fondo general tipo papel calido |
-| `surface` | `#FFFFFF` | Formularios, tablas y contenido principal |
-| `surface-muted` | `#F3E8DD` | Bloques secundarios y filtros |
-| `text-primary` | `#2B211E` | Titulos, texto y cifras principales |
-| `text-secondary` | `#665851` | Etiquetas y texto complementario |
-| `border` | `#CFC0B5` | Divisores y bordes de controles |
-| `brand-primary` | `#6B2948` | Boton principal, enlaces destacados y seleccion |
-| `brand-primary-active` | `#512037` | Hover y estado presionado |
-| `brand-secondary` | `#A94725` | Acentos editoriales y acciones secundarias especiales |
-| `accent` | `#E3A72F` | Oportunidades, hitos y destacados |
-| `success` | `#267052` | Meta completada o resultado confirmado |
-| `warning` | `#9A5700` | Cerca del limite o requiere revision |
-| `danger` | `#B3263E` | Error, gasto excedido o accion destructiva |
-| `info` | `#6650A4` | Informacion educativa o estimaciones |
+| Token                  | Color     | Uso                                                   |
+| ---------------------- | --------- | ----------------------------------------------------- |
+| `background`           | `#FFF8F0` | Fondo general tipo papel calido                       |
+| `surface`              | `#FFFFFF` | Formularios, tablas y contenido principal             |
+| `surface-muted`        | `#F3E8DD` | Bloques secundarios y filtros                         |
+| `text-primary`         | `#2B211E` | Titulos, texto y cifras principales                   |
+| `text-secondary`       | `#665851` | Etiquetas y texto complementario                      |
+| `border`               | `#CFC0B5` | Divisores y bordes de controles                       |
+| `brand-primary`        | `#6B2948` | Boton principal, enlaces destacados y seleccion       |
+| `brand-primary-active` | `#512037` | Hover y estado presionado                             |
+| `brand-secondary`      | `#A94725` | Acentos editoriales y acciones secundarias especiales |
+| `accent`               | `#E3A72F` | Oportunidades, hitos y destacados                     |
+| `success`              | `#267052` | Meta completada o resultado confirmado                |
+| `warning`              | `#9A5700` | Cerca del limite o requiere revision                  |
+| `danger`               | `#B3263E` | Error, gasto excedido o accion destructiva            |
+| `info`                 | `#6650A4` | Informacion educativa o estimaciones                  |
 
 ### Contrastes validados
 
-| Combinacion | Relacion aproximada |
-| --- | --- |
-| Texto blanco sobre ciruela `#6B2948` | 10.31:1 |
-| Texto blanco sobre terracota `#A94725` | 5.81:1 |
-| Texto blanco sobre verde `#267052` | 5.96:1 |
-| Texto cacao sobre fondo crema | 14.89:1 |
-| Texto secundario sobre blanco | 6.82:1 |
-| Texto cacao sobre ambar | 7.34:1 |
+| Combinacion                            | Relacion aproximada |
+| -------------------------------------- | ------------------- |
+| Texto blanco sobre ciruela `#6B2948`   | 10.31:1             |
+| Texto blanco sobre terracota `#A94725` | 5.81:1              |
+| Texto blanco sobre verde `#267052`     | 5.96:1              |
+| Texto cacao sobre fondo crema          | 14.89:1             |
+| Texto secundario sobre blanco          | 6.82:1              |
+| Texto cacao sobre ambar                | 7.34:1              |
 
 No se usara blanco sobre ambar. Ningun estado dependera solamente del color: siempre tendra icono, etiqueta o patron adicional.
 
@@ -80,15 +80,15 @@ No se usara blanco sobre ambar. Ningun estado dependera solamente del color: sie
 
 ### Escala
 
-| Estilo | Escritorio | Movil | Uso |
-| --- | --- | --- | --- |
-| Display | 48/52 px | 36/40 px | Bienvenida y disponible principal |
-| Titulo 1 | 36/42 px | 30/36 px | Titulo de modulo |
-| Titulo 2 | 28/34 px | 24/30 px | Secciones |
-| Titulo 3 | 20/26 px | 18/24 px | Tarjetas y paneles |
-| Cuerpo | 16/24 px | 16/24 px | Texto general |
-| Secundario | 14/20 px | 14/20 px | Ayudas y metadatos |
-| Cifra principal | 40/44 px | 32/36 px | Disponible y totales |
+| Estilo          | Escritorio | Movil    | Uso                               |
+| --------------- | ---------- | -------- | --------------------------------- |
+| Display         | 48/52 px   | 36/40 px | Bienvenida y disponible principal |
+| Titulo 1        | 36/42 px   | 30/36 px | Titulo de modulo                  |
+| Titulo 2        | 28/34 px   | 24/30 px | Secciones                         |
+| Titulo 3        | 20/26 px   | 18/24 px | Tarjetas y paneles                |
+| Cuerpo          | 16/24 px   | 16/24 px | Texto general                     |
+| Secundario      | 14/20 px   | 14/20 px | Ayudas y metadatos                |
+| Cifra principal | 40/44 px   | 32/36 px | Disponible y totales              |
 
 Montos y tablas usaran numeros tabulares para que las cifras queden alineadas. No se mostrara texto operativo menor de 14 px.
 
@@ -428,16 +428,16 @@ Los movimientos se agruparan por fecha y mostraran subtotal diario cuando sea ut
 
 ### Tabla de escritorio
 
-| Columna | Comportamiento |
-| --- | --- |
-| Fecha | Ordenable |
-| Descripcion | Busqueda y acceso al detalle |
-| Categoria | Filtrable |
-| Tipo | Ingreso, gasto, aporte o transferencia |
-| Contexto | Personal o Negocio |
-| Estado | Registrado o programado |
-| Monto | Alineado a la derecha |
-| Acciones | Editar, duplicar o eliminar |
+| Columna     | Comportamiento                         |
+| ----------- | -------------------------------------- |
+| Fecha       | Ordenable                              |
+| Descripcion | Busqueda y acceso al detalle           |
+| Categoria   | Filtrable                              |
+| Tipo        | Ingreso, gasto, aporte o transferencia |
+| Contexto    | Personal o Negocio                     |
+| Estado      | Registrado o programado                |
+| Monto       | Alineado a la derecha                  |
+| Acciones    | Editar, duplicar o eliminar            |
 
 ## 12. Diseno del presupuesto
 

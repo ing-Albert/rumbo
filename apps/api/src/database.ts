@@ -226,7 +226,15 @@ export class AppDatabase implements UserFinanceRepository {
             id, space_id, name, target_cents, target_date, priority, status, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`
         )
-        .run(id, input.spaceId, input.name, input.targetCents, input.targetDate, input.priority, createdAt);
+        .run(
+          id,
+          input.spaceId,
+          input.name,
+          input.targetCents,
+          input.targetDate,
+          input.priority,
+          createdAt
+        );
       if (input.initialAmountCents > 0) {
         this.database
           .prepare(
@@ -245,8 +253,7 @@ export class AppDatabase implements UserFinanceRepository {
 
   addGoalContribution(goalId: string, input: GoalContributionInput): Goal | undefined {
     const goal = this.database.prepare("SELECT * FROM goals WHERE id = ?").get(goalId) as
-      | Omit<GoalRow, "saved_cents">
-      | undefined;
+      Omit<GoalRow, "saved_cents"> | undefined;
     if (!goal) return undefined;
 
     const createdAt = new Date().toISOString();
@@ -301,9 +308,7 @@ export class AppDatabase implements UserFinanceRepository {
   ): GoalContribution | undefined {
     const contribution = this.database
       .prepare("SELECT * FROM goal_contributions WHERE id = ? AND goal_id = ?")
-      .get(contributionId, goalId) as
-      | { movement_id: string | null }
-      | undefined;
+      .get(contributionId, goalId) as { movement_id: string | null } | undefined;
     if (!contribution) return undefined;
 
     this.database.exec("BEGIN");
@@ -322,7 +327,9 @@ export class AppDatabase implements UserFinanceRepository {
           )
           .run(input.amountCents, input.effectiveDate, contribution.movement_id);
       }
-      const goal = this.database.prepare("SELECT target_cents FROM goals WHERE id = ?").get(goalId) as {
+      const goal = this.database
+        .prepare("SELECT target_cents FROM goals WHERE id = ?")
+        .get(goalId) as {
         target_cents: number;
       };
       const total = this.database
@@ -365,7 +372,8 @@ export class AppDatabase implements UserFinanceRepository {
         .run(category.id, category.spaceId, category.name, category.createdAt);
       return category;
     } catch (error) {
-      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) return undefined;
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed"))
+        return undefined;
       throw error;
     }
   }
@@ -373,11 +381,14 @@ export class AppDatabase implements UserFinanceRepository {
   updateExpenseCategory(id: string, name: string): ExpenseCategory | undefined {
     try {
       const result = this.database
-        .prepare(`UPDATE expense_categories SET name = ? WHERE id = ? RETURNING id, space_id AS spaceId, name, created_at AS createdAt`)
+        .prepare(
+          `UPDATE expense_categories SET name = ? WHERE id = ? RETURNING id, space_id AS spaceId, name, created_at AS createdAt`
+        )
         .get(name, id) as ExpenseCategory | undefined;
       return result;
     } catch (error) {
-      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) return undefined;
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed"))
+        return undefined;
       throw error;
     }
   }
@@ -455,7 +466,9 @@ export class AppDatabase implements UserFinanceRepository {
       ON expense_categories(space_id, name);
     `);
 
-    const contributionColumns = this.database.prepare("PRAGMA table_info(goal_contributions)").all() as unknown as Array<{ name: string }>;
+    const contributionColumns = this.database
+      .prepare("PRAGMA table_info(goal_contributions)")
+      .all() as unknown as Array<{ name: string }>;
     if (!contributionColumns.some((column) => column.name === "movement_id")) {
       this.database.exec("ALTER TABLE goal_contributions ADD COLUMN movement_id TEXT");
     }

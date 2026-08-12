@@ -262,7 +262,8 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
       return reply.code(404).send({ message: "El espacio no existe." });
     }
     const category = await database.createExpenseCategory(parsed.data);
-    if (!category) return reply.code(409).send({ message: "Ya existe una categoria con ese nombre." });
+    if (!category)
+      return reply.code(409).send({ message: "Ya existe una categoria con ese nombre." });
     return reply.code(201).send(category);
   });
 
@@ -273,7 +274,8 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
     if (!parsed.success) return reply.code(400).send({ message: "Escribe un nombre valido." });
     const database = repositoryFor(request);
     const updated = await database.updateExpenseCategory(idResult.data, parsed.data.name);
-    if (!updated) return reply.code(404).send({ message: "Categoria no encontrada o nombre duplicado." });
+    if (!updated)
+      return reply.code(404).send({ message: "Categoria no encontrada o nombre duplicado." });
     return updated;
   });
 

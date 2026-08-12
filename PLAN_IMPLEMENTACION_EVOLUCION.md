@@ -114,28 +114,28 @@ La base se creara dentro de un proyecto Supabase. Se utilizaran ambientes separa
 
 ### Tablas base
 
-| Tabla | Responsabilidad |
-| --- | --- |
-| `users` | Vinculo con el identificador estable de Supabase Auth |
-| `profiles` | Nombre, idioma, zona horaria y preferencias |
-| `spaces` | Personal o Negocio, siempre vinculado al usuario |
-| `categories` | Categorias normalizadas, clasificacion y archivo |
-| `movements` | Ingresos, gastos, aportes y estados |
-| `budgets` | Periodos presupuestarios |
-| `budget_limits` | Limites por categoria |
-| `recurrence_rules` | Plantillas de movimientos recurrentes |
-| `scheduled_occurrences` | Ocurrencias pendientes, realizadas u omitidas |
-| `goals` | Metas y fondos especiales |
-| `goal_contributions` | Aportes enlazados a movimientos |
-| `income_scenarios` | Ingreso minimo, probable y maximo |
-| `saved_simulations` | Escenarios guardados por el usuario |
-| `debts` | Datos declarados de deudas |
-| `debt_payments` | Pagos enlazados a movimientos |
-| `notifications` | Recordatorios y estado de entrega |
-| `notification_preferences` | Canales, horarios y privacidad |
-| `import_batches` | Lotes de importacion |
-| `import_rows` | Filas en revision y resultado |
-| `audit_events` | Acciones sensibles sin copiar datos financieros completos |
+| Tabla                      | Responsabilidad                                           |
+| -------------------------- | --------------------------------------------------------- |
+| `users`                    | Vinculo con el identificador estable de Supabase Auth     |
+| `profiles`                 | Nombre, idioma, zona horaria y preferencias               |
+| `spaces`                   | Personal o Negocio, siempre vinculado al usuario          |
+| `categories`               | Categorias normalizadas, clasificacion y archivo          |
+| `movements`                | Ingresos, gastos, aportes y estados                       |
+| `budgets`                  | Periodos presupuestarios                                  |
+| `budget_limits`            | Limites por categoria                                     |
+| `recurrence_rules`         | Plantillas de movimientos recurrentes                     |
+| `scheduled_occurrences`    | Ocurrencias pendientes, realizadas u omitidas             |
+| `goals`                    | Metas y fondos especiales                                 |
+| `goal_contributions`       | Aportes enlazados a movimientos                           |
+| `income_scenarios`         | Ingreso minimo, probable y maximo                         |
+| `saved_simulations`        | Escenarios guardados por el usuario                       |
+| `debts`                    | Datos declarados de deudas                                |
+| `debt_payments`            | Pagos enlazados a movimientos                             |
+| `notifications`            | Recordatorios y estado de entrega                         |
+| `notification_preferences` | Canales, horarios y privacidad                            |
+| `import_batches`           | Lotes de importacion                                      |
+| `import_rows`              | Filas en revision y resultado                             |
+| `audit_events`             | Acciones sensibles sin copiar datos financieros completos |
 
 ### Campos transversales
 
@@ -478,19 +478,19 @@ Criterio de salida:
 
 Las rutas se versionaran bajo `/api/v1`.
 
-| Area | Rutas principales |
-| --- | --- |
-| Usuario | `/me`, `/account/export`, `/account` |
-| Espacios | `/spaces` |
-| Categorias | `/spaces/:id/categories`, `/categories/:id` |
-| Movimientos | `/spaces/:id/movements`, `/movements/:id` |
-| Recurrencias | `/recurrence-rules`, `/occurrences/:id` |
-| Metas | `/goals`, `/goals/:id/contributions`, `/goals/:id/projection` |
-| Planificacion | `/plans`, `/distributions`, `/simulations` |
-| Reportes | `/reports/monthly`, `/reports/categories`, `/reports/trends` |
-| Calendario | `/calendar`, `/notifications`, `/notification-preferences` |
-| Deudas | `/debts`, `/debts/:id/payments`, `/debts/:id/simulation` |
-| Importaciones | `/imports`, `/imports/:id/preview`, `/imports/:id/confirm` |
+| Area          | Rutas principales                                             |
+| ------------- | ------------------------------------------------------------- |
+| Usuario       | `/me`, `/account/export`, `/account`                          |
+| Espacios      | `/spaces`                                                     |
+| Categorias    | `/spaces/:id/categories`, `/categories/:id`                   |
+| Movimientos   | `/spaces/:id/movements`, `/movements/:id`                     |
+| Recurrencias  | `/recurrence-rules`, `/occurrences/:id`                       |
+| Metas         | `/goals`, `/goals/:id/contributions`, `/goals/:id/projection` |
+| Planificacion | `/plans`, `/distributions`, `/simulations`                    |
+| Reportes      | `/reports/monthly`, `/reports/categories`, `/reports/trends`  |
+| Calendario    | `/calendar`, `/notifications`, `/notification-preferences`    |
+| Deudas        | `/debts`, `/debts/:id/payments`, `/debts/:id/simulation`      |
+| Importaciones | `/imports`, `/imports/:id/preview`, `/imports/:id/confirm`    |
 
 Toda ruta financiera obtiene el usuario desde la sesion. Un identificador enviado por el navegador no puede cambiar el propietario.
 
@@ -575,13 +575,13 @@ El tratamiento se disenara siguiendo los principios de finalidad, minimizacion, 
 
 Para un desarrollador full-stack trabajando de forma continua:
 
-| Bloque | Estimacion |
-| --- | ---: |
+| Bloque                                              |    Estimacion |
+| --------------------------------------------------- | ------------: |
 | Supabase, Auth, privacidad y sincronizacion offline | 3 a 4 semanas |
 | Categorias, movimientos, eliminacion y recurrencias | 2 a 3 semanas |
-| Metas, distribucion y reportes | 2 a 3 semanas |
-| Calendario, notificaciones y simulaciones | 2 a 3 semanas |
-| Deudas, emergencia e importaciones | 3 a 4 semanas |
+| Metas, distribucion y reportes                      | 2 a 3 semanas |
+| Calendario, notificaciones y simulaciones           | 2 a 3 semanas |
+| Deudas, emergencia e importaciones                  | 3 a 4 semanas |
 
 Estimacion total: 12 a 17 semanas. La sincronizacion offline completa es la parte de mayor riesgo y no debe implementarse de forma apresurada.
 

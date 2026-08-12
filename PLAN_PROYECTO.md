@@ -344,19 +344,19 @@ Antes de implementarla se requerira:
 
 ## 16. Riesgos principales
 
-| Riesgo | Respuesta |
-| --- | --- |
-| El registro manual resulta tedioso | Entradas rapidas, categorias sugeridas y duplicacion del mes anterior |
-| Los ingresos variables producen planes irreales | Usar el escenario minimo como base y separar los excedentes |
-| Se confunde dinero personal y del negocio | Espacios visibles y retiros internos sin duplicar importes |
-| El producto deriva hacia contabilidad completa | Mantener los limites del MVP y separar futuros modulos fiscales |
-| El usuario desconfia del calculo | Mostrar formulas, supuestos y escenarios editables |
-| El disponible manual no coincide con el banco | Indicar que es estimado, mostrar ultima actualizacion y facilitar correcciones |
-| Hay poca recurrencia despues del primer plan | Revision mensual, progreso y recordatorios configurables |
-| Se exponen datos financieros | Minimizacion, autorizacion estricta, cifrado y auditoria |
-| La IA ofrece una recomendacion perjudicial | Explicaciones, limites tematicos, confirmacion humana y calculos deterministas |
-| La conectividad movil es limitada | PWA ligera y ultimo plan disponible sin conexion |
-| Se internacionaliza demasiado pronto | Validar Republica Dominicana antes de abstraer reglas de otros paises |
+| Riesgo                                          | Respuesta                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| El registro manual resulta tedioso              | Entradas rapidas, categorias sugeridas y duplicacion del mes anterior          |
+| Los ingresos variables producen planes irreales | Usar el escenario minimo como base y separar los excedentes                    |
+| Se confunde dinero personal y del negocio       | Espacios visibles y retiros internos sin duplicar importes                     |
+| El producto deriva hacia contabilidad completa  | Mantener los limites del MVP y separar futuros modulos fiscales                |
+| El usuario desconfia del calculo                | Mostrar formulas, supuestos y escenarios editables                             |
+| El disponible manual no coincide con el banco   | Indicar que es estimado, mostrar ultima actualizacion y facilitar correcciones |
+| Hay poca recurrencia despues del primer plan    | Revision mensual, progreso y recordatorios configurables                       |
+| Se exponen datos financieros                    | Minimizacion, autorizacion estricta, cifrado y auditoria                       |
+| La IA ofrece una recomendacion perjudicial      | Explicaciones, limites tematicos, confirmacion humana y calculos deterministas |
+| La conectividad movil es limitada               | PWA ligera y ultimo plan disponible sin conexion                               |
+| Se internacionaliza demasiado pronto            | Validar Republica Dominicana antes de abstraer reglas de otros paises          |
 
 ## 17. Referencias iniciales
 

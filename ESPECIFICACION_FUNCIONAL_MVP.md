@@ -77,27 +77,27 @@ Aplicacion
 
 ## 4. Rutas propuestas
 
-| Ruta | Pantalla | Acceso |
-| --- | --- | --- |
-| `/` | Bienvenida o redireccion | Publico |
-| `/registro` | Crear cuenta | Publico |
-| `/acceso` | Iniciar sesion | Publico |
-| `/recuperar` | Recuperar acceso | Publico |
-| `/onboarding` | Configuracion inicial | Autenticado sin onboarding |
-| `/inicio` | Resumen | Autenticado |
-| `/inicio/graficos` | Resumen visual | Autenticado |
-| `/movimientos` | Lista de movimientos | Autenticado |
-| `/movimientos/nuevo` | Crear movimiento | Autenticado |
-| `/movimientos/:id` | Detalle | Propietario del espacio |
-| `/movimientos/:id/editar` | Editar | Propietario del espacio |
-| `/presupuesto` | Presupuesto del periodo | Autenticado |
-| `/metas` | Lista de metas | Autenticado |
-| `/metas/nueva` | Crear meta | Autenticado |
-| `/metas/:id` | Detalle de meta | Propietario del espacio |
-| `/metas/:id/aporte` | Registrar aporte | Propietario del espacio |
-| `/reportes` | Reportes | Autenticado |
-| `/configuracion` | Configuracion | Autenticado |
-| `/configuracion/:seccion` | Seccion especifica | Autenticado |
+| Ruta                      | Pantalla                 | Acceso                     |
+| ------------------------- | ------------------------ | -------------------------- |
+| `/`                       | Bienvenida o redireccion | Publico                    |
+| `/registro`               | Crear cuenta             | Publico                    |
+| `/acceso`                 | Iniciar sesion           | Publico                    |
+| `/recuperar`              | Recuperar acceso         | Publico                    |
+| `/onboarding`             | Configuracion inicial    | Autenticado sin onboarding |
+| `/inicio`                 | Resumen                  | Autenticado                |
+| `/inicio/graficos`        | Resumen visual           | Autenticado                |
+| `/movimientos`            | Lista de movimientos     | Autenticado                |
+| `/movimientos/nuevo`      | Crear movimiento         | Autenticado                |
+| `/movimientos/:id`        | Detalle                  | Propietario del espacio    |
+| `/movimientos/:id/editar` | Editar                   | Propietario del espacio    |
+| `/presupuesto`            | Presupuesto del periodo  | Autenticado                |
+| `/metas`                  | Lista de metas           | Autenticado                |
+| `/metas/nueva`            | Crear meta               | Autenticado                |
+| `/metas/:id`              | Detalle de meta          | Propietario del espacio    |
+| `/metas/:id/aporte`       | Registrar aporte         | Propietario del espacio    |
+| `/reportes`               | Reportes                 | Autenticado                |
+| `/configuracion`          | Configuracion            | Autenticado                |
+| `/configuracion/:seccion` | Seccion especifica       | Autenticado                |
 
 El espacio activo se mantiene como estado de sesion y no se expone como permiso confiable del cliente. El backend valida siempre que cada recurso pertenece al usuario.
 
@@ -217,17 +217,17 @@ Solo resume. No permite crear un movimiento sin elegir antes Personal o Negocio.
 
 ## 8. Estados globales
 
-| Estado | Comportamiento |
-| --- | --- |
-| Cargando | Skeleton que conserva la estructura |
-| Sin datos | Explicacion y una accion principal |
-| Sin resultados | Filtros visibles y accion Limpiar |
-| Error recuperable | Mensaje contextual y Reintentar |
-| Sin conexion | Ultimos datos en modo de solo lectura |
-| Sesion vencida | Solicitar acceso sin perder el destino de navegacion |
-| Acceso denegado | No revelar existencia ni contenido del recurso |
-| Actualizacion PWA | Aviso no bloqueante fuera de formularios |
-| Exito | Confirmacion especifica con resultado actualizado |
+| Estado            | Comportamiento                                       |
+| ----------------- | ---------------------------------------------------- |
+| Cargando          | Skeleton que conserva la estructura                  |
+| Sin datos         | Explicacion y una accion principal                   |
+| Sin resultados    | Filtros visibles y accion Limpiar                    |
+| Error recuperable | Mensaje contextual y Reintentar                      |
+| Sin conexion      | Ultimos datos en modo de solo lectura                |
+| Sesion vencida    | Solicitar acceso sin perder el destino de navegacion |
+| Acceso denegado   | No revelar existencia ni contenido del recurso       |
+| Actualizacion PWA | Aviso no bloqueante fuera de formularios             |
+| Exito             | Confirmacion especifica con resultado actualizado    |
 
 ## 9. Categorias iniciales
 

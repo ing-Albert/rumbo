@@ -13,7 +13,13 @@ afterEach(cleanup);
 
 describe("AuthGate", () => {
   it("fails closed while Supabase is not configured", () => {
-    render(<AuthProvider><AuthGate><p>Aplicacion local</p></AuthGate></AuthProvider>);
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <p>Aplicacion local</p>
+        </AuthGate>
+      </AuthProvider>
+    );
 
     expect(screen.getByRole("heading", { name: /Falta configurar Supabase/i })).toBeInTheDocument();
     expect(screen.queryByText("Aplicacion local")).not.toBeInTheDocument();

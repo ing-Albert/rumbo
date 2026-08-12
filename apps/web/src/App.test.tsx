@@ -25,14 +25,30 @@ describe("App", () => {
   it("shows the empty-state action when there are no movements", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 0, contributionCents: 0, availableBeforeSavingsCents: 0, availableAfterSavingsCents: 0, projectedAvailableCents: 0, expenseByCategory: [] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 0,
+            contributionCents: 0,
+            availableBeforeSavingsCents: 0,
+            availableAfterSavingsCents: 0,
+            projectedAvailableCents: 0,
+            expenseByCategory: []
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 
     render(<App />);
 
-    await waitFor(() => expect(screen.getByRole("heading", { name: /todavia no podemos/i })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /todavia no podemos/i })).toBeInTheDocument()
+    );
     expect(screen.getByRole("button", { name: "Registrar ingreso" })).toBeInTheDocument();
   });
 
@@ -51,8 +67,22 @@ describe("App", () => {
 
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 300_000, contributionCents: 0, availableBeforeSavingsCents: -300_000, availableAfterSavingsCents: -300_000, projectedAvailableCents: -300_000, expenseByCategory: [{ category: "Alimentacion", amountCents: 300_000 }] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 300_000,
+            contributionCents: 0,
+            availableBeforeSavingsCents: -300_000,
+            availableAfterSavingsCents: -300_000,
+            projectedAvailableCents: -300_000,
+            expenseByCategory: [{ category: "Alimentacion", amountCents: 300_000 }]
+          })
+        );
       if (url.includes("/api/movements")) return new Response(JSON.stringify([movement]));
       return new Response(JSON.stringify([]));
     });
@@ -70,8 +100,22 @@ describe("App", () => {
   it("opens modules as separate routes instead of page anchors", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 0, contributionCents: 0, availableBeforeSavingsCents: 0, availableAfterSavingsCents: 0, projectedAvailableCents: 0, expenseByCategory: [] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 0,
+            contributionCents: 0,
+            availableBeforeSavingsCents: 0,
+            availableAfterSavingsCents: 0,
+            projectedAvailableCents: 0,
+            expenseByCategory: []
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 
@@ -87,8 +131,22 @@ describe("App", () => {
     window.history.replaceState({}, "", "/metas");
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 0, contributionCents: 0, availableBeforeSavingsCents: 0, availableAfterSavingsCents: 0, projectedAvailableCents: 0, expenseByCategory: [] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 0,
+            contributionCents: 0,
+            availableBeforeSavingsCents: 0,
+            availableAfterSavingsCents: 0,
+            projectedAvailableCents: 0,
+            expenseByCategory: []
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 
@@ -101,8 +159,22 @@ describe("App", () => {
     window.history.replaceState({}, "", "/presupuesto");
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 1_324_000, expenseCents: 1_240_000, contributionCents: 0, availableBeforeSavingsCents: 84_000, availableAfterSavingsCents: 84_000, projectedAvailableCents: 84_000, expenseByCategory: [{ category: "Transporte", amountCents: 200_000 }] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 1_324_000,
+            expenseCents: 1_240_000,
+            contributionCents: 0,
+            availableBeforeSavingsCents: 84_000,
+            availableAfterSavingsCents: 84_000,
+            projectedAvailableCents: 84_000,
+            expenseByCategory: [{ category: "Transporte", amountCents: 200_000 }]
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 
@@ -111,7 +183,9 @@ describe("App", () => {
     expect(await screen.findByText("Disponible")).toBeInTheDocument();
     expect(await screen.findByText(formatDop(84_000))).toBeInTheDocument();
     expect(screen.queryByText(formatDop(-1_240_000))).not.toBeInTheDocument();
-    expect(screen.getAllByText("Define un limite para comparar este gasto.").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Define un limite para comparar este gasto.").length
+    ).toBeGreaterThan(0);
   });
 
   it("paginates movement results in groups of fifteen", async () => {
@@ -130,8 +204,22 @@ describe("App", () => {
 
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 160_000, contributionCents: 0, availableBeforeSavingsCents: -160_000, availableAfterSavingsCents: -160_000, projectedAvailableCents: -160_000, expenseByCategory: [] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 160_000,
+            contributionCents: 0,
+            availableBeforeSavingsCents: -160_000,
+            availableAfterSavingsCents: -160_000,
+            projectedAvailableCents: -160_000,
+            expenseByCategory: []
+          })
+        );
       if (url.includes("/api/movements")) return new Response(JSON.stringify(movements));
       return new Response(JSON.stringify([]));
     });
@@ -144,15 +232,33 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     expect(await screen.findByText("Movimiento 16")).toBeInTheDocument();
     expect(screen.queryByText("Movimiento 1")).not.toBeInTheDocument();
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === "Pagina 2 de 2")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) => element?.tagName === "SPAN" && element.textContent === "Pagina 2 de 2"
+      )
+    ).toBeInTheDocument();
   });
 
   it("opens the form to add a custom expense category", async () => {
     window.history.replaceState({}, "", "/presupuesto");
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 0, contributionCents: 0, availableBeforeSavingsCents: 0, availableAfterSavingsCents: 0, projectedAvailableCents: 0, expenseByCategory: [] }));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 0,
+            contributionCents: 0,
+            availableBeforeSavingsCents: 0,
+            availableAfterSavingsCents: 0,
+            projectedAvailableCents: 0,
+            expenseByCategory: []
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 
@@ -165,17 +271,60 @@ describe("App", () => {
   it("explains a negative available amount after savings", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 1_324_000, expenseCents: 1_270_000, contributionCents: 100_000, availableBeforeSavingsCents: 54_000, availableAfterSavingsCents: -46_000, projectedAvailableCents: -46_000, expenseByCategory: [] }));
-      if (url.includes("/api/movements")) return new Response(JSON.stringify([{ id: "1", spaceId: "personal", type: "CONTRIBUTION", status: "REGISTERED", amountCents: 100_000, effectiveDate: "2026-08-07", description: "Aporte", category: "Ahorro", createdAt: "2026-08-07T12:00:00.000Z" }]));
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 1_324_000,
+            expenseCents: 1_270_000,
+            contributionCents: 100_000,
+            availableBeforeSavingsCents: 54_000,
+            availableAfterSavingsCents: -46_000,
+            projectedAvailableCents: -46_000,
+            expenseByCategory: []
+          })
+        );
+      if (url.includes("/api/movements"))
+        return new Response(
+          JSON.stringify([
+            {
+              id: "1",
+              spaceId: "personal",
+              type: "CONTRIBUTION",
+              status: "REGISTERED",
+              amountCents: 100_000,
+              effectiveDate: "2026-08-07",
+              description: "Aporte",
+              category: "Ahorro",
+              createdAt: "2026-08-07T12:00:00.000Z"
+            }
+          ])
+        );
       return new Response(JSON.stringify([]));
     });
 
     render(<App />);
 
-    expect(await screen.findByText(`Tu plan supera el dinero disponible por ${formatDop(46_000)}`)).toBeInTheDocument();
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === `Antes de ahorro: ${formatDop(54_000)}`)).toBeInTheDocument();
-    expect(screen.getByText((_, element) => element?.tagName === "SPAN" && element.textContent === `Ahorro separado: ${formatDop(100_000)}`)).toBeInTheDocument();
+    expect(
+      await screen.findByText(`Tu plan supera el dinero disponible por ${formatDop(46_000)}`)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "SPAN" &&
+          element.textContent === `Antes de ahorro: ${formatDop(54_000)}`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "SPAN" &&
+          element.textContent === `Ahorro separado: ${formatDop(100_000)}`
+      )
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ajustar metas" })).toBeInTheDocument();
   });
 
@@ -183,10 +332,51 @@ describe("App", () => {
     window.history.replaceState({}, "", "/metas");
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/goals/goal-1/contributions")) return new Response(JSON.stringify([{ id: "contribution-1", goalId: "goal-1", movementId: "movement-1", amountCents: 100_000, effectiveDate: "2026-08-07", createdAt: "2026-08-07T12:00:00.000Z" }]));
-      if (url.includes("/api/goals")) return new Response(JSON.stringify([{ id: "goal-1", spaceId: "personal", name: "PC Gamer", targetCents: 10_000_000, savedCents: 100_000, targetDate: "2027-08-07", priority: "MEDIUM", status: "ACTIVE", createdAt: "2026-08-07T12:00:00.000Z" }]));
-      if (url.includes("/api/spaces")) return new Response(JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }]));
-      if (url.includes("/api/summary")) return new Response(JSON.stringify({ incomeCents: 0, expenseCents: 0, contributionCents: 100_000, availableBeforeSavingsCents: 0, availableAfterSavingsCents: -100_000, projectedAvailableCents: -100_000, expenseByCategory: [] }));
+      if (url.includes("/api/goals/goal-1/contributions"))
+        return new Response(
+          JSON.stringify([
+            {
+              id: "contribution-1",
+              goalId: "goal-1",
+              movementId: "movement-1",
+              amountCents: 100_000,
+              effectiveDate: "2026-08-07",
+              createdAt: "2026-08-07T12:00:00.000Z"
+            }
+          ])
+        );
+      if (url.includes("/api/goals"))
+        return new Response(
+          JSON.stringify([
+            {
+              id: "goal-1",
+              spaceId: "personal",
+              name: "PC Gamer",
+              targetCents: 10_000_000,
+              savedCents: 100_000,
+              targetDate: "2027-08-07",
+              priority: "MEDIUM",
+              status: "ACTIVE",
+              createdAt: "2026-08-07T12:00:00.000Z"
+            }
+          ])
+        );
+      if (url.includes("/api/spaces"))
+        return new Response(
+          JSON.stringify([{ id: "personal", name: "Personal", type: "PERSONAL" }])
+        );
+      if (url.includes("/api/summary"))
+        return new Response(
+          JSON.stringify({
+            incomeCents: 0,
+            expenseCents: 0,
+            contributionCents: 100_000,
+            availableBeforeSavingsCents: 0,
+            availableAfterSavingsCents: -100_000,
+            projectedAvailableCents: -100_000,
+            expenseByCategory: []
+          })
+        );
       return new Response(JSON.stringify([]));
     });
 

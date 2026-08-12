@@ -173,7 +173,12 @@ describe("movements API", () => {
       method: "PUT",
       url: "/api/budget",
       headers: authenticated,
-      payload: { spaceId: PERSONAL_SPACE_ID, month: "2026-08", category: "Alimentacion", limitCents: 500_000 }
+      payload: {
+        spaceId: PERSONAL_SPACE_ID,
+        month: "2026-08",
+        category: "Alimentacion",
+        limitCents: 500_000
+      }
     });
     expect(saved.statusCode).toBe(200);
 
@@ -183,7 +188,12 @@ describe("movements API", () => {
       headers: authenticated
     });
     expect(budget.json()).toMatchObject([
-      { spaceId: PERSONAL_SPACE_ID, month: "2026-08", category: "Alimentacion", limitCents: 500_000 }
+      {
+        spaceId: PERSONAL_SPACE_ID,
+        month: "2026-08",
+        category: "Alimentacion",
+        limitCents: 500_000
+      }
     ]);
   });
 
@@ -228,7 +238,9 @@ describe("movements API", () => {
       url: `/api/goals/${created.json().id}/contributions`,
       headers: authenticated
     });
-    const editable = contributions.json().find((item: { movementId: string | null }) => item.movementId);
+    const editable = contributions
+      .json()
+      .find((item: { movementId: string | null }) => item.movementId);
     const edited = await app.inject({
       method: "PUT",
       url: `/api/goals/${created.json().id}/contributions/${editable.id}`,

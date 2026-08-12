@@ -102,10 +102,14 @@ try {
     );
   }
 
-  console.log(`\nConfiguracion ${apiConfig ? "actualizada" : "creada"} sin exponer secretos en el chat.`);
+  console.log(
+    `\nConfiguracion ${apiConfig ? "actualizada" : "creada"} sin exponer secretos en el chat.`
+  );
   console.log("Siguiente verificacion: npm run db:check -w @ahorra/api");
 } catch (error) {
-  console.error(`\nNo se completo la configuracion: ${error instanceof Error ? error.message : error}`);
+  console.error(
+    `\nNo se completo la configuracion: ${error instanceof Error ? error.message : error}`
+  );
   process.exitCode = 1;
 } finally {
   prompt.close();

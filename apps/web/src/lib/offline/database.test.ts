@@ -1,10 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  clearOfflineUserData,
-  pendingOperationCount,
-  RumboOfflineDatabase
-} from "./database";
+import { clearOfflineUserData, pendingOperationCount, RumboOfflineDatabase } from "./database";
 
 const databases: RumboOfflineDatabase[] = [];
 
