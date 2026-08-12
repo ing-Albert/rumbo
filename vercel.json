@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build -w @ahorra/domain && npm run build -w @ahorra/web",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "rm -f package-lock.json && npm install",
+  "installCommand": "npm ci",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/[...fastify]" },
     { "source": "/:path*", "destination": "/index.html" }
