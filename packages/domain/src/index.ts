@@ -153,6 +153,15 @@ export function calculateSummary(movements: Movement[]): Summary {
   };
 }
 
+export function dominicanDate(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Santo_Domingo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+}
+
 export function formatDop(amountCents: number): string {
   return new Intl.NumberFormat("es-DO", {
     style: "currency",

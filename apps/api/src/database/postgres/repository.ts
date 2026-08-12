@@ -1,14 +1,15 @@
-import type {
-  BudgetLimit,
-  BudgetLimitInput,
-  CreateExpenseCategory,
-  CreateGoal,
-  CreateMovement,
-  ExpenseCategory,
-  Goal,
-  GoalContribution,
-  GoalContributionInput,
-  Movement
+import {
+  dominicanDate,
+  type BudgetLimit,
+  type BudgetLimitInput,
+  type CreateExpenseCategory,
+  type CreateGoal,
+  type CreateMovement,
+  type ExpenseCategory,
+  type Goal,
+  type GoalContribution,
+  type GoalContributionInput,
+  type Movement
 } from "@ahorra/domain";
 import type { Pool, PoolClient } from "pg";
 import type { FinancePersistence, Space, UserFinanceRepository } from "../../persistence.js";
@@ -110,15 +111,6 @@ function monthRange(month: string): [string, string] {
   const nextYear = value === 12 ? year + 1 : year;
   const nextMonth = value === 12 ? 1 : value + 1;
   return [`${month}-01`, `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`];
-}
-
-function dominicanDate(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Santo_Domingo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).format(new Date());
 }
 
 async function ownedSpaceExists(
