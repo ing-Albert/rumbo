@@ -1,0 +1,6 @@
+dist
+node_modules
+coverage
+apps/web/dev-dist
+supabase/migrations
+package-lock.json
