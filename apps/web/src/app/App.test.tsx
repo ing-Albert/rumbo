@@ -3,7 +3,7 @@ import { formatDop } from "@ahorra/domain";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./features/auth/AuthProvider", () => ({
+vi.mock("../features/auth/AuthProvider", () => ({
   useAuth: () => ({
     configured: true,
     loading: false,
