@@ -1,5 +1,5 @@
 import { formatDop, type BudgetLimit, type ExpenseCategory, type Summary } from "@ahorra/domain";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { PageTitle } from "../../components/PageTitle";
 import { Stat } from "../../components/Stat";
@@ -157,7 +157,7 @@ export function BudgetPage({
         action={
           <div className="button-row">
             <button className="secondary" onClick={() => setAddingCategory(true)}>
-              + Nueva categoria
+              <Plus size={16} /> Nueva categoria
             </button>
             <button className="primary" onClick={() => void saveBudget()} disabled={saving}>
               {saving ? "Guardando..." : "Guardar presupuesto"}

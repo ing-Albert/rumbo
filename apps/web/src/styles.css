@@ -215,6 +215,10 @@ h2 {
 }
 .primary,
 .secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 0;
   border-radius: var(--radius-md);
   padding: 12px 18px;
@@ -1068,6 +1072,10 @@ h2 {
   border-radius: var(--radius-lg);
 }
 .type-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 0;
   background: transparent;
   padding: 10px;
@@ -1678,7 +1686,13 @@ h2 {
   border-right: 0;
 }
 .report-kpis span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
+}
+.report-kpis span svg {
+  flex-shrink: 0;
 }
 .report-kpis strong {
   font-size: var(--text-xl);
@@ -1775,6 +1789,13 @@ h2 {
 }
 .settings-definition dt {
   color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-definition dt svg {
+  color: var(--terracotta);
+  flex-shrink: 0;
 }
 .settings-definition dd {
   margin: 0;
@@ -1784,6 +1805,15 @@ h2 {
 .privacy-card {
   grid-column: 1 / -1;
   background: var(--muted-surface);
+}
+.privacy-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.privacy-card h2 svg {
+  color: var(--success);
+  flex-shrink: 0;
 }
 .sr-only {
   position: absolute;

@@ -263,7 +263,7 @@ describe("App", () => {
     });
 
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "+ Nueva categoria" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Nueva categoria" }));
     expect(screen.getByLabelText("Nombre de la categoria")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Agregar categoria" })).toBeInTheDocument();
   });

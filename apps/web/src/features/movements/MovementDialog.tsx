@@ -1,4 +1,5 @@
 import { formatDop, type Movement, type MovementStatus, type MovementType } from "@ahorra/domain";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { expenseCategories, incomeCategories } from "../../lib/categories";
 import { today } from "../../lib/format";
@@ -122,14 +123,14 @@ export function MovementDialog({
               className={type === "EXPENSE" ? "active" : ""}
               onClick={() => changeType("EXPENSE")}
             >
-              Gasto
+              <TrendingDown size={16} /> Gasto
             </button>
             <button
               type="button"
               className={type === "INCOME" ? "active" : ""}
               onClick={() => changeType("INCOME")}
             >
-              Ingreso
+              <TrendingUp size={16} /> Ingreso
             </button>
           </div>
           <label>

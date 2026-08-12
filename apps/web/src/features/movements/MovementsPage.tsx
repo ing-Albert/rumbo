@@ -1,5 +1,5 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
-import { Pencil } from "lucide-react";
+import { Pencil, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/PageTitle";
 import { today } from "../../lib/format";
@@ -89,10 +89,10 @@ export function MovementsPage({
         action={
           <div className="button-row">
             <button className="secondary" onClick={() => onAdd("INCOME")}>
-              + Ingreso
+              <TrendingUp size={16} /> Ingreso
             </button>
             <button className="primary" onClick={() => onAdd("EXPENSE")}>
-              + Gasto
+              <TrendingDown size={16} /> Gasto
             </button>
           </div>
         }

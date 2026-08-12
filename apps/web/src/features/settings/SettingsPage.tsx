@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { PageTitle } from "../../components/PageTitle";
-import { Pencil } from "lucide-react";
+import { Briefcase, CalendarDays, Clock, Coins, Pencil, ShieldCheck, User } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getUserName } from "../../lib/format";
 
@@ -110,7 +110,9 @@ export function SettingsPage({
           <div className="settings-list">
             {spaces.map((space) => (
               <div key={space.id}>
-                <span className="space-avatar">{space.type === "PERSONAL" ? "P" : "N"}</span>
+                <span className="space-avatar">
+                  {space.type === "PERSONAL" ? <User size={18} /> : <Briefcase size={18} />}
+                </span>
                 <div>
                   <strong>{space.name}</strong>
                   <span>
@@ -127,22 +129,30 @@ export function SettingsPage({
           <h2>Republica Dominicana</h2>
           <dl className="settings-definition">
             <div>
-              <dt>Moneda</dt>
+              <dt>
+                <Coins size={16} /> Moneda
+              </dt>
               <dd>DOP · Peso dominicano</dd>
             </div>
             <div>
-              <dt>Zona horaria</dt>
+              <dt>
+                <Clock size={16} /> Zona horaria
+              </dt>
               <dd>America/Santo_Domingo</dd>
             </div>
             <div>
-              <dt>Formato de fecha</dt>
+              <dt>
+                <CalendarDays size={16} /> Formato de fecha
+              </dt>
               <dd>DD/MM/AAAA</dd>
             </div>
           </dl>
         </section>
         <section className="panel privacy-card">
           <p className="eyebrow">Privacidad</p>
-          <h2>Tus registros son manuales</h2>
+          <h2>
+            <ShieldCheck size={22} /> Tus registros son manuales
+          </h2>
           <p>Rumbo no esta conectado a tus cuentas bancarias y no mueve dinero.</p>
         </section>
       </div>

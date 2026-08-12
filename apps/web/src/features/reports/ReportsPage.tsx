@@ -1,4 +1,5 @@
 import { formatDop, type Movement, type Summary } from "@ahorra/domain";
+import { Download, PiggyBank, Sprout, TrendingDown, TrendingUp } from "lucide-react";
 import { PageTitle } from "../../components/PageTitle";
 import { CashFlowChart } from "../dashboard/CashFlowChart";
 import { CategoryChart } from "../dashboard/CategoryChart";
@@ -55,25 +56,33 @@ export function ReportsPage({
         description={`Resumen financiero de ${monthLabel(month)}.`}
         action={
           <button className="primary" onClick={exportCsv}>
-            Exportar CSV
+            <Download size={16} /> Exportar CSV
           </button>
         }
       />
       <div className="report-kpis">
         <div>
-          <span>Ingresos</span>
+          <span>
+            <TrendingUp size={14} /> Ingresos
+          </span>
           <strong>{formatDop(summary.incomeCents)}</strong>
         </div>
         <div>
-          <span>Gastos</span>
+          <span>
+            <TrendingDown size={14} /> Gastos
+          </span>
           <strong>{formatDop(summary.expenseCents)}</strong>
         </div>
         <div>
-          <span>Ahorro</span>
+          <span>
+            <PiggyBank size={14} /> Ahorro
+          </span>
           <strong>{formatDop(summary.contributionCents)}</strong>
         </div>
         <div>
-          <span>Tasa de ahorro</span>
+          <span>
+            <Sprout size={14} /> Tasa de ahorro
+          </span>
           <strong>{savingsRate === null ? "No calculable" : `${savingsRate}%`}</strong>
         </div>
       </div>

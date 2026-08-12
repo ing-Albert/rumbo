@@ -1,4 +1,5 @@
 import { formatDop, type MovementType, type Movement } from "@ahorra/domain";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../features/auth/AuthProvider";
 import { BottomNav } from "../components/layout/BottomNav";
@@ -246,7 +247,7 @@ export default function App() {
         aria-label="Agregar movimiento"
         onClick={() => openForm("EXPENSE")}
       >
-        +
+        <Plus size={26} />
       </button>
       <BottomNav pathname={pathname} />
 

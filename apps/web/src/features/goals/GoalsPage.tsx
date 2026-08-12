@@ -1,5 +1,5 @@
 import { formatDop, type Goal, type GoalContribution } from "@ahorra/domain";
-import { Pencil } from "lucide-react";
+import { Pencil, PiggyBank, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { PageTitle } from "../../components/PageTitle";
 import { apiFetch } from "../../lib/api";
@@ -129,7 +129,7 @@ export function GoalsPage({
         description="Convierte lo que quieres lograr en un avance visible."
         action={
           <button className="primary" onClick={() => setCreating(true)}>
-            + Nueva meta
+            <Plus size={18} /> Nueva meta
           </button>
         }
       />
@@ -265,7 +265,7 @@ export function GoalsPage({
                   <div className="goal-actions">
                     {goal.status !== "COMPLETED" && (
                       <button className="primary" onClick={() => setContributingTo(goal.id)}>
-                        Registrar aporte
+                        <PiggyBank size={16} /> Registrar aporte
                       </button>
                     )}
                     <button className="secondary" onClick={() => void toggleContributions(goal.id)}>

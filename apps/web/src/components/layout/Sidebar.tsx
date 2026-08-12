@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { RouteLink } from "../../app/router";
 import { NAV_ITEMS } from "./nav-items";
 import { RumboLogo } from "./RumboLogo";
@@ -18,7 +19,7 @@ export function Sidebar({
     <aside className="sidebar">
       <RumboLogo />
       <button className="primary add-button" onClick={onAdd}>
-        + Agregar
+        <Plus size={18} /> Agregar
       </button>
       <nav aria-label="Navegacion principal">
         {NAV_ITEMS.map(([path, icon, label]) => (
