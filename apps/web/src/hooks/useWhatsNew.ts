@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 
-const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+const SHOW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const RELEASE_AT_MS = new Date("2026-08-12T00:00:00Z").getTime();
 const STORAGE_PREFIX = "rumbo-whats-new-dismissed-";
 
 /**
- * Shows the "what's new" panel to accounts created in the last 2 days,
- * until they explicitly dismiss it (persisted per-user in localStorage).
+ * Shows the "what's new" panel to every signed-in user for a fixed window
+ * after this update's release date, until they explicitly dismiss it
+ * (persisted per-user in localStorage).
  */
-export function useWhatsNew(user: { id: string; created_at?: string } | null): {
+export function useWhatsNew(user: { id: string } | null): {
   show: boolean;
   dismiss: () => void;
 } {
@@ -18,13 +20,12 @@ export function useWhatsNew(user: { id: string; created_at?: string } | null): {
     setDismissed(localStorage.getItem(STORAGE_PREFIX + user.id) === "1");
   }, [user]);
 
-  const isNewAccount =
-    !!user?.created_at && Date.now() - new Date(user.created_at).getTime() < TWO_DAYS_MS;
+  const withinReleaseWindow = Date.now() - RELEASE_AT_MS < SHOW_WINDOW_MS;
 
   function dismiss() {
     if (user) localStorage.setItem(STORAGE_PREFIX + user.id, "1");
     setDismissed(true);
   }
 
-  return { show: isNewAccount && !dismissed, dismiss };
+  return { show: withinReleaseWindow && !dismissed, dismiss };
 }
