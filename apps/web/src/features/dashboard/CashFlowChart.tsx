@@ -1,9 +1,20 @@
 import { formatDop, type Summary } from "@ahorra/domain";
 import { navigate } from "../../app/router";
 
-export function CashFlowChart({ summary }: { summary: Summary }) {
+export function CashFlowChart({
+  summary,
+  previousSummary
+}: {
+  summary: Summary;
+  previousSummary?: Summary | null;
+}) {
   const values = [summary.incomeCents, summary.expenseCents, summary.contributionCents];
-  const max = Math.max(...values, 1);
+  const previousValues = previousSummary
+    ? [previousSummary.incomeCents, previousSummary.expenseCents, previousSummary.contributionCents]
+    : null;
+  const max = Math.max(...values, ...(previousValues ?? []), 1);
+  const labels = ["Ingresos", "Gastos", "Ahorro"];
+
   return (
     <section className="panel cash-chart">
       <header>
@@ -15,6 +26,11 @@ export function CashFlowChart({ summary }: { summary: Summary }) {
           Ver reporte
         </button>
       </header>
+      {previousValues && (
+        <p className="cash-chart-legend muted">
+          <span className="legend-swatch" aria-hidden="true" /> Mes anterior como referencia
+        </p>
+      )}
       <div
         className="bars"
         role="img"
@@ -24,12 +40,19 @@ export function CashFlowChart({ summary }: { summary: Summary }) {
           <div className="bar-item" key={index}>
             <strong>{formatDop(value)}</strong>
             <div className="bar-track">
+              {previousValues && (
+                <div
+                  className="bar-reference"
+                  style={{ bottom: `${Math.min((previousValues[index]! / max) * 100, 100)}%` }}
+                  title={`Mes anterior: ${formatDop(previousValues[index]!)}`}
+                />
+              )}
               <div
                 className={`bar-fill bar-${index}`}
                 style={{ height: `${Math.max((value / max) * 100, value ? 8 : 0)}%` }}
               />
             </div>
-            <span>{["Ingresos", "Gastos", "Ahorro"][index]}</span>
+            <span>{labels[index]}</span>
           </div>
         ))}
       </div>

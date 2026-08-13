@@ -3,17 +3,23 @@ import { Download, PiggyBank, Sprout, TrendingDown, TrendingUp } from "lucide-re
 import { PageTitle } from "../../components/PageTitle";
 import { CashFlowChart } from "../dashboard/CashFlowChart";
 import { CategoryChart } from "../dashboard/CategoryChart";
+import { usePreviousMonthSummary } from "../../hooks/usePreviousMonthSummary";
 import { monthLabel } from "../../lib/format";
 
 export function ReportsPage({
   summary,
   movements,
-  month
+  month,
+  accessToken,
+  spaceId
 }: {
   summary: Summary;
   movements: Movement[];
   month: string;
+  accessToken?: string;
+  spaceId?: string;
 }) {
+  const previousSummary = usePreviousMonthSummary(accessToken, spaceId ?? "", month);
   function exportCsv() {
     const rows = [
       ["fecha", "descripcion", "categoria", "tipo", "estado", "monto_DOP"],
@@ -87,7 +93,7 @@ export function ReportsPage({
         </div>
       </div>
       <div className="reports-grid">
-        <CashFlowChart summary={summary} />
+        <CashFlowChart summary={summary} previousSummary={previousSummary} />
         <CategoryChart summary={summary} />
         <section className="panel report-detail">
           <header>

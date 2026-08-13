@@ -1,9 +1,10 @@
 import { formatDop, type Goal, type GoalContribution } from "@ahorra/domain";
-import { Pencil, PiggyBank, Plus } from "lucide-react";
+import { Pencil, PartyPopper, PiggyBank, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { MoneyInput } from "../../components/MoneyInput";
 import { PageTitle } from "../../components/PageTitle";
+import { ProgressRing } from "../../components/ProgressRing";
 import { StatusPill } from "../../components/StatusPill";
 import { apiFetch } from "../../lib/api";
 import { today } from "../../lib/format";
@@ -24,6 +25,7 @@ export function GoalsPage({
   const [viewingContributions, setViewingContributions] = useState<string | null>(null);
   const [contributions, setContributions] = useState<Record<string, GoalContribution[]>>({});
   const [editingContribution, setEditingContribution] = useState<GoalContribution | null>(null);
+  const [celebratingGoalId, setCelebratingGoalId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [initial, setInitial] = useState("");
@@ -60,6 +62,7 @@ export function GoalsPage({
   }
 
   async function addContribution(goalId: string) {
+    const wasCompleted = goals.find((goal) => goal.id === goalId)?.status === "COMPLETED";
     setSaving(true);
     const response = await apiFetch(accessToken, `/api/goals/${goalId}/contributions`, {
       method: "POST",
@@ -71,10 +74,15 @@ export function GoalsPage({
     });
     setSaving(false);
     if (response.ok) {
+      const updatedGoal = (await response.json()) as Goal;
       setContribution("");
       setContributingTo(null);
       onSaved();
       if (viewingContributions === goalId) await loadContributions(goalId);
+      if (!wasCompleted && updatedGoal.status === "COMPLETED") {
+        setCelebratingGoalId(goalId);
+        setTimeout(() => setCelebratingGoalId(null), 3200);
+      }
     }
   }
 
@@ -208,31 +216,36 @@ export function GoalsPage({
             const goalContributions = contributions[goal.id] ?? [];
             return (
               <article className="panel goal-card" key={goal.id}>
-                <div className="goal-top">
-                  <StatusPill
-                    tone={
-                      goal.status === "COMPLETED"
-                        ? "completed"
-                        : goal.status === "PAUSED"
-                          ? "paused"
-                          : "active"
-                    }
-                    label={
-                      goal.status === "COMPLETED"
-                        ? "Completada"
-                        : goal.status === "PAUSED"
-                          ? "Pausada"
-                          : "Activa"
-                    }
-                  />
-                  <span>{progress}%</span>
-                </div>
-                <h2>{goal.name}</h2>
-                <p>
-                  <strong>{formatDop(goal.savedCents)}</strong> de {formatDop(goal.targetCents)}
-                </p>
-                <div className="goal-progress">
-                  <span style={{ width: `${Math.min(progress, 100)}%` }} />
+                {celebratingGoalId === goal.id && (
+                  <div className="goal-celebration" role="status">
+                    <PartyPopper size={28} />
+                    <strong>Meta completada</strong>
+                  </div>
+                )}
+                <div className="goal-card-top">
+                  <div className="goal-card-title">
+                    <StatusPill
+                      tone={
+                        goal.status === "COMPLETED"
+                          ? "completed"
+                          : goal.status === "PAUSED"
+                            ? "paused"
+                            : "active"
+                      }
+                      label={
+                        goal.status === "COMPLETED"
+                          ? "Completada"
+                          : goal.status === "PAUSED"
+                            ? "Pausada"
+                            : "Activa"
+                      }
+                    />
+                    <h2>{goal.name}</h2>
+                    <p>
+                      <strong>{formatDop(goal.savedCents)}</strong> de {formatDop(goal.targetCents)}
+                    </p>
+                  </div>
+                  <ProgressRing percent={progress} />
                 </div>
                 <div className="goal-meta">
                   <span>Faltan {formatDop(Math.max(0, goal.targetCents - goal.savedCents))}</span>

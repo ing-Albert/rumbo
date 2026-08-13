@@ -2,6 +2,9 @@ import { formatDop, type Summary } from "@ahorra/domain";
 
 export function CategoryChart({ summary }: { summary: Summary }) {
   const max = summary.expenseByCategory[0]?.amountCents ?? 1;
+  const top = summary.expenseByCategory.slice(0, 5);
+  const rest = summary.expenseByCategory.slice(5);
+  const restTotal = rest.reduce((total, item) => total + item.amountCents, 0);
   return (
     <section className="panel category-chart">
       <header>
@@ -14,7 +17,7 @@ export function CategoryChart({ summary }: { summary: Summary }) {
         <p className="muted">Registra un gasto para ver tus categorias.</p>
       ) : (
         <div className="category-list">
-          {summary.expenseByCategory.slice(0, 5).map((item) => (
+          {top.map((item) => (
             <div className="category-row" key={item.category}>
               <div>
                 <span>{item.category}</span>
@@ -25,6 +28,17 @@ export function CategoryChart({ summary }: { summary: Summary }) {
               </div>
             </div>
           ))}
+          {rest.length > 0 && (
+            <div className="category-row category-row-rest">
+              <div>
+                <span>Otras ({rest.length})</span>
+                <strong>{formatDop(restTotal)}</strong>
+              </div>
+              <div className="horizontal-track">
+                <span style={{ width: `${(restTotal / max) * 100}%` }} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>

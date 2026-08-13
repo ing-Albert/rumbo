@@ -36,7 +36,7 @@ export function Sidebar({
       </nav>
       <div className="sidebar-foot">
         {user && <UserMenu user={user} onSignOut={onSignOut} className="sidebar-user-menu" />}
-        <small>v0.2</small>
+        <small>v0.5</small>
       </div>
     </aside>
   );

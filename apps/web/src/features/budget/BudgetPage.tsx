@@ -7,6 +7,7 @@ import { PageTitle } from "../../components/PageTitle";
 import { Stat } from "../../components/Stat";
 import { apiFetch } from "../../lib/api";
 import { expenseCategories } from "../../lib/categories";
+import { CategoryIcon } from "../../lib/categoryIcons";
 import { monthLabel } from "../../lib/format";
 
 export function BudgetPage({
@@ -265,6 +266,9 @@ export function BudgetPage({
                     </form>
                   ) : (
                     <>
+                      <span className="budget-category-icon" aria-hidden="true">
+                        <CategoryIcon category={category} />
+                      </span>
                       <strong>{category}</strong>
                       {customCat && (
                         <div className="category-actions">
