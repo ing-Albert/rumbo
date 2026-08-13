@@ -2117,7 +2117,10 @@ h2 {
   }
   .main-content {
     margin-left: 0;
-    padding: 18px 18px 110px;
+    padding: 20px 18px 116px;
+  }
+  .dashboard-grid {
+    gap: 16px;
   }
   .desktop-add {
     display: none;
@@ -2298,7 +2301,7 @@ h2 {
     padding-right: 0;
   }
   .stat {
-    padding: 8px;
+    padding: 10px 8px;
   }
   .stat strong {
     font-size: 15px;
@@ -2307,10 +2310,11 @@ h2 {
     align-items: start;
   }
   .panel {
-    padding: 20px 16px;
+    padding: 22px 18px;
   }
   .panel > header {
     align-items: start;
+    margin-bottom: 20px;
   }
   .bars {
     gap: 14px;
@@ -2321,9 +2325,13 @@ h2 {
   }
   .movement-row {
     grid-template-columns: 40px minmax(0, 1fr) auto;
+    padding: 14px 0;
   }
   .movement-row > strong {
     font-size: var(--text-base);
+  }
+  .movement-list {
+    gap: 2px;
   }
   .empty-state {
     padding: 35px 22px;
@@ -2356,6 +2364,7 @@ h2 {
   }
   .category-creator {
     grid-template-columns: 1fr;
+    padding: 18px;
   }
   .category-creator > div {
     justify-content: end;
@@ -2363,6 +2372,8 @@ h2 {
   .filters-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 16px 12px;
+    padding: 18px;
   }
   .filters-row label:first-child {
     min-width: 0;
@@ -2371,6 +2382,9 @@ h2 {
   .result-count {
     margin-left: 0;
     padding: 7px 0;
+  }
+  .period-filter-row {
+    padding: 12px 18px;
   }
   .pagination {
     align-items: stretch;
@@ -2385,39 +2399,51 @@ h2 {
   }
   .budget-row {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 18px;
+    padding: 22px 18px;
   }
   .form-grid,
   .goals-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
   .contribution-form {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
   .contribution-form .compact-money {
     grid-column: 1 / -1;
   }
   .goal-actions {
     display: grid;
+    gap: 10px;
+  }
+  .contribution-row {
+    padding: 14px 0;
   }
   .contribution-row:has(.compact-money) {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
   .contribution-row:has(.compact-money) .compact-money,
   .contribution-row:has(.compact-money) > input {
     grid-column: 1 / -1;
   }
   .report-kpis > div {
-    padding: 16px 12px;
+    padding: 18px 14px;
   }
   .report-kpis strong {
     font-size: var(--text-lg);
   }
   .movement-dialog {
-    padding: 22px 18px 100px;
+    padding: 24px 20px 108px;
+  }
+  .movement-dialog form {
+    gap: 22px;
   }
   .form-row {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
   .dialog-actions {
     position: fixed;
