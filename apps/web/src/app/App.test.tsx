@@ -93,7 +93,7 @@ describe("App", () => {
     fireEvent.click(editButton);
 
     expect(screen.getByRole("heading", { name: "Editar gasto" })).toBeInTheDocument();
-    expect(screen.getByDisplayValue("3000")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("3,000")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Supermercado")).toBeInTheDocument();
   });
 
@@ -384,7 +384,7 @@ describe("App", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Ver y editar aportes" }));
     fireEvent.click(await screen.findByRole("button", { name: "Editar" }));
 
-    expect(screen.getByLabelText("Monto del aporte")).toHaveValue(1000);
+    expect(screen.getByLabelText("Monto del aporte")).toHaveValue("1,000");
     expect(screen.getByLabelText("Fecha del aporte")).toHaveValue("2026-08-07");
     expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
   });

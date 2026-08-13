@@ -1,7 +1,9 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
 import { Pencil, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { PageTitle } from "../../components/PageTitle";
+import { StatusPill } from "../../components/StatusPill";
 import { today } from "../../lib/format";
 
 export function MovementsPage({
@@ -97,179 +99,200 @@ export function MovementsPage({
           </div>
         }
       />
-      <section className="panel module-panel">
-        <div className="filters-row">
-          <label>
-            Buscar
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Descripcion o categoria"
-            />
-          </label>
-          <label>
-            Tipo
-            <select value={type} onChange={(event) => setType(event.target.value)}>
-              <option value="ALL">Todos</option>
-              <option value="INCOME">Ingresos</option>
-              <option value="EXPENSE">Gastos</option>
-              <option value="CONTRIBUTION">Aportes</option>
-            </select>
-          </label>
-          <label>
-            Estado
-            <select value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="ALL">Todos</option>
-              <option value="REGISTERED">Registrados</option>
-              <option value="SCHEDULED">Programados</option>
-            </select>
-          </label>
-          <span className="result-count">{filtered.length} resultados</span>
-        </div>
-        <div className="period-filter-row">
-          {["ALL", "TODAY", "WEEK", "MONTH", "YEAR", "RANGE"].map((p) => (
-            <button
-              key={p}
-              className={`period-chip${period === p ? " active" : ""}`}
-              onClick={() => {
-                setPeriod(p);
-                if (p !== "RANGE") {
-                  setRangeFrom("");
-                  setRangeTo("");
-                }
-              }}
-            >
-              {periodLabels[p]}
-            </button>
-          ))}
-          {period === "RANGE" && (
-            <div className="period-range-inputs">
-              <label>
-                Desde
-                <input
-                  type="date"
-                  value={rangeFrom}
-                  min={minDate}
-                  max={today()}
-                  onChange={(e) => setRangeFrom(e.target.value)}
-                />
-              </label>
-              <label>
-                Hasta
-                <input
-                  type="date"
-                  value={rangeTo}
-                  min={rangeFrom || minDate}
-                  max={today()}
-                  onChange={(e) => setRangeTo(e.target.value)}
-                />
-              </label>
-            </div>
-          )}
-        </div>
-        {filtered.length === 0 ? (
-          <div className="module-empty">
-            <h2>No hay movimientos con estos filtros</h2>
-            <button
-              className="text-button"
-              onClick={() => {
-                setQuery("");
-                setType("ALL");
-                setStatus("ALL");
-                setPeriod("ALL");
-              }}
-            >
-              Limpiar filtros
-            </button>
+      {movements.length === 0 ? (
+        <IllustratedEmptyState
+          eyebrow="Aun no hay movimientos"
+          title="Registra tu primer movimiento"
+          description="Anade un ingreso o un gasto para empezar a ver tu actividad aqui."
+          action={
+            <>
+              <button className="primary" onClick={() => onAdd("INCOME")}>
+                Registrar ingreso
+              </button>
+              <button className="secondary" onClick={() => onAdd("EXPENSE")}>
+                Registrar gasto
+              </button>
+            </>
+          }
+        />
+      ) : (
+        <section className="panel module-panel">
+          <div className="filters-row">
+            <label>
+              Buscar
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Descripcion o categoria"
+              />
+            </label>
+            <label>
+              Tipo
+              <select value={type} onChange={(event) => setType(event.target.value)}>
+                <option value="ALL">Todos</option>
+                <option value="INCOME">Ingresos</option>
+                <option value="EXPENSE">Gastos</option>
+                <option value="CONTRIBUTION">Aportes</option>
+              </select>
+            </label>
+            <label>
+              Estado
+              <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                <option value="ALL">Todos</option>
+                <option value="REGISTERED">Registrados</option>
+                <option value="SCHEDULED">Programados</option>
+              </select>
+            </label>
+            <span className="result-count">{filtered.length} resultados</span>
           </div>
-        ) : (
-          <>
-            <div className="data-table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Descripcion</th>
-                    <th>Categoria</th>
-                    <th>Tipo</th>
-                    <th>Estado</th>
-                    <th className="number">Monto</th>
-                    <th>
-                      <span className="sr-only">Acciones</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.map((movement) => (
-                    <tr key={movement.id}>
-                      <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
-                      <td>
-                        <strong>{movement.description}</strong>
-                      </td>
-                      <td>{movement.category}</td>
-                      <td>
-                        {movement.type === "INCOME"
-                          ? "Ingreso"
-                          : movement.type === "EXPENSE"
-                            ? "Gasto"
-                            : "Aporte"}
-                      </td>
-                      <td>
-                        <span className={`status-pill ${movement.status.toLowerCase()}`}>
-                          {movement.status === "REGISTERED" ? "Registrado" : "Programado"}
-                        </span>
-                      </td>
-                      <td className={`number ${movement.type === "INCOME" ? "amount-income" : ""}`}>
-                        {movement.type === "INCOME" ? "+" : "-"}
-                        {formatDop(movement.amountCents)}
-                      </td>
-                      <td>
-                        {movement.type !== "CONTRIBUTION" && (
-                          <button
-                            className="table-action"
-                            onClick={() => onEdit(movement)}
-                            title="Editar"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <footer className="pagination">
-              <p>
-                Mostrando{" "}
-                <strong>
-                  {firstResult}-{lastResult}
-                </strong>{" "}
-                de <strong>{filtered.length}</strong>
-              </p>
-              <div>
-                <button
-                  className="secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => setPage((value) => Math.max(1, value - 1))}
-                >
-                  Anterior
-                </button>
-                <span>
-                  Pagina <strong>{currentPage}</strong> de {totalPages}
-                </span>
-                <button
-                  className="secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                >
-                  Siguiente
-                </button>
+          <div className="period-filter-row">
+            {["ALL", "TODAY", "WEEK", "MONTH", "YEAR", "RANGE"].map((p) => (
+              <button
+                key={p}
+                className={`period-chip${period === p ? " active" : ""}`}
+                onClick={() => {
+                  setPeriod(p);
+                  if (p !== "RANGE") {
+                    setRangeFrom("");
+                    setRangeTo("");
+                  }
+                }}
+              >
+                {periodLabels[p]}
+              </button>
+            ))}
+            {period === "RANGE" && (
+              <div className="period-range-inputs">
+                <label>
+                  Desde
+                  <input
+                    type="date"
+                    value={rangeFrom}
+                    min={minDate}
+                    max={today()}
+                    onChange={(e) => setRangeFrom(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Hasta
+                  <input
+                    type="date"
+                    value={rangeTo}
+                    min={rangeFrom || minDate}
+                    max={today()}
+                    onChange={(e) => setRangeTo(e.target.value)}
+                  />
+                </label>
               </div>
-            </footer>
-          </>
-        )}
-      </section>
+            )}
+          </div>
+          {filtered.length === 0 ? (
+            <div className="module-empty">
+              <h2>No hay movimientos con estos filtros</h2>
+              <button
+                className="text-button"
+                onClick={() => {
+                  setQuery("");
+                  setType("ALL");
+                  setStatus("ALL");
+                  setPeriod("ALL");
+                }}
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Descripcion</th>
+                      <th>Categoria</th>
+                      <th>Tipo</th>
+                      <th>Estado</th>
+                      <th className="number">Monto</th>
+                      <th>
+                        <span className="sr-only">Acciones</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginated.map((movement) => (
+                      <tr key={movement.id}>
+                        <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
+                        <td>
+                          <strong>{movement.description}</strong>
+                        </td>
+                        <td>{movement.category}</td>
+                        <td>
+                          {movement.type === "INCOME"
+                            ? "Ingreso"
+                            : movement.type === "EXPENSE"
+                              ? "Gasto"
+                              : "Aporte"}
+                        </td>
+                        <td>
+                          <StatusPill
+                            tone={movement.status === "REGISTERED" ? "registered" : "scheduled"}
+                            label={movement.status === "REGISTERED" ? "Registrado" : "Programado"}
+                          />
+                        </td>
+                        <td
+                          className={`number ${movement.type === "INCOME" ? "amount-income" : ""}`}
+                        >
+                          {movement.type === "INCOME" ? "+" : "-"}
+                          {formatDop(movement.amountCents)}
+                        </td>
+                        <td>
+                          {movement.type !== "CONTRIBUTION" && (
+                            <button
+                              className="table-action"
+                              onClick={() => onEdit(movement)}
+                              title="Editar"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <footer className="pagination">
+                <p>
+                  Mostrando{" "}
+                  <strong>
+                    {firstResult}-{lastResult}
+                  </strong>{" "}
+                  de <strong>{filtered.length}</strong>
+                </p>
+                <div>
+                  <button
+                    className="secondary"
+                    disabled={currentPage === 1}
+                    onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  >
+                    Anterior
+                  </button>
+                  <span>
+                    Pagina <strong>{currentPage}</strong> de {totalPages}
+                  </span>
+                  <button
+                    className="secondary"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </footer>
+            </>
+          )}
+        </section>
+      )}
     </>
   );
 }

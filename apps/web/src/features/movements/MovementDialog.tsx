@@ -1,6 +1,8 @@
 import { formatDop, type Movement, type MovementStatus, type MovementType } from "@ahorra/domain";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { MoneyInput } from "../../components/MoneyInput";
+import { useDialog } from "../../hooks/useDialog";
 import { expenseCategories, incomeCategories } from "../../lib/categories";
 import { today } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
@@ -24,6 +26,7 @@ export function MovementDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const dialogRef = useDialog<HTMLElement>(onClose);
   const [type, setType] = useState<MovementType>(initialType);
   const [status, setStatus] = useState<MovementStatus>(movement?.status ?? "REGISTERED");
   const [amount, setAmount] = useState(movement ? String(movement.amountCents / 100) : "");
@@ -96,6 +99,7 @@ export function MovementDialog({
       }}
     >
       <section
+        ref={dialogRef}
         className="movement-dialog"
         role="dialog"
         aria-modal="true"
@@ -137,13 +141,7 @@ export function MovementDialog({
             Monto <span>*</span>
             <div className="money-input">
               <span>RD$</span>
-              <input
-                autoFocus
-                inputMode="decimal"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="0.00"
-              />
+              <MoneyInput autoFocus value={amount} onChange={setAmount} placeholder="0.00" />
             </div>
           </label>
           <div className="form-row">

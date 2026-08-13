@@ -1,4 +1,5 @@
 import { formatDop, type Summary } from "@ahorra/domain";
+import { navigate } from "../../app/router";
 
 export function CashFlowChart({ summary }: { summary: Summary }) {
   const values = [summary.incomeCents, summary.expenseCents, summary.contributionCents];
@@ -10,7 +11,9 @@ export function CashFlowChart({ summary }: { summary: Summary }) {
           <p className="eyebrow">Flujo del periodo</p>
           <h2>Lo que entra, sale y apartas</h2>
         </div>
-        <button className="text-button">Ver reporte</button>
+        <button className="text-button" onClick={() => navigate("/reportes")}>
+          Ver reporte
+        </button>
       </header>
       <div
         className="bars"

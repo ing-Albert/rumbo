@@ -1,7 +1,10 @@
 import { formatDop, type Goal, type GoalContribution } from "@ahorra/domain";
 import { Pencil, PiggyBank, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
+import { MoneyInput } from "../../components/MoneyInput";
 import { PageTitle } from "../../components/PageTitle";
+import { StatusPill } from "../../components/StatusPill";
 import { apiFetch } from "../../lib/api";
 import { today } from "../../lib/format";
 
@@ -158,23 +161,14 @@ export function GoalsPage({
               Monto objetivo
               <div className="compact-money">
                 <span>RD$</span>
-                <input
-                  required
-                  inputMode="decimal"
-                  value={target}
-                  onChange={(event) => setTarget(event.target.value)}
-                />
+                <MoneyInput required value={target} onChange={setTarget} />
               </div>
             </label>
             <label>
               Ya tengo ahorrado <small>Opcional</small>
               <div className="compact-money">
                 <span>RD$</span>
-                <input
-                  inputMode="decimal"
-                  value={initial}
-                  onChange={(event) => setInitial(event.target.value)}
-                />
+                <MoneyInput value={initial} onChange={setInitial} />
               </div>
             </label>
             <label>
@@ -197,13 +191,16 @@ export function GoalsPage({
         </form>
       )}
       {goals.length === 0 ? (
-        <div className="module-empty large">
-          <h2>Aun no tienes metas</h2>
-          <p>Define una cantidad y una fecha para calcular tu avance.</p>
-          <button className="primary" onClick={() => setCreating(true)}>
-            Crear primera meta
-          </button>
-        </div>
+        <IllustratedEmptyState
+          eyebrow="Objetivos claros"
+          title="Aun no tienes metas"
+          description="Define una cantidad y una fecha para calcular tu avance y ver cuanto te falta."
+          action={
+            <button className="primary" onClick={() => setCreating(true)}>
+              <Plus size={18} /> Crear primera meta
+            </button>
+          }
+        />
       ) : (
         <div className="goals-grid">
           {goals.map((goal) => {
@@ -212,13 +209,22 @@ export function GoalsPage({
             return (
               <article className="panel goal-card" key={goal.id}>
                 <div className="goal-top">
-                  <span className={`status-pill ${goal.status.toLowerCase()}`}>
-                    {goal.status === "COMPLETED"
-                      ? "Completada"
-                      : goal.status === "PAUSED"
-                        ? "Pausada"
-                        : "Activa"}
-                  </span>
+                  <StatusPill
+                    tone={
+                      goal.status === "COMPLETED"
+                        ? "completed"
+                        : goal.status === "PAUSED"
+                          ? "paused"
+                          : "active"
+                    }
+                    label={
+                      goal.status === "COMPLETED"
+                        ? "Completada"
+                        : goal.status === "PAUSED"
+                          ? "Pausada"
+                          : "Activa"
+                    }
+                  />
                   <span>{progress}%</span>
                 </div>
                 <h2>{goal.name}</h2>
@@ -242,11 +248,10 @@ export function GoalsPage({
                   <div className="contribution-form">
                     <div className="compact-money">
                       <span>RD$</span>
-                      <input
+                      <MoneyInput
                         autoFocus
-                        inputMode="decimal"
                         value={contribution}
-                        onChange={(event) => setContribution(event.target.value)}
+                        onChange={setContribution}
                         placeholder="0"
                       />
                     </div>
@@ -287,14 +292,11 @@ export function GoalsPage({
                             <>
                               <div className="compact-money">
                                 <span>RD$</span>
-                                <input
+                                <MoneyInput
                                   aria-label="Monto del aporte"
                                   autoFocus
-                                  type="number"
-                                  min="0.01"
-                                  step="0.01"
                                   value={editedAmount}
-                                  onChange={(event) => setEditedAmount(event.target.value)}
+                                  onChange={setEditedAmount}
                                 />
                               </div>
                               <input

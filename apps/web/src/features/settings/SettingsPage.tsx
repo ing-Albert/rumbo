@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { PageTitle } from "../../components/PageTitle";
 import { Briefcase, CalendarDays, Clock, Coins, Pencil, ShieldCheck, User } from "lucide-react";
+import { StatusPill } from "../../components/StatusPill";
 import { supabase } from "../../lib/supabase";
 import { getUserName } from "../../lib/format";
 
@@ -119,7 +120,7 @@ export function SettingsPage({
                     {space.type === "PERSONAL" ? "Finanzas personales" : "Emprendimiento"}
                   </span>
                 </div>
-                {space.id === spaceId && <span className="status-pill active">Activo</span>}
+                {space.id === spaceId && <StatusPill tone="active" label="Activo" />}
               </div>
             ))}
           </div>

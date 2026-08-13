@@ -1,6 +1,8 @@
 import { formatDop, type BudgetLimit, type ExpenseCategory, type Summary } from "@ahorra/domain";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { MoneyInput } from "../../components/MoneyInput";
 import { PageTitle } from "../../components/PageTitle";
 import { Stat } from "../../components/Stat";
 import { apiFetch } from "../../lib/api";
@@ -34,6 +36,13 @@ export function BudgetPage({
   const [editName, setEditName] = useState("");
   const [editError, setEditError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ExpenseCategory | null>(null);
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(""), 4000);
+    return () => clearTimeout(timer);
+  }, [message]);
 
   const customCategoryNames = customCategories.map((c) => c.name);
   const categories = [
@@ -268,10 +277,7 @@ export function BudgetPage({
                           </button>
                           <button
                             className="table-action danger"
-                            onClick={() => {
-                              if (window.confirm(`¿Eliminar la categoria "${category}"?`))
-                                void deleteCategory(customCat);
-                            }}
+                            onClick={() => setPendingDelete(customCat)}
                             disabled={deletingId === customCat.id}
                             title="Eliminar"
                           >
@@ -314,15 +320,9 @@ export function BudgetPage({
                 <span>Limite mensual</span>
                 <div className="compact-money">
                   <span>RD$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
+                  <MoneyInput
                     value={values[category] ?? ""}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, [category]: event.target.value }))
-                    }
+                    onChange={(raw) => setValues((current) => ({ ...current, [category]: raw }))}
                     placeholder="Ej. 10000"
                   />
                 </div>
@@ -331,6 +331,19 @@ export function BudgetPage({
           );
         })}
       </section>
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Eliminar categoria"
+          description={`¿Eliminar la categoria "${pendingDelete.name}"? Esta accion no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          danger
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            void deleteCategory(pendingDelete);
+            setPendingDelete(null);
+          }}
+        />
+      )}
     </>
   );
 }

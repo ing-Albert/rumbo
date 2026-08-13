@@ -18,6 +18,7 @@
   --success-bg: #e7f4ee;
   --success-border: #a8d5c1;
   --danger: #b3263e;
+  --danger-active: #8f1e30;
   --danger-bg: #fff0f2;
   --danger-border: #f3cfd7;
   --danger-border-strong: #ebb3c0;
@@ -1032,6 +1033,48 @@ h2 {
   display: flex;
   justify-content: end;
 }
+.confirm-backdrop {
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.confirm-dialog {
+  width: min(380px, 100%);
+  background: var(--paper);
+  padding: 28px;
+  border-radius: var(--radius-signature);
+  box-shadow: 0 20px 50px rgba(43, 33, 30, 0.22);
+  text-align: center;
+  animation: scaleIn 0.18s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.confirm-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.confirm-dialog h2 {
+  font-size: var(--text-xl);
+  margin-bottom: 8px;
+}
+.confirm-dialog p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+.confirm-dialog .dialog-actions {
+  justify-content: center;
+  margin-top: 22px;
+}
+.confirm-danger {
+  background: var(--danger);
+}
+.confirm-danger:hover {
+  background: var(--danger-active);
+}
 .movement-dialog {
   width: min(520px, 100%);
   height: 100%;
@@ -1340,6 +1383,7 @@ h2 {
 .status-pill {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   border-radius: var(--radius-full);
   padding: 5px 9px;
   font-size: var(--text-xs);
@@ -1438,6 +1482,21 @@ h2 {
   padding: 12px 15px;
   border-left: 4px solid var(--success);
   background: var(--success-bg);
+  animation: messageFadeOut 4s ease forwards;
+}
+@keyframes messageFadeOut {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-message {
+    animation: none;
+  }
 }
 .budget-editor > header {
   padding: 22px;
