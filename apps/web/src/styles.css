@@ -1000,14 +1000,7 @@ h2 {
 }
 .movement-actions {
   justify-items: end;
-}
-.movement-actions button {
-  border: 0;
-  background: transparent;
-  color: var(--primary);
-  padding: 3px 0;
-  font-weight: 700;
-  text-decoration: underline;
+  gap: 4px;
 }
 .movement-icon {
   display: grid;
@@ -1428,6 +1421,9 @@ h2 {
   flex-wrap: wrap;
 }
 .period-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   padding: 6px 16px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
@@ -1497,13 +1493,22 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 .table-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
   border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--primary);
   font-weight: 700;
-  text-decoration: underline;
   padding: 8px;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+.table-action:hover {
+  background: var(--muted-surface);
 }
 .table-action.danger {
   color: var(--danger);
@@ -1527,7 +1532,7 @@ h2 {
   gap: 14px;
 }
 .pagination .secondary {
-  min-height: 38px;
+  min-height: 40px;
   padding: 8px 13px;
 }
 .pagination button:disabled {

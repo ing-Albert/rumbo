@@ -1,5 +1,5 @@
 import { formatDop, type Movement } from "@ahorra/domain";
-import { Gem, TrendingDown, TrendingUp } from "lucide-react";
+import { Gem, Pencil, TrendingDown, TrendingUp } from "lucide-react";
 
 export function RecentMovements({
   movements,
@@ -49,10 +49,12 @@ export function RecentMovements({
               </strong>
               {movement.type !== "CONTRIBUTION" && (
                 <button
+                  className="table-action"
                   aria-label={`Editar ${movement.description}`}
+                  title="Editar"
                   onClick={() => onEdit(movement)}
                 >
-                  Editar
+                  <Pencil size={16} />
                 </button>
               )}
             </div>
