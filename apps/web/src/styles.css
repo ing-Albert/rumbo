@@ -998,9 +998,11 @@ h2 {
   color: var(--muted);
   font-size: var(--text-base);
 }
-.movement-actions {
-  justify-items: end;
-  gap: 4px;
+.movement-row > .movement-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
 }
 .movement-icon {
   display: grid;
