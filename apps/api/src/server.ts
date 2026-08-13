@@ -4,7 +4,7 @@ import { SupabaseAuthVerifier } from "./auth/supabase-verifier.js";
 import { createPostgresPool } from "./database/postgres/pool.js";
 import { PostgresFinancePersistence } from "./database/postgres/repository.js";
 
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.API_PORT ?? 3001);
 const supabaseUrl = process.env.SUPABASE_URL?.trim();
 if (!supabaseUrl || !process.env.DATABASE_URL?.trim()) {
   throw new Error("La API requiere SUPABASE_URL y DATABASE_URL para iniciar de forma segura.");
