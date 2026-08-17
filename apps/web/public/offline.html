@@ -10,6 +10,7 @@
         --cream: #fff8f0;
         --gold: #e3a72f;
         --ink: #3b2130;
+        --danger: #a8324a;
       }
       * {
         box-sizing: border-box;
@@ -32,7 +33,7 @@
           sans-serif;
         text-align: center;
       }
-      svg {
+      #logo {
         width: 84px;
         height: 84px;
       }
@@ -49,22 +50,65 @@
         line-height: 1.5;
         opacity: 0.75;
       }
-      a {
+      button {
         min-height: 48px;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        gap: 10px;
         padding: 0 28px;
+        border: 0;
         border-radius: 999px;
         background: var(--plum);
         color: var(--cream);
+        font: inherit;
         font-size: 16px;
         font-weight: 700;
-        text-decoration: none;
+        cursor: pointer;
+      }
+      button[aria-busy="true"] {
+        opacity: 0.75;
+        cursor: progress;
+      }
+      /* El disco gira solo mientras se comprueba la conexion. */
+      #spinner {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 248, 240, 0.35);
+        border-top-color: var(--cream);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      button[aria-busy="true"] #spinner {
+        display: block;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #spinner {
+          animation-duration: 2.4s;
+        }
+      }
+      /* Ocupa sitio siempre, para que el texto no salte al aparecer el error. */
+      #status {
+        min-height: 24px;
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--danger);
+        opacity: 1;
+      }
+      #status:empty {
+        visibility: hidden;
       }
     </style>
   </head>
   <body>
-    <svg viewBox="0 0 512 512" role="img" aria-label="Rumbo">
+    <svg id="logo" viewBox="0 0 512 512" role="img" aria-label="Rumbo">
       <rect width="512" height="512" rx="112" fill="#6B2948" />
       <path
         d="M126 354V158h92c63 0 105 31 105 87 0 35-17 61-48 75l90 34h-94l-66-29v29h-79zm79-97h19c24 0 37-9 37-28s-13-27-37-27h-19v55z"
@@ -73,9 +117,79 @@
       <circle cx="365" cy="152" r="42" fill="#E3A72F" />
     </svg>
     <h1>Sin conexion</h1>
-    <p>
-      Rumbo necesita internet para mostrarte tus cuentas. Revisa tu conexion y vuelve a intentar.
-    </p>
-    <a href="https://rumbo-web-sepia.vercel.app">Reintentar</a>
+    <p>Rumbo necesita internet para mostrarte tus cuentas.</p>
+    <button id="retry" type="button">
+      <span id="spinner" aria-hidden="true"></span>
+      <span id="label">Reintentar</span>
+    </button>
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <script>
+      var SITE = "https://rumbo-web-sepia.vercel.app";
+      var TIMEOUT_MS = 8000;
+
+      var button = document.getElementById("retry");
+      var label = document.getElementById("label");
+      // No llamar a esta variable `status`: en el ambito global choca con
+      // window.status, que convierte lo que se le asigne en texto, y las
+      // escrituras al elemento se pierden en silencio.
+      var aviso = document.getElementById("status");
+
+      /**
+       * Comprueba que haya internet de verdad antes de abrir la app.
+       *
+       * Un enlace directo no sirve: el service worker del sitio guarda la
+       * interfaz, asi que sin conexion la app abre igual pero vacia, sin poder
+       * leer ni guardar nada. Esta pagina se sirve desde el APK, en otro
+       * origen, asi que este fetch no pasa por ese cache y toca la red real.
+       *
+       * `no-cors` porque solo interesa saber si la peticion llega a destino, no
+       * leer la respuesta: el sitio no expone cabeceras CORS para este origen.
+       * En una respuesta opaca el estado no se puede leer, pero un fallo de red
+       * si rechaza la promesa, que es justo lo que hay que distinguir.
+       */
+      function hayInternet() {
+        var control = new AbortController();
+        var corte = setTimeout(function () {
+          control.abort();
+        }, TIMEOUT_MS);
+
+        return fetch(SITE + "/icon.svg?_=" + Date.now(), {
+          method: "GET",
+          mode: "no-cors",
+          cache: "no-store",
+          signal: control.signal
+        }).then(
+          function () {
+            clearTimeout(corte);
+            return true;
+          },
+          function () {
+            clearTimeout(corte);
+            return false;
+          }
+        );
+      }
+
+      button.addEventListener("click", function () {
+        if (button.getAttribute("aria-busy") === "true") return;
+
+        button.setAttribute("aria-busy", "true");
+        label.textContent = "Comprobando";
+        aviso.textContent = "";
+
+        hayInternet().then(function (conectado) {
+          if (conectado) {
+            label.textContent = "Abriendo";
+            // replace y no href: evita que el boton Atras vuelva aqui.
+            location.replace(SITE);
+            return;
+          }
+          button.setAttribute("aria-busy", "false");
+          label.textContent = "Reintentar";
+          aviso.textContent = "Sigues sin conexion. Revisa el wifi o los datos moviles.";
+        });
+      });
+    </script>
   </body>
 </html>
