@@ -9,6 +9,20 @@
       content="Planifica tus ingresos, gastos y metas de ahorro en pesos dominicanos."
     />
     <link rel="icon" href="/icon.svg" />
+
+    <!--
+      Safari ignora los iconos SVG del manifiesto, asi que sin este PNG la
+      opcion "Anadir a pantalla de inicio" del iPhone deja una miniatura de la
+      pagina en vez del logo. Va sin esquinas redondeadas y sin transparencia:
+      iOS aplica su propia mascara y pinta de negro lo translucido.
+    -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Rumbo" />
+    <!-- Abre a pantalla completa, sin la barra de Safari, igual que el APK. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <title>Rumbo | Tu plan de ahorro</title>
   </head>
   <body>

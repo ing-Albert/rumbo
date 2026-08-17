@@ -129,6 +129,28 @@ haria falta, ademas:
 
 ## iOS
 
-No esta configurado. Requiere una Mac con Xcode para compilar, asi que se deja
-fuera por ahora. El codigo esta preparado: `npx cap add ios` mas la misma
-variable `VITE_API_BASE_URL` bastarian para arrancar.
+No hay envoltorio nativo para iOS, y por ahora no hace falta. Compilarlo exige
+una Mac con Xcode, y repartirlo exige el programa de desarrollador de Apple (99
+USD al ano) mas TestFlight, porque iOS no permite instalar apps por fuera de
+sus canales. No existe el equivalente a pasar un APK por mensaje.
+
+Como el envoltorio de Android ya no es mas que una ventana sobre el sitio, en
+iPhone se consigue casi lo mismo gratis: Safari, boton de compartir, **Anadir a
+pantalla de inicio**. Queda el icono en el lanzador, abre a pantalla completa
+sin barra del navegador y se actualiza igual, porque es el mismo despliegue.
+
+Lo que eso necesitaba del lado del sitio ya esta en `apps/web/index.html`:
+
+- `apple-touch-icon.png`. Safari ignora los iconos SVG del manifiesto, asi que
+  sin este PNG el iPhone dejaba una miniatura de la pagina como icono. Va a
+  sangre y opaco: iOS recorta con su propia mascara y pinta de negro cualquier
+  zona translucida.
+- `apple-mobile-web-app-capable` y `mobile-web-app-capable`, para que abra sin
+  la barra de Safari.
+
+Diferencia real a tener en cuenta: iOS puede borrar el almacenamiento del sitio
+tras periodos largos sin abrirlo, y eso cierra la sesion. Se vuelve a entrar y
+listo, pero conviene saberlo antes de que alguien lo reporte como fallo.
+
+Si algun dia hiciera falta el envoltorio nativo, el codigo esta preparado:
+`npx cap add ios` mas la misma configuracion de `capacitor.config.ts`.

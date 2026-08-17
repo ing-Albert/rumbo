@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         disable: isNative,
         registerType: "autoUpdate",
-        includeAssets: ["icon.svg"],
+        includeAssets: ["icon.svg", "apple-touch-icon.png"],
         manifest: {
           name: "Rumbo - Planificacion de ahorro",
           short_name: "Rumbo",
