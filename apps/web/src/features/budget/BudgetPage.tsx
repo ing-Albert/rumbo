@@ -1,5 +1,11 @@
-import { formatDop, type BudgetLimit, type ExpenseCategory, type Summary } from "@ahorra/domain";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  calculateBudgetAlerts,
+  formatDop,
+  type BudgetLimit,
+  type ExpenseCategory,
+  type Summary
+} from "@ahorra/domain";
+import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { MoneyInput } from "../../components/MoneyInput";
@@ -68,6 +74,19 @@ export function BudgetPage({
   const totalLimit = categories.reduce(
     (total, category) => total + Math.round(Number(values[category] || 0) * 100),
     0
+  );
+
+  // Se evalua contra lo que hay escrito en los campos, no contra lo guardado,
+  // para que al teclear un limite mas bajo el aviso aparezca antes de guardar.
+  // La regla vive en el dominio: aqui solo se consulta el resultado.
+  const alertLevels = new Map(
+    calculateBudgetAlerts(
+      categories.map((category) => ({
+        category,
+        limitCents: Math.round(Number(values[category] || 0) * 100)
+      })),
+      summary.expenseByCategory
+    ).categories.map((item) => [item.category, item.level])
   );
 
   async function saveBudget() {
@@ -313,6 +332,16 @@ export function BudgetPage({
                           : `Excedido por ${formatDop(Math.abs(remaining))}`}
                       </strong>
                     </div>
+                    {alertLevels.get(category) === "OVER" ? (
+                      <p className="budget-flag over">
+                        <AlertTriangle size={14} aria-hidden="true" /> Te pasaste del limite
+                      </p>
+                    ) : alertLevels.get(category) === "NEAR" ? (
+                      <p className="budget-flag near">
+                        <AlertTriangle size={14} aria-hidden="true" /> Ya usaste el {percent}% del
+                        limite
+                      </p>
+                    ) : null}
                   </>
                 ) : (
                   <span className="no-limit-message">

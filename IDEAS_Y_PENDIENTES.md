@@ -11,7 +11,7 @@ Ordenado por dependencia, no por valor: cada bloque se apoya en el anterior.
 | #   | Que                                                               | Estado    |
 | --- | ----------------------------------------------------------------- | --------- |
 | 3   | Metas: cuanto apartar por mes para llegar a la fecha objetivo     | hecho     |
-| 2   | Presupuesto: aviso al acercarse y al pasarse del limite           | pendiente |
+| 2   | Presupuesto: aviso al acercarse y al pasarse del limite           | hecho     |
 | 1   | Movimientos recurrentes que se registran solos al llegar la fecha | pendiente |
 | 4   | Saldo acumulado real, no solo el flujo del mes                    | pendiente |
 | 5   | Deudas, prestamos y sanes                                         | pendiente |

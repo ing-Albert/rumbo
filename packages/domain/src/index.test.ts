@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { calculateGoalPace, calculateSummary, dominicanDate, type Movement } from "./index.js";
+import {
+  calculateBudgetAlerts,
+  calculateGoalPace,
+  calculateSummary,
+  dominicanDate,
+  type Movement
+} from "./index.js";
 
 const base = {
   spaceId: "personal",
@@ -141,5 +147,78 @@ describe("calculateGoalPace", () => {
     expect(calculateGoalPace(goal({ savedCents: 150_000_00 }), "2026-08-17").remainingCents).toBe(
       0
     );
+  });
+});
+
+describe("calculateBudgetAlerts", () => {
+  const limit = (category: string, limitCents: number) => ({ category, limitCents });
+  const spent = (category: string, amountCents: number) => ({ category, amountCents });
+
+  it("warns once a category reaches 80% of its limit", () => {
+    const alerts = calculateBudgetAlerts(
+      [limit("Alimentacion", 10_000_00)],
+      [spent("Alimentacion", 8_000_00)]
+    );
+
+    expect(alerts.categories[0]!.level).toBe("NEAR");
+    expect(alerts.nearCount).toBe(1);
+    expect(alerts.overCount).toBe(0);
+  });
+
+  it("stays quiet just below the threshold", () => {
+    const alerts = calculateBudgetAlerts(
+      [limit("Alimentacion", 10_000_00)],
+      [spent("Alimentacion", 7_999_00)]
+    );
+
+    expect(alerts.categories[0]!.level).toBe("OK");
+    expect(alerts.nearCount).toBe(0);
+  });
+
+  it("only reports over budget once the limit is actually passed", () => {
+    const exact = calculateBudgetAlerts(
+      [limit("Transporte", 5_000_00)],
+      [spent("Transporte", 5_000_00)]
+    );
+    const passed = calculateBudgetAlerts(
+      [limit("Transporte", 5_000_00)],
+      [spent("Transporte", 5_000_01)]
+    );
+
+    expect(exact.categories[0]!.level).toBe("NEAR");
+    expect(passed.categories[0]!.level).toBe("OVER");
+    expect(passed.categories[0]!.remainingCents).toBe(-1);
+  });
+
+  it("ignores categories with no limit set, instead of calling them exceeded", () => {
+    const alerts = calculateBudgetAlerts(
+      [limit("Ocio", 0), limit("Salud", 1_000_00)],
+      [spent("Ocio", 9_000_00)]
+    );
+
+    expect(alerts.categories.map((item) => item.category)).toEqual(["Salud"]);
+    expect(alerts.overCount).toBe(0);
+  });
+
+  it("treats a category with a limit and no spending as untouched", () => {
+    const alerts = calculateBudgetAlerts([limit("Salud", 1_000_00)], []);
+
+    expect(alerts.categories[0]).toMatchObject({
+      spentCents: 0,
+      usedRatio: 0,
+      remainingCents: 1_000_00,
+      level: "OK"
+    });
+  });
+
+  it("puts the most consumed category first, whatever the amounts", () => {
+    const alerts = calculateBudgetAlerts(
+      [limit("Salud", 100_000_00), limit("Ocio", 1_000_00), limit("Transporte", 10_000_00)],
+      [spent("Salud", 10_000_00), spent("Ocio", 1_500_00), spent("Transporte", 9_000_00)]
+    );
+
+    expect(alerts.categories.map((item) => item.category)).toEqual(["Ocio", "Transporte", "Salud"]);
+    expect(alerts.overCount).toBe(1);
+    expect(alerts.nearCount).toBe(1);
   });
 });

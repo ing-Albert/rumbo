@@ -153,6 +153,67 @@ export function calculateSummary(movements: Movement[]): Summary {
   };
 }
 
+/** Punto a partir del cual una categoria deja de ir holgada y conviene avisar. */
+export const BUDGET_NEAR_RATIO = 0.8;
+
+export type BudgetAlertLevel = "OK" | "NEAR" | "OVER";
+
+export interface BudgetCategoryAlert {
+  category: string;
+  limitCents: number;
+  spentCents: number;
+  /** Parte del limite ya consumida. Puede pasar de 1 si se excedio. */
+  usedRatio: number;
+  /** Lo que queda del limite. Negativo cuando ya se paso. */
+  remainingCents: number;
+  level: BudgetAlertLevel;
+}
+
+export interface BudgetAlerts {
+  /** Solo categorias con limite definido, de la mas critica a la menos. */
+  categories: BudgetCategoryAlert[];
+  nearCount: number;
+  overCount: number;
+}
+
+/**
+ * Cruza los limites del mes con lo gastado y dice cuales conviene mirar.
+ *
+ * Un limite en cero es "sin limite definido", no "no puedes gastar nada": es
+ * lo que guarda la pantalla de presupuesto cuando el campo se deja vacio, asi
+ * que esas categorias quedan fuera en vez de aparecer siempre excedidas.
+ */
+export function calculateBudgetAlerts(
+  limits: Array<Pick<BudgetLimit, "category" | "limitCents">>,
+  expenseByCategory: Summary["expenseByCategory"]
+): BudgetAlerts {
+  const spentByCategory = new Map(
+    expenseByCategory.map((item) => [item.category, item.amountCents])
+  );
+
+  const categories = limits
+    .filter((limit) => limit.limitCents > 0)
+    .map<BudgetCategoryAlert>((limit) => {
+      const spentCents = spentByCategory.get(limit.category) ?? 0;
+      const usedRatio = spentCents / limit.limitCents;
+      return {
+        category: limit.category,
+        limitCents: limit.limitCents,
+        spentCents,
+        usedRatio,
+        remainingCents: limit.limitCents - spentCents,
+        level: usedRatio > 1 ? "OVER" : usedRatio >= BUDGET_NEAR_RATIO ? "NEAR" : "OK"
+      };
+    })
+    .sort((left, right) => right.usedRatio - left.usedRatio);
+
+  return {
+    categories,
+    nearCount: categories.filter((item) => item.level === "NEAR").length,
+    overCount: categories.filter((item) => item.level === "OVER").length
+  };
+}
+
 export type GoalPaceStatus = "COMPLETED" | "NO_DATE" | "OVERDUE" | "ON_TRACK" | "BEHIND";
 
 export interface GoalPace {

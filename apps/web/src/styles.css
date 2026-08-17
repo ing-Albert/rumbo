@@ -826,6 +826,77 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Aviso de presupuesto en el inicio. Comparte la forma del aviso de asignacion
+   y solo cambia de color al pasarse del limite, para que "cerca" y "pasado" no
+   griten igual. */
+.budget-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 18px;
+  padding: 18px 20px;
+  border: 1px solid;
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+}
+.budget-alert.near {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  border-left-color: var(--warning);
+}
+.budget-alert.over {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  border-left-color: var(--danger);
+}
+.budget-alert > div:first-child {
+  display: flex;
+  align-items: start;
+  gap: 13px;
+}
+.budget-alert > div:first-child > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: white;
+}
+.budget-alert.near > div:first-child > span {
+  background: var(--warning);
+}
+.budget-alert.over > div:first-child > span {
+  background: var(--danger);
+}
+.budget-alert-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+.budget-alert .button-row {
+  flex-wrap: nowrap;
+  margin-top: 0;
+}
+/* Etiqueta por categoria dentro de la pantalla de presupuesto. */
+.budget-flag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.budget-flag.near {
+  color: var(--warning);
+}
+.budget-flag.over {
+  color: var(--danger);
+}
 .error-banner button,
 .text-button {
   border: 0;
@@ -2221,11 +2292,13 @@ h2 {
   .button-row {
     justify-content: center;
   }
-  .allocation-alert {
+  .allocation-alert,
+  .budget-alert {
     align-items: stretch;
     display: grid;
   }
-  .allocation-alert .button-row {
+  .allocation-alert .button-row,
+  .budget-alert .button-row {
     justify-content: start;
   }
   .page-title {

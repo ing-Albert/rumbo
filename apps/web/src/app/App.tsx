@@ -15,6 +15,7 @@ import { Projection } from "../features/dashboard/Projection";
 import { RecentMovements } from "../features/dashboard/RecentMovements";
 import { MovementDialog } from "../features/movements/MovementDialog";
 import { MovementsPage } from "../features/movements/MovementsPage";
+import { BudgetAlertBanner } from "../features/budget/BudgetAlertBanner";
 import { BudgetPage } from "../features/budget/BudgetPage";
 import { GoalsPage } from "../features/goals/GoalsPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
@@ -187,6 +188,8 @@ export default function App() {
                   </div>
                 </section>
               )}
+
+              {!loading && <BudgetAlertBanner limits={budgetLimits} summary={summary} />}
 
               {error && (
                 <div className="error-banner" role="alert">
