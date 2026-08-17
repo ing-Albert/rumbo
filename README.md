@@ -35,7 +35,19 @@ npm run build
 - `apps/web`: PWA React y Vite.
 - `apps/api`: API Fastify autenticada y persistencia PostgreSQL aislada por usuario.
 - `packages/domain`: contratos, validaciones y calculos financieros compartidos.
+- `android`: envoltorio nativo generado con Capacitor; ver `MOVIL_ANDROID.md`.
 - Documentos Markdown: especificacion funcional, UX/UI, reglas y datos.
+
+## App movil
+
+El mismo build de `apps/web` se empaqueta como APK de Android con Capacitor,
+contra el mismo backend de produccion. Instrucciones completas en
+`MOVIL_ANDROID.md`.
+
+```bash
+npm run build:mobile   # bundle web en modo native + cap sync
+npm run mobile:open    # abre el proyecto en Android Studio
+```
 
 ## Primera vertical
 

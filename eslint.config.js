@@ -12,7 +12,11 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/coverage/**",
       "apps/web/dev-dist/**",
-      "supabase/migrations/**"
+      "supabase/migrations/**",
+      // Proyecto nativo generado por Capacitor: no es codigo nuestro y ademas
+      // contiene una copia del build web.
+      "android/**",
+      "ios/**"
     ]
   },
   js.configs.recommended,

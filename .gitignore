@@ -7,5 +7,6 @@ coverage/
 .env.*
 !.env.example
 !**/.env.example
+!apps/web/.env.native
 apps/api/data/
 apps/web/dev-dist/

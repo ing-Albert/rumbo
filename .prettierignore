@@ -4,3 +4,5 @@ coverage
 apps/web/dev-dist
 supabase/migrations
 package-lock.json
+android
+ios

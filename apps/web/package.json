@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b && vite build",
+    "build:native": "tsc -b && vite build --mode native",
     "dev": "vite",
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false"

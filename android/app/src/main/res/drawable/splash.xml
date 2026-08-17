@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pantalla de arranque: mismo crema del tema de la app con el logo centrado,
+  para que el salto al WebView no se note. Reemplaza al splash.png de ejemplo
+  que trae Capacitor.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/rumbo_splash_background" />
+    <item
+        android:width="160dp"
+        android:height="160dp"
+        android:drawable="@drawable/rumbo_logo"
+        android:gravity="center" />
+</layer-list>

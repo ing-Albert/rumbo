@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "build": "npm run build -w @ahorra/domain && npm run build -w @ahorra/api && npm run build -w @ahorra/web",
+    "build:mobile": "npm run build -w @ahorra/domain && npm run build:native -w @ahorra/web && cap sync android",
+    "mobile:open": "cap open android",
     "dev": "npm run build -w @ahorra/domain && concurrently -n API,WEB -c magenta,cyan \"npm run dev -w @ahorra/api\" \"npm run dev -w @ahorra/web\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -18,6 +20,7 @@
     "typecheck": "npm run build -w @ahorra/domain && npm run typecheck -w @ahorra/api && npm run typecheck -w @ahorra/web"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
@@ -26,5 +29,9 @@
     "globals": "^17.11.0",
     "prettier": "^3.9.6",
     "typescript-eslint": "^8.67.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
   }
 }

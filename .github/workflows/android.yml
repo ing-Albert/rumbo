@@ -1,0 +1,46 @@
+name: Android APK
+
+# Se dispara a mano desde la pestana Actions de GitHub. Genera un APK de debug
+# (firmado con la clave de desarrollo de Android, suficiente para instalarlo en
+# un telefono propio, no para publicar en Play Store) y lo sube como artefacto
+# descargable del run.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      # `npm install` y no `npm ci`: el package-lock.json se genera en Windows y
+      # no trae resueltos los binarios nativos de Rollup para Linux (npm/cli#4828).
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web bundle for the native shell
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npm run build:mobile
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rumbo-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

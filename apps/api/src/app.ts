@@ -26,10 +26,17 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
   const app = Fastify({ logger: false });
   const authenticatedUsers = new WeakMap<FastifyRequest, AuthenticatedUser>();
 
-  const allowedOrigins = process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()) ?? [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:4173"
+  // Origenes de la app nativa (Capacitor): Android sirve el bundle desde
+  // http://localhost y iOS desde capacitor://localhost. Van siempre permitidos
+  // porque no son configurables por despliegue.
+  const nativeOrigins = ["http://localhost", "https://localhost", "capacitor://localhost"];
+  const allowedOrigins = [
+    ...(process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()) ?? [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:4173"
+    ]),
+    ...nativeOrigins
   ];
   app.register(cors, { origin: allowedOrigins });
 
