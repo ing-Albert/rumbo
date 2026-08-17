@@ -1,15 +1,20 @@
 import {
   dominicanDate,
+  nextRecurrenceDate,
   type BudgetLimit,
   type BudgetLimitInput,
   type CreateExpenseCategory,
   type CreateGoal,
   type CreateMovement,
+  type CreateRecurringMovement,
   type ExpenseCategory,
   type Goal,
   type GoalContribution,
   type GoalContributionInput,
-  type Movement
+  type Movement,
+  type RecurrenceFrequency,
+  type RecurringMovement,
+  type UpdateRecurringMovement
 } from "@ahorra/domain";
 import type { Pool, PoolClient } from "pg";
 import type { FinancePersistence, Space, UserFinanceRepository } from "../../persistence.js";
@@ -27,6 +32,22 @@ interface MovementRow {
   effective_date: DatabaseDate;
   description: string;
   category: string;
+  created_at: DatabaseDate;
+  recurring_movement_id?: string | null;
+}
+
+interface RecurringMovementRow {
+  id: string;
+  space_id: string;
+  type: RecurringMovement["type"];
+  frequency: RecurrenceFrequency;
+  amount_cents: DatabaseNumber;
+  description: string;
+  category: string;
+  start_date: DatabaseDate;
+  end_date: DatabaseDate | null;
+  next_run_date: DatabaseDate;
+  active: boolean;
   created_at: DatabaseDate;
 }
 
@@ -50,6 +71,22 @@ interface ContributionRow {
   effective_date: DatabaseDate;
   created_at: DatabaseDate;
 }
+
+/**
+ * Techo de ocurrencias por peticion. Una regla semanal olvidada durante anos
+ * pediria miles de inserciones de golpe; lo que sobre se genera en la siguiente
+ * lectura, sin dejar una peticion colgada.
+ */
+const MAX_OCCURRENCES_PER_RUN = 240;
+
+const RECURRING_SELECT = `select r.id, r.space_id, r.type, r.frequency, r.amount_cents,
+                                 r.description, r.start_date, r.end_date, r.next_run_date,
+                                 r.active, r.created_at,
+                                 coalesce(c.name, 'Sin categoria') as category
+                          from public.recurring_movements r
+                          left join public.categories c
+                            on c.id = r.category_id and c.user_id = r.user_id
+                           and c.space_id = r.space_id`;
 
 function safeInteger(value: DatabaseNumber): number {
   const number = typeof value === "number" ? value : Number(value);
@@ -76,6 +113,24 @@ function mapMovement(row: MovementRow): Movement {
     effectiveDate: dateOnly(row.effective_date),
     description: row.description,
     category: row.category,
+    createdAt: timestamp(row.created_at),
+    recurringMovementId: row.recurring_movement_id ?? null
+  };
+}
+
+function mapRecurringMovement(row: RecurringMovementRow): RecurringMovement {
+  return {
+    id: row.id,
+    spaceId: row.space_id,
+    type: row.type,
+    frequency: row.frequency,
+    amountCents: safeInteger(row.amount_cents),
+    description: row.description,
+    category: row.category,
+    startDate: dateOnly(row.start_date),
+    endDate: row.end_date === null ? null : dateOnly(row.end_date),
+    nextRunDate: dateOnly(row.next_run_date),
+    active: row.active,
     createdAt: timestamp(row.created_at)
   };
 }
@@ -218,7 +273,7 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       }
       const result = await client.query<MovementRow>(
         `select m.id, m.space_id, m.type, m.status, m.amount_cents,
-                m.effective_date, m.description, m.created_at,
+                m.effective_date, m.description, m.created_at, m.recurring_movement_id,
                 coalesce(c.name, case when m.type = 'CONTRIBUTION' then 'Ahorro' else 'Sin categoria' end) as category
          from public.movements m
          left join public.categories c
@@ -561,6 +616,196 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
       return mapContribution(updated.rows[0]!);
     });
+  }
+
+  async listRecurringMovements(spaceId: string): Promise<RecurringMovement[]> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query<RecurringMovementRow>(
+        `${RECURRING_SELECT}
+         where r.user_id = $1 and r.space_id = $2
+         order by r.active desc, r.next_run_date, r.created_at`,
+        [this.userId, spaceId]
+      );
+      return result.rows.map(mapRecurringMovement);
+    });
+  }
+
+  async createRecurringMovement(
+    input: CreateRecurringMovement
+  ): Promise<RecurringMovement | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      if (!(await ownedSpaceExists(client, this.userId, input.spaceId))) return undefined;
+      const categoryId = await resolveCategory(client, this.userId, input);
+      if (!categoryId) return undefined;
+
+      const created = await client.query<{ id: string }>(
+        `insert into public.recurring_movements (
+           user_id, space_id, category_id, type, frequency, amount_cents,
+           description, start_date, end_date, next_run_date
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9::date, $8::date)
+         returning id`,
+        [
+          this.userId,
+          input.spaceId,
+          categoryId,
+          input.type,
+          input.frequency,
+          input.amountCents,
+          input.description,
+          input.startDate,
+          input.endDate
+        ]
+      );
+      return this.readRecurring(client, created.rows[0]!.id);
+    });
+  }
+
+  async updateRecurringMovement(
+    id: string,
+    input: UpdateRecurringMovement
+  ): Promise<RecurringMovement | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const existing = await client.query<{ space_id: string; next_run_date: DatabaseDate }>(
+        `select space_id, next_run_date from public.recurring_movements
+         where id = $1 and user_id = $2`,
+        [id, this.userId]
+      );
+      const current = existing.rows[0];
+      if (!current) return undefined;
+
+      const categoryId = await resolveCategory(client, this.userId, {
+        spaceId: current.space_id,
+        type: input.type,
+        category: input.category
+      });
+      if (!categoryId) return undefined;
+
+      // Cambiar la fecha de inicio redefine el ancla de la serie, asi que la
+      // proxima ejecucion se recalcula desde ahi. Mientras el inicio no cambia,
+      // se conserva lo ya avanzado para no regenerar lo que ya se registro.
+      const startChanged = dateOnly(current.next_run_date) < input.startDate;
+      const updated = await client.query<{ id: string }>(
+        `update public.recurring_movements
+         set category_id = $3, type = $4, frequency = $5, amount_cents = $6,
+             description = $7, start_date = $8::date, end_date = $9::date,
+             active = $10, updated_at = now(),
+             next_run_date = case when $11 then $8::date else next_run_date end
+         where id = $1 and user_id = $2
+         returning id`,
+        [
+          id,
+          this.userId,
+          categoryId,
+          input.type,
+          input.frequency,
+          input.amountCents,
+          input.description,
+          input.startDate,
+          input.endDate,
+          input.active,
+          startChanged
+        ]
+      );
+      if (updated.rowCount !== 1) return undefined;
+      return this.readRecurring(client, id);
+    });
+  }
+
+  async deleteRecurringMovement(id: string): Promise<boolean> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      // Los movimientos ya generados se quedan: son gastos que de verdad
+      // ocurrieron, y borrarlos falsearia los meses pasados. La clave foranea
+      // los desvincula sola.
+      const result = await client.query(
+        "delete from public.recurring_movements where id = $1 and user_id = $2",
+        [id, this.userId]
+      );
+      return result.rowCount === 1;
+    });
+  }
+
+  async materializeDueRecurrences(spaceId: string, today: string): Promise<number> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      // `for update` serializa dos peticiones simultaneas del mismo usuario:
+      // la segunda espera y ya encuentra `next_run_date` avanzado.
+      const due = await client.query<{
+        id: string;
+        category_id: string | null;
+        type: RecurringMovement["type"];
+        frequency: RecurrenceFrequency;
+        amount_cents: DatabaseNumber;
+        description: string;
+        start_date: DatabaseDate;
+        end_date: DatabaseDate | null;
+        next_run_date: DatabaseDate;
+      }>(
+        `select id, category_id, type, frequency, amount_cents, description,
+                start_date, end_date, next_run_date
+         from public.recurring_movements
+         where user_id = $1 and space_id = $2 and active and next_run_date <= $3::date
+         for update`,
+        [this.userId, spaceId, today]
+      );
+
+      let generated = 0;
+
+      for (const rule of due.rows) {
+        const startDate = dateOnly(rule.start_date);
+        const endDate = rule.end_date === null ? null : dateOnly(rule.end_date);
+        let occurrence = dateOnly(rule.next_run_date);
+        let guard = 0;
+
+        while (occurrence <= today && (endDate === null || occurrence <= endDate)) {
+          // Tope de seguridad: una regla semanal con inicio muy antiguo podria
+          // pedir miles de inserciones en una sola peticion. Lo que quede sin
+          // generar se recupera en la siguiente lectura.
+          if (guard >= MAX_OCCURRENCES_PER_RUN) break;
+
+          const inserted = await client.query(
+            `insert into public.movements (
+               user_id, space_id, category_id, type, status, source,
+               amount_cents, effective_date, description, recurring_movement_id
+             ) values ($1, $2, $3, $4, 'REGISTERED', 'RECURRENCE', $5, $6::date, $7, $8)
+             on conflict do nothing`,
+            [
+              this.userId,
+              spaceId,
+              rule.category_id,
+              rule.type,
+              safeInteger(rule.amount_cents),
+              occurrence,
+              rule.description,
+              rule.id
+            ]
+          );
+          generated += inserted.rowCount ?? 0;
+          occurrence = nextRecurrenceDate(startDate, rule.frequency, occurrence);
+          guard += 1;
+        }
+
+        const finished = endDate !== null && occurrence > endDate;
+        await client.query(
+          `update public.recurring_movements
+           set next_run_date = $3::date, active = $4, updated_at = now()
+           where id = $1 and user_id = $2`,
+          [rule.id, this.userId, occurrence, !finished]
+        );
+      }
+
+      return generated;
+    });
+  }
+
+  private async readRecurring(
+    client: PoolClient,
+    id: string
+  ): Promise<RecurringMovement | undefined> {
+    const result = await client.query<RecurringMovementRow>(
+      `${RECURRING_SELECT} where r.id = $1 and r.user_id = $2`,
+      [id, this.userId]
+    );
+    const row = result.rows[0];
+    return row ? mapRecurringMovement(row) : undefined;
   }
 
   async listExpenseCategories(spaceId: string): Promise<ExpenseCategory[]> {

@@ -15,6 +15,7 @@ import { Projection } from "../features/dashboard/Projection";
 import { RecentMovements } from "../features/dashboard/RecentMovements";
 import { MovementDialog } from "../features/movements/MovementDialog";
 import { MovementsPage } from "../features/movements/MovementsPage";
+import { RecurrencesPanel } from "../features/movements/RecurrencesPanel";
 import { BudgetAlertBanner } from "../features/budget/BudgetAlertBanner";
 import { BudgetPage } from "../features/budget/BudgetPage";
 import { GoalsPage } from "../features/goals/GoalsPage";
@@ -53,6 +54,7 @@ export default function App() {
     budgetLimits,
     goals,
     customCategories,
+    recurrences,
     error: moduleError
   } = useModuleData(accessToken, spaceId, month, refreshKey, auth.user?.id);
 
@@ -222,6 +224,15 @@ export default function App() {
               onAdd={openForm}
               onEdit={editMovement}
               minDate={auth.user?.created_at ? auth.user.created_at.substring(0, 10) : undefined}
+              recurrencesSlot={
+                <RecurrencesPanel
+                  accessToken={accessToken}
+                  spaceId={spaceId}
+                  recurrences={recurrences}
+                  customCategories={customCategories}
+                  onSaved={() => setRefreshKey((value) => value + 1)}
+                />
+              }
             />
           ) : pathname === "/presupuesto" ? (
             <BudgetPage

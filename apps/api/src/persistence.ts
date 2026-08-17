@@ -4,11 +4,14 @@ import type {
   CreateExpenseCategory,
   CreateGoal,
   CreateMovement,
+  CreateRecurringMovement,
   ExpenseCategory,
   Goal,
   GoalContribution,
   GoalContributionInput,
-  Movement
+  Movement,
+  RecurringMovement,
+  UpdateRecurringMovement
 } from "@ahorra/domain";
 
 export interface Space {
@@ -36,6 +39,20 @@ export interface UserFinanceRepository {
     contributionId: string,
     input: GoalContributionInput
   ): Awaitable<GoalContribution | undefined>;
+  listRecurringMovements(spaceId: string): Awaitable<RecurringMovement[]>;
+  createRecurringMovement(input: CreateRecurringMovement): Awaitable<RecurringMovement | undefined>;
+  updateRecurringMovement(
+    id: string,
+    input: UpdateRecurringMovement
+  ): Awaitable<RecurringMovement | undefined>;
+  deleteRecurringMovement(id: string): Awaitable<boolean>;
+  /**
+   * Registra las ocurrencias que ya vencieron y devuelve cuantas creo.
+   *
+   * Se llama al leer, no desde un cron: el despliegue es serverless y no hay
+   * proceso vivo que despierte a medianoche.
+   */
+  materializeDueRecurrences(spaceId: string, today: string): Awaitable<number>;
   listExpenseCategories(spaceId: string): Awaitable<ExpenseCategory[]>;
   createExpenseCategory(input: CreateExpenseCategory): Awaitable<ExpenseCategory | undefined>;
   updateExpenseCategory(id: string, name: string): Awaitable<ExpenseCategory | undefined>;

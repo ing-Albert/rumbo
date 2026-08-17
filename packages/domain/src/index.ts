@@ -37,6 +37,24 @@ export const goalContributionSchema = z.object({
   effectiveDate: z.iso.date()
 });
 
+export const recurrenceFrequencies = ["WEEKLY", "BIWEEKLY", "MONTHLY"] as const;
+
+export const createRecurringMovementSchema = z.object({
+  spaceId: entityIdSchema,
+  // Los aportes a metas se registran por su propio flujo, no como recurrencia.
+  type: z.enum(["INCOME", "EXPENSE"]),
+  frequency: z.enum(recurrenceFrequencies),
+  amountCents: amountCentsSchema.positive(),
+  description: z.string().trim().min(1).max(160),
+  category: z.string().trim().min(1).max(80),
+  startDate: z.iso.date(),
+  endDate: z.iso.date().nullable().default(null)
+});
+
+export const updateRecurringMovementSchema = createRecurringMovementSchema
+  .omit({ spaceId: true })
+  .extend({ active: z.boolean().default(true) });
+
 export const createExpenseCategorySchema = z.object({
   spaceId: entityIdSchema,
   name: z.string().trim().min(2).max(80)
@@ -54,10 +72,15 @@ export type CreateGoal = z.infer<typeof createGoalSchema>;
 export type GoalContributionInput = z.infer<typeof goalContributionSchema>;
 export type CreateExpenseCategory = z.infer<typeof createExpenseCategorySchema>;
 export type UpdateExpenseCategory = z.infer<typeof updateExpenseCategorySchema>;
+export type RecurrenceFrequency = (typeof recurrenceFrequencies)[number];
+export type CreateRecurringMovement = z.infer<typeof createRecurringMovementSchema>;
+export type UpdateRecurringMovement = z.infer<typeof updateRecurringMovementSchema>;
 
 export interface Movement extends CreateMovement {
   id: string;
   createdAt: string;
+  /** Regla que lo genero, si no se escribio a mano. */
+  recurringMovementId?: string | null;
 }
 
 export interface BudgetLimit extends BudgetLimitInput {
@@ -78,6 +101,14 @@ export interface Goal {
 
 export interface ExpenseCategory extends CreateExpenseCategory {
   id: string;
+  createdAt: string;
+}
+
+export interface RecurringMovement extends CreateRecurringMovement {
+  id: string;
+  /** Proxima fecha que falta por generar. */
+  nextRunDate: string;
+  active: boolean;
   createdAt: string;
 }
 
@@ -151,6 +182,43 @@ export function calculateSummary(movements: Movement[]): Summary {
       .map(([category, amountCents]) => ({ category, amountCents }))
       .sort((left, right) => right.amountCents - left.amountCents)
   };
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function toIsoDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/**
+ * Calcula cuando toca la siguiente vez, contando siempre desde `startDate`.
+ *
+ * Contar desde el origen y no desde la ocurrencia anterior es lo que hace que
+ * una regla mensual anclada en un dia 31 vuelva al 31 despues de pasar por
+ * febrero: si se encadenara desde la fecha ya recortada, la serie se quedaria
+ * en el 28 para siempre.
+ */
+export function nextRecurrenceDate(
+  startDate: string,
+  frequency: RecurrenceFrequency,
+  current: string
+): string {
+  if (frequency === "WEEKLY" || frequency === "BIWEEKLY") {
+    const [year, month, day] = current.split("-").map(Number);
+    const moved = new Date(Date.UTC(year!, month! - 1, day!));
+    moved.setUTCDate(moved.getUTCDate() + (frequency === "WEEKLY" ? 7 : 14));
+    return moved.toISOString().slice(0, 10);
+  }
+
+  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+  const [currentYear, currentMonth] = current.split("-").map(Number);
+  const elapsed = (currentYear! - startYear!) * 12 + (currentMonth! - startMonth!);
+  const index = startMonth! - 1 + elapsed + 1;
+  const year = startYear! + Math.floor(index / 12);
+  const month = (index % 12) + 1;
+  return toIsoDate(year, month, Math.min(startDay!, daysInMonth(year, month)));
 }
 
 /** Punto a partir del cual una categoria deja de ir holgada y conviene avisar. */

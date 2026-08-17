@@ -4,6 +4,7 @@ import {
   calculateGoalPace,
   calculateSummary,
   dominicanDate,
+  nextRecurrenceDate,
   type Movement
 } from "./index.js";
 
@@ -220,5 +221,49 @@ describe("calculateBudgetAlerts", () => {
     expect(alerts.categories.map((item) => item.category)).toEqual(["Ocio", "Transporte", "Salud"]);
     expect(alerts.overCount).toBe(1);
     expect(alerts.nearCount).toBe(1);
+  });
+});
+
+describe("nextRecurrenceDate", () => {
+  it("moves a monthly rule to the same day of the next month", () => {
+    expect(nextRecurrenceDate("2026-01-15", "MONTHLY", "2026-01-15")).toBe("2026-02-15");
+  });
+
+  it("clamps to the last day when the anchor day does not exist", () => {
+    expect(nextRecurrenceDate("2026-01-31", "MONTHLY", "2026-01-31")).toBe("2026-02-28");
+  });
+
+  it("returns to the anchor day after a short month, instead of staying clamped", () => {
+    // Es la razon de contar desde el origen: encadenando desde el 28 la serie
+    // se quedaria en el 28 para siempre.
+    expect(nextRecurrenceDate("2026-01-31", "MONTHLY", "2026-02-28")).toBe("2026-03-31");
+  });
+
+  it("handles a leap February", () => {
+    expect(nextRecurrenceDate("2028-01-31", "MONTHLY", "2028-01-31")).toBe("2028-02-29");
+  });
+
+  it("rolls a monthly rule over the end of the year", () => {
+    expect(nextRecurrenceDate("2026-03-10", "MONTHLY", "2026-12-10")).toBe("2027-01-10");
+  });
+
+  it("adds seven days for a weekly rule, across month and year ends", () => {
+    expect(nextRecurrenceDate("2026-08-25", "WEEKLY", "2026-08-25")).toBe("2026-09-01");
+    expect(nextRecurrenceDate("2026-12-28", "WEEKLY", "2026-12-28")).toBe("2027-01-04");
+  });
+
+  it("adds fourteen days for a biweekly rule", () => {
+    expect(nextRecurrenceDate("2026-08-25", "BIWEEKLY", "2026-08-25")).toBe("2026-09-08");
+  });
+
+  it("keeps a monthly series stable when applied repeatedly", () => {
+    let date = "2026-01-31";
+    const series = [date];
+    for (let index = 0; index < 4; index += 1) {
+      date = nextRecurrenceDate("2026-01-31", "MONTHLY", date);
+      series.push(date);
+    }
+
+    expect(series).toEqual(["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30", "2026-05-31"]);
   });
 });

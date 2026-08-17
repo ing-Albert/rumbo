@@ -882,6 +882,78 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Reglas de movimientos recurrentes, dentro de la pantalla de Movimientos. */
+.recurrences-panel {
+  margin-top: 24px;
+}
+.recurrences-empty {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.recurrence-list {
+  display: grid;
+  gap: 4px;
+}
+.recurrence-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.recurrence-row:last-child {
+  border-bottom: 0;
+}
+.recurrence-row.paused {
+  opacity: 0.6;
+}
+.recurrence-row > div:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.recurrence-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recurrence-row span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.recurrence-row > .recurrence-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+}
+.recurrence-form {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.recurrence-hint {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+/* Marca en la tabla los movimientos que nadie escribio a mano. */
+.recurrence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--muted-surface);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
 /* Etiqueta por categoria dentro de la pantalla de presupuesto. */
 .budget-flag {
   display: flex;

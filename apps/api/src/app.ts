@@ -5,9 +5,12 @@ import {
   createExpenseCategorySchema,
   updateExpenseCategorySchema,
   createMovementSchema,
+  createRecurringMovementSchema,
+  dominicanDate,
   entityIdSchema,
   goalContributionSchema,
-  monthSchema
+  monthSchema,
+  updateRecurringMovementSchema
 } from "@ahorra/domain";
 import cors from "@fastify/cors";
 import Fastify, { type FastifyRequest } from "fastify";
@@ -84,6 +87,7 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
       if (!(await database.spaceExists(spaceId))) {
         return reply.code(404).send({ message: "El espacio no existe." });
       }
+      await database.materializeDueRecurrences(spaceId, dominicanDate());
       return await database.listMovements(spaceId, request.query.month);
     }
   );
@@ -102,6 +106,10 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
       if (!(await database.spaceExists(spaceId))) {
         return reply.code(404).send({ message: "El espacio no existe." });
       }
+      // Las recurrencias se materializan al leer, porque el despliegue es
+      // serverless y no hay proceso vivo que las despierte a medianoche. Va
+      // antes del calculo para que el resumen incluya lo que vencio hoy.
+      await database.materializeDueRecurrences(spaceId, dominicanDate());
       return calculateSummary(await database.listMovements(spaceId, request.query.month));
     }
   );
@@ -292,6 +300,62 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
     const database = repositoryFor(request);
     const deleted = await database.deleteExpenseCategory(idResult.data);
     if (!deleted) return reply.code(404).send({ message: "Categoria no encontrada." });
+    return reply.code(204).send();
+  });
+
+  app.get<{ Querystring: { spaceId?: string } }>("/api/recurrences", async (request, reply) => {
+    const spaceId = request.query.spaceId;
+    if (!spaceId || !entityIdSchema.safeParse(spaceId).success) {
+      return reply.code(400).send({ message: "Selecciona un espacio valido." });
+    }
+    const database = repositoryFor(request);
+    if (!(await database.spaceExists(spaceId))) {
+      return reply.code(404).send({ message: "El espacio no existe." });
+    }
+    await database.materializeDueRecurrences(spaceId, dominicanDate());
+    return await database.listRecurringMovements(spaceId);
+  });
+
+  app.post("/api/recurrences", async (request, reply) => {
+    const database = repositoryFor(request);
+    const parsed = createRecurringMovementSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ message: "Revisa los datos de la recurrencia.", issues: parsed.error.issues });
+    }
+    if (!(await database.spaceExists(parsed.data.spaceId))) {
+      return reply.code(404).send({ message: "El espacio no existe." });
+    }
+    const created = await database.createRecurringMovement(parsed.data);
+    if (!created) return reply.code(400).send({ message: "No pudimos crear la recurrencia." });
+    // Una regla que arranca hoy o antes ya tiene ocurrencias que registrar:
+    // sin esto no apareceria nada hasta la siguiente lectura.
+    await database.materializeDueRecurrences(parsed.data.spaceId, dominicanDate());
+    return reply.code(201).send(created);
+  });
+
+  app.put<{ Params: { id: string } }>("/api/recurrences/:id", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID de recurrencia invalido." });
+    const parsed = updateRecurringMovementSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ message: "Revisa los datos de la recurrencia.", issues: parsed.error.issues });
+    }
+    const database = repositoryFor(request);
+    const updated = await database.updateRecurringMovement(idResult.data, parsed.data);
+    if (!updated) return reply.code(404).send({ message: "Recurrencia no encontrada." });
+    return updated;
+  });
+
+  app.delete<{ Params: { id: string } }>("/api/recurrences/:id", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID de recurrencia invalido." });
+    const database = repositoryFor(request);
+    const deleted = await database.deleteRecurringMovement(idResult.data);
+    if (!deleted) return reply.code(404).send({ message: "Recurrencia no encontrada." });
     return reply.code(204).send();
   });
 

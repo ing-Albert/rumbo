@@ -1,6 +1,6 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
-import { Pencil, TrendingDown, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { PageTitle } from "../../components/PageTitle";
 import { StatusPill } from "../../components/StatusPill";
@@ -10,12 +10,16 @@ export function MovementsPage({
   movements,
   onAdd,
   onEdit,
-  minDate
+  minDate,
+  recurrencesSlot
 }: {
   movements: Movement[];
   onAdd: (type: MovementType) => void;
   onEdit: (movement: Movement) => void;
   minDate?: string;
+  /** Panel de recurrencias. Se recibe montado para no arrastrar hasta aqui
+      el token ni el espacio, que esta pagina no necesita para nada mas. */
+  recurrencesSlot?: ReactNode;
 }) {
   const pageSize = 15;
   const [query, setQuery] = useState("");
@@ -224,6 +228,11 @@ export function MovementsPage({
                         <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
                         <td>
                           <strong>{movement.description}</strong>
+                          {movement.recurringMovementId && (
+                            <span className="recurrence-badge" title="Generado por una recurrencia">
+                              <Repeat size={12} aria-hidden="true" /> Recurrente
+                            </span>
+                          )}
                         </td>
                         <td>{movement.category}</td>
                         <td>
@@ -293,6 +302,7 @@ export function MovementsPage({
           )}
         </section>
       )}
+      {recurrencesSlot}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { BudgetLimit, ExpenseCategory, Goal } from "@ahorra/domain";
+import type { BudgetLimit, ExpenseCategory, Goal, RecurringMovement } from "@ahorra/domain";
 import { apiFetch } from "../lib/api";
 import { readJson } from "../lib/format";
 
@@ -13,12 +13,14 @@ export function useModuleData(
   const [budgetLimits, setBudgetLimits] = useState<BudgetLimit[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [customCategories, setCustomCategories] = useState<ExpenseCategory[]>([]);
+  const [recurrences, setRecurrences] = useState<RecurringMovement[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setBudgetLimits([]);
     setGoals([]);
     setCustomCategories([]);
+    setRecurrences([]);
   }, [userId]);
 
   useEffect(() => {
@@ -33,12 +35,16 @@ export function useModuleData(
       }).then((response) => readJson<Goal[]>(response)),
       apiFetch(accessToken, `/api/categories?spaceId=${encodeURIComponent(spaceId)}`, {
         signal: controller.signal
-      }).then((response) => readJson<ExpenseCategory[]>(response))
+      }).then((response) => readJson<ExpenseCategory[]>(response)),
+      apiFetch(accessToken, `/api/recurrences?spaceId=${encodeURIComponent(spaceId)}`, {
+        signal: controller.signal
+      }).then((response) => readJson<RecurringMovement[]>(response))
     ])
-      .then(([limits, nextGoals, nextCategories]) => {
+      .then(([limits, nextGoals, nextCategories, nextRecurrences]) => {
         setBudgetLimits(limits);
         setGoals(nextGoals);
         setCustomCategories(nextCategories);
+        setRecurrences(nextRecurrences);
       })
       .catch((reason: unknown) => {
         if (!(reason instanceof DOMException && reason.name === "AbortError"))
@@ -47,5 +53,5 @@ export function useModuleData(
     return () => controller.abort();
   }, [accessToken, spaceId, month, refreshKey]);
 
-  return { budgetLimits, goals, customCategories, error };
+  return { budgetLimits, goals, customCategories, recurrences, error };
 }
