@@ -43,7 +43,9 @@ siempre los origenes de Capacitor (`https://localhost`, `http://localhost`,
 ### Opcion A: desde GitHub Actions (no requiere instalar nada)
 
 El workflow `.github/workflows/android.yml` compila el APK de debug en los
-servidores de GitHub.
+servidores de GitHub. Requiere que la cuenta tenga GitHub Actions habilitado:
+si hay un problema de facturacion, el job falla antes de arrancar con
+"your account is locked due to a billing issue" y no es un error del proyecto.
 
 1. Configurar una sola vez los secrets del repositorio (Settings > Secrets and
    variables > Actions): `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
@@ -52,17 +54,46 @@ servidores de GitHub.
 
 ### Opcion B: en la maquina local
 
-Requiere Android Studio instalado (trae el JDK y el SDK de Android).
+Hace falta un JDK 21 y el SDK de Android. Android Studio los trae, pero no es
+necesario: alcanza con el JDK y las command line tools.
+
+Instalacion de la cadena minima (una sola vez):
+
+```bash
+winget install --id Microsoft.OpenJDK.21 --silent --accept-package-agreements
+```
+
+Descargar `commandlinetools-win-*_latest.zip` de
+<https://developer.android.com/studio#command-line-tools-only>, descomprimirlo
+en `%USERPROFILE%\Android\Sdk\cmdline-tools\latest`, y desde ahi:
+
+```bash
+sdkmanager --licenses
+sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+```
+
+Crear `android/local.properties` (ignorado por Git) con la ruta del SDK:
+
+```
+sdk.dir=C\:\\Users\\TU_USUARIO\\Android\\Sdk
+```
+
+Ya con eso, generar el APK:
 
 ```bash
 npm run build:mobile
-npm run mobile:open
+cd android && ./gradlew assembleDebug
 ```
 
 `build:mobile` compila `packages/domain`, genera el bundle web en modo `native`
-y copia el resultado al proyecto Android (`cap sync`). `mobile:open` abre
-Android Studio, donde se genera el APK con **Build > Build Bundle(s) / APK(s) >
-Build APK(s)**.
+y copia el resultado al proyecto Android (`cap sync`). El APK queda en
+`android/app/build/outputs/apk/debug/app-debug.apk`.
+
+Si `gradlew` no encuentra Java, exportar `JAVA_HOME` apuntando al JDK 21
+(`C:\Program Files\Microsoft\jdk-21.x.y.z-hotspot`).
+
+Con Android Studio instalado, `npm run mobile:open` abre el proyecto y el APK
+se genera desde **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
 
 ## Instalar el APK en un telefono
 
