@@ -8,6 +8,7 @@ import { ProgressRing } from "../../components/ProgressRing";
 import { StatusPill } from "../../components/StatusPill";
 import { apiFetch } from "../../lib/api";
 import { today } from "../../lib/format";
+import { GoalPaceNote } from "./GoalPaceNote";
 
 export function GoalsPage({
   accessToken,
@@ -257,6 +258,7 @@ export function GoalsPage({
                       : "Sin fecha"}
                   </span>
                 </div>
+                <GoalPaceNote goal={goal} />
                 {contributingTo === goal.id ? (
                   <div className="contribution-form">
                     <div className="compact-money">

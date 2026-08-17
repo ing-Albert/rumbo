@@ -1899,6 +1899,37 @@ h2 {
   font-size: var(--text-base);
   margin-bottom: 22px;
 }
+/* El ritmo de ahorro: cuanto apartar al mes para llegar a la fecha objetivo. */
+.goal-pace {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  margin: -12px 0 20px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.goal-pace > svg {
+  flex: none;
+  margin-top: 1px;
+}
+.goal-pace.on-track {
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+.goal-pace.behind {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+.goal-pace.overdue {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
 .full-button {
   width: 100%;
 }
