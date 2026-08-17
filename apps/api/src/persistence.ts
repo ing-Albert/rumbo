@@ -1,4 +1,5 @@
 import type {
+  Balance,
   BudgetLimit,
   BudgetLimitInput,
   CreateExpenseCategory,
@@ -39,6 +40,8 @@ export interface UserFinanceRepository {
     contributionId: string,
     input: GoalContributionInput
   ): Awaitable<GoalContribution | undefined>;
+  getBalance(spaceId: string): Awaitable<Balance | undefined>;
+  setOpeningBalance(spaceId: string, openingCents: number): Awaitable<Balance | undefined>;
   listRecurringMovements(spaceId: string): Awaitable<RecurringMovement[]>;
   createRecurringMovement(input: CreateRecurringMovement): Awaitable<RecurringMovement | undefined>;
   updateRecurringMovement(

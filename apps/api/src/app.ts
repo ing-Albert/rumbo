@@ -10,6 +10,7 @@ import {
   entityIdSchema,
   goalContributionSchema,
   monthSchema,
+  openingBalanceSchema,
   updateRecurringMovementSchema
 } from "@ahorra/domain";
 import cors from "@fastify/cors";
@@ -301,6 +302,34 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
     const deleted = await database.deleteExpenseCategory(idResult.data);
     if (!deleted) return reply.code(404).send({ message: "Categoria no encontrada." });
     return reply.code(204).send();
+  });
+
+  app.get<{ Querystring: { spaceId?: string } }>("/api/balance", async (request, reply) => {
+    const spaceId = request.query.spaceId;
+    if (!spaceId || !entityIdSchema.safeParse(spaceId).success) {
+      return reply.code(400).send({ message: "Selecciona un espacio valido." });
+    }
+    const database = repositoryFor(request);
+    // El saldo suma todo lo registrado, asi que lo recurrente vencido tiene que
+    // estar ya materializado o la cifra saldria corta.
+    await database.materializeDueRecurrences(spaceId, dominicanDate());
+    const balance = await database.getBalance(spaceId);
+    if (!balance) return reply.code(404).send({ message: "El espacio no existe." });
+    return balance;
+  });
+
+  app.put<{ Params: { id: string } }>("/api/spaces/:id/opening-balance", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID de espacio invalido." });
+    const parsed = openingBalanceSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ message: "Escribe un saldo valido." });
+    const database = repositoryFor(request);
+    const balance = await database.setOpeningBalance(
+      idResult.data,
+      parsed.data.openingBalanceCents
+    );
+    if (!balance) return reply.code(404).send({ message: "El espacio no existe." });
+    return balance;
   });
 
   app.get<{ Querystring: { spaceId?: string } }>("/api/recurrences", async (request, reply) => {

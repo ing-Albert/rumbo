@@ -4,17 +4,23 @@ import { Briefcase, CalendarDays, Clock, Coins, Pencil, ShieldCheck, User } from
 import { StatusPill } from "../../components/StatusPill";
 import { supabase } from "../../lib/supabase";
 import { getUserName } from "../../lib/format";
+import { OpeningBalanceCard } from "./OpeningBalanceCard";
+import type { Balance } from "@ahorra/domain";
 
 type Space = { id: string; name: string; type: "PERSONAL" | "BUSINESS" };
 
 export function SettingsPage({
+  accessToken,
   spaces,
   spaceId,
+  balance,
   user,
   onSaved
 }: {
+  accessToken: string;
   spaces: Space[];
   spaceId: string;
+  balance: Balance;
   user: { email?: string; user_metadata?: Record<string, unknown> } | null;
   onSaved: () => void;
 }) {
@@ -149,6 +155,13 @@ export function SettingsPage({
             </div>
           </dl>
         </section>
+        <OpeningBalanceCard
+          accessToken={accessToken}
+          spaceId={spaceId}
+          spaceName={spaces.find((space) => space.id === spaceId)?.name ?? "este espacio"}
+          balance={balance}
+          onSaved={onSaved}
+        />
         <section className="panel privacy-card">
           <p className="eyebrow">Privacidad</p>
           <h2>

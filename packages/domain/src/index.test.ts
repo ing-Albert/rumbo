@@ -4,7 +4,9 @@ import {
   calculateGoalPace,
   calculateSummary,
   dominicanDate,
+  calculateBalance,
   nextRecurrenceDate,
+  type BalanceTotals,
   type Movement
 } from "./index.js";
 
@@ -265,5 +267,62 @@ describe("nextRecurrenceDate", () => {
     }
 
     expect(series).toEqual(["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30", "2026-05-31"]);
+  });
+});
+
+describe("calculateBalance", () => {
+  const totals = (overrides: Partial<BalanceTotals> = {}): BalanceTotals => ({
+    openingCents: 0,
+    incomeCents: 0,
+    expenseCents: 0,
+    contributionCents: 0,
+    ...overrides
+  });
+
+  it("carries the opening balance into the total", () => {
+    const balance = calculateBalance(totals({ openingCents: 50_000_00 }));
+
+    expect(balance.totalCents).toBe(50_000_00);
+    expect(balance.freeCents).toBe(50_000_00);
+  });
+
+  it("does not spend money that was only set aside for a goal", () => {
+    // Un aporte mueve dinero, no lo gasta: el total no cambia, solo deja de
+    // estar libre.
+    const balance = calculateBalance(
+      totals({ incomeCents: 30_000_00, contributionCents: 10_000_00 })
+    );
+
+    expect(balance.totalCents).toBe(30_000_00);
+    expect(balance.earmarkedCents).toBe(10_000_00);
+    expect(balance.freeCents).toBe(20_000_00);
+  });
+
+  it("subtracts expenses from the total, unlike contributions", () => {
+    const balance = calculateBalance(totals({ incomeCents: 30_000_00, expenseCents: 12_000_00 }));
+
+    expect(balance.totalCents).toBe(18_000_00);
+    expect(balance.freeCents).toBe(18_000_00);
+  });
+
+  it("reports a negative total when spending outran the money available", () => {
+    const balance = calculateBalance(totals({ incomeCents: 5_000_00, expenseCents: 8_000_00 }));
+
+    expect(balance.totalCents).toBe(-3_000_00);
+  });
+
+  it("reports negative free money when more was set aside than is left", () => {
+    const balance = calculateBalance(
+      totals({ incomeCents: 10_000_00, expenseCents: 7_000_00, contributionCents: 5_000_00 })
+    );
+
+    expect(balance.totalCents).toBe(3_000_00);
+    expect(balance.freeCents).toBe(-2_000_00);
+  });
+
+  it("accepts a negative opening balance, for a space that starts in the red", () => {
+    const balance = calculateBalance(totals({ openingCents: -1_000_00, incomeCents: 4_000_00 }));
+
+    expect(balance.totalCents).toBe(3_000_00);
   });
 });

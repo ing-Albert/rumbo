@@ -1,6 +1,8 @@
 import {
+  calculateBalance,
   dominicanDate,
   nextRecurrenceDate,
+  type Balance,
   type BudgetLimit,
   type BudgetLimitInput,
   type CreateExpenseCategory,
@@ -616,6 +618,54 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
       return mapContribution(updated.rows[0]!);
     });
+  }
+
+  async getBalance(spaceId: string): Promise<Balance | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const space = await client.query<{ opening_balance_cents: DatabaseNumber }>(
+        `select opening_balance_cents from public.spaces
+         where id = $1 and user_id = $2 and archived_at is null`,
+        [spaceId, this.userId]
+      );
+      if (space.rowCount !== 1) return undefined;
+
+      // Se agrega en la base y no cargando los movimientos: el saldo mira toda
+      // la historia del espacio, no un mes, y esa lista solo crece.
+      const totals = await client.query<{
+        income_cents: DatabaseNumber;
+        expense_cents: DatabaseNumber;
+        contribution_cents: DatabaseNumber;
+      }>(
+        `select
+           coalesce(sum(amount_cents) filter (where type = 'INCOME'), 0) as income_cents,
+           coalesce(sum(amount_cents) filter (where type = 'EXPENSE'), 0) as expense_cents,
+           coalesce(sum(amount_cents) filter (where type = 'CONTRIBUTION'), 0) as contribution_cents
+         from public.movements
+         where user_id = $1 and space_id = $2
+           and deleted_at is null and status = 'REGISTERED'`,
+        [this.userId, spaceId]
+      );
+      const row = totals.rows[0]!;
+
+      return calculateBalance({
+        openingCents: safeInteger(space.rows[0]!.opening_balance_cents),
+        incomeCents: safeInteger(row.income_cents),
+        expenseCents: safeInteger(row.expense_cents),
+        contributionCents: safeInteger(row.contribution_cents)
+      });
+    });
+  }
+
+  async setOpeningBalance(spaceId: string, openingCents: number): Promise<Balance | undefined> {
+    const updated = await withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query(
+        `update public.spaces set opening_balance_cents = $3, updated_at = now()
+         where id = $1 and user_id = $2 and archived_at is null`,
+        [spaceId, this.userId, openingCents]
+      );
+      return result.rowCount === 1;
+    });
+    return updated ? this.getBalance(spaceId) : undefined;
   }
 
   async listRecurringMovements(spaceId: string): Promise<RecurringMovement[]> {

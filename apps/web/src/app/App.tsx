@@ -10,6 +10,7 @@ import { UserMenu } from "../components/layout/UserMenu";
 import { Stat } from "../components/Stat";
 import { CashFlowChart } from "../features/dashboard/CashFlowChart";
 import { CategoryChart } from "../features/dashboard/CategoryChart";
+import { BalanceCard } from "../features/dashboard/BalanceCard";
 import { EmptyState } from "../features/dashboard/EmptyState";
 import { Projection } from "../features/dashboard/Projection";
 import { RecentMovements } from "../features/dashboard/RecentMovements";
@@ -25,6 +26,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 import { useSpaces } from "../hooks/useSpaces";
 import { useMonthlyData } from "../hooks/useMonthlyData";
 import { useModuleData } from "../hooks/useModuleData";
+import { useBalance } from "../hooks/useBalance";
 import { useCountUp } from "../hooks/useCountUp";
 import { usePreviousMonthSummary } from "../hooks/usePreviousMonthSummary";
 import { useWhatsNew } from "../hooks/useWhatsNew";
@@ -59,6 +61,7 @@ export default function App() {
   } = useModuleData(accessToken, spaceId, month, refreshKey, auth.user?.id);
 
   const error = spacesError || monthlyError || moduleError;
+  const { balance } = useBalance(accessToken, spaceId, refreshKey, auth.user?.id);
   const animatedAvailable = useCountUp(summary.availableAfterSavingsCents);
   const previousSummary = usePreviousMonthSummary(accessToken, spaceId, month);
   const whatsNew = useWhatsNew(auth.user);
@@ -191,6 +194,8 @@ export default function App() {
                 </section>
               )}
 
+              {!loading && <BalanceCard balance={balance} />}
+
               {!loading && <BudgetAlertBanner limits={budgetLimits} summary={summary} />}
 
               {error && (
@@ -261,8 +266,10 @@ export default function App() {
             />
           ) : pathname === "/configuracion" ? (
             <SettingsPage
+              accessToken={accessToken}
               spaces={spaces}
               spaceId={spaceId}
+              balance={balance}
               user={auth.user}
               onSaved={() => setRefreshKey((value) => value + 1)}
             />

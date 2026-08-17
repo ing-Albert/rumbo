@@ -184,6 +184,46 @@ export function calculateSummary(movements: Movement[]): Summary {
   };
 }
 
+export const openingBalanceSchema = z.object({
+  openingBalanceCents: z.number().int().min(-9_000_000_000_000_000).max(9_000_000_000_000_000)
+});
+
+export type OpeningBalanceInput = z.infer<typeof openingBalanceSchema>;
+
+/** Totales de toda la vida del espacio, no de un mes. */
+export interface BalanceTotals {
+  openingCents: number;
+  incomeCents: number;
+  expenseCents: number;
+  contributionCents: number;
+}
+
+export interface Balance extends BalanceTotals {
+  /** Todo el dinero del espacio, este donde este. */
+  totalCents: number;
+  /** La parte ya comprometida con metas de ahorro. */
+  earmarkedCents: number;
+  /** Lo que queda sin comprometer. Puede ser negativo si se aparto de mas. */
+  freeCents: number;
+}
+
+/**
+ * Convierte los totales acumulados en el saldo real del espacio.
+ *
+ * Los aportes a metas no se restan del total: ese dinero sigue siendo del
+ * usuario, solo que apartado. Restarlo diria que se gasto, que es justo lo que
+ * la app no debe afirmar. Se separa como comprometido, y lo libre es la resta.
+ */
+export function calculateBalance(totals: BalanceTotals): Balance {
+  const totalCents = totals.openingCents + totals.incomeCents - totals.expenseCents;
+  return {
+    ...totals,
+    totalCents,
+    earmarkedCents: totals.contributionCents,
+    freeCents: totalCents - totals.contributionCents
+  };
+}
+
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }

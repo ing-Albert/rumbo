@@ -882,6 +882,72 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Saldo acumulado del espacio, en el inicio. */
+.balance-card {
+  margin-top: 18px;
+}
+.balance-total {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.balance-total strong {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-3xl);
+  line-height: 1.1;
+}
+.balance-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--muted-surface);
+  color: var(--primary);
+}
+.balance-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+.balance-split > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.balance-split span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.balance-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.opening-balance-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+}
+.settings-value {
+  margin: 6px 0 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-2xl);
+}
+.settings-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
 /* Reglas de movimientos recurrentes, dentro de la pantalla de Movimientos. */
 .recurrences-panel {
   margin-top: 24px;
