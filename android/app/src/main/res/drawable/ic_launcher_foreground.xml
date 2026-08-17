@@ -2,9 +2,18 @@
 <!--
   Logotipo de Rumbo para el icono adaptativo de Android.
 
-  El lienzo del icono adaptativo mide 108x108 y solo los 66 centrales quedan
-  garantizados visibles (el resto lo recorta la mascara del lanzador). El grupo
-  escala el arte original de 512 y lo centra dentro de esa zona segura.
+  El lienzo del icono adaptativo mide 108x108 y las mascaras del lanzador
+  recortan todo lo que quede fuera de los 72 centrales, asi que solo los 66
+  centrales estan garantizados.
+
+  El grupo mapea el lienzo original de 512 a 82 puntos centrados: 82/512 =
+  0.1602 de escala, y (108 - 82) / 2 = 13 de desplazamiento en ambos ejes.
+  Es importante escalar el lienzo completo y no el recuadro de las figuras: el
+  punto dorado vive arriba a la derecha y encuadrar por las figuras corre la R
+  hacia abajo y a la izquierda, que es justo lo que se veia mal.
+
+  Con esta escala el punto mas lejano del dibujo (el borde exterior del punto
+  dorado) queda a 30.8 del centro, dentro de los 33 siempre visibles.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -12,10 +21,10 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:scaleX="0.2349"
-        android:scaleY="0.2349"
-        android:translateX="-8.6"
-        android:translateY="-0.5">
+        android:scaleX="0.1602"
+        android:scaleY="0.1602"
+        android:translateX="13"
+        android:translateY="13">
         <path
             android:fillColor="#FFF8F0"
             android:pathData="M126,354V158h92c63,0 105,31 105,87 0,35 -17,61 -48,75l90,34h-94l-66,-29v29h-79zM205,257h19c24,0 37,-9 37,-28s-13,-27 -37,-27h-19v55z" />
