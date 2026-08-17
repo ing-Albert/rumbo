@@ -6,35 +6,52 @@ Rumbo se distribuye en tres formas a partir del mismo codigo:
 2. La PWA instalable desde el navegador.
 3. Un APK de Android, que es lo que documenta este archivo.
 
-Capacitor no reescribe la interfaz: empaqueta el build de `apps/web` dentro de
-un WebView nativo y lo sirve desde `https://localhost`. La app instalada usa el
-mismo backend de produccion (Supabase + la API en Vercel) que la web, asi que
-los datos son los mismos en ambos lados.
+Capacitor no reescribe la interfaz: le pone un envoltorio nativo (icono,
+nombre, pantalla de arranque, entrada en el lanzador) a la misma app web.
 
-## Que cambia respecto al build web
+## Como se actualiza
 
-| Tema | Web | APK |
-| --- | --- | --- |
-| Llamadas a la API | rutas relativas `/api/...`, resueltas por los rewrites de `vercel.json` | URL absoluta de produccion, inyectada en `VITE_API_BASE_URL` |
-| Service worker | activo (PWA offline) | desactivado: los assets ya viajan dentro del APK, y cachearlos dejaria la app pegada en una version vieja |
-| Origen del navegador | el dominio de Vercel | `https://localhost` |
+La app **carga el despliegue de produccion**, no la copia que viaja dentro del
+APK: `capacitor.config.ts` define `server.url`. Un arreglo desplegado en Vercel
+llega a todos los telefonos en la siguiente apertura, sin que nadie reinstale.
 
-La reescritura de las rutas vive en un solo lugar, `apps/web/src/lib/api.ts`:
-si `VITE_API_BASE_URL` esta definida, `apiFetch` antepone esa base a cualquier
-ruta que empiece con `/`. El resto del codigo sigue escribiendo `/api/...` sin
-enterarse.
+Solo hace falta repartir un APK nuevo cuando cambia el envoltorio nativo: el
+icono, el nombre, los permisos, la version de Capacitor. Nunca por un cambio de
+la interfaz o de la logica.
 
-Como el APK deja de compartir dominio con la API, las llamadas pasan a ser
-cross-origin y entra a jugar CORS. Por eso `apps/api/src/app.ts` permite
-siempre los origenes de Capacitor (`https://localhost`, `http://localhost`,
-`capacitor://localhost`), ademas de los que se configuren en `CORS_ORIGIN`.
+La alternativa era empaquetar los assets adentro (borrando el bloque `server`),
+que es como estuvo al principio. Se descarto porque obligaba a reinstalar en
+cada cambio, y eso no escala apenas la usa mas de una persona. A cambio, la app
+necesita red para arrancar; pesa poco, porque todos los datos vienen del
+servidor y sin conexion no serviria igual. Ademas:
+
+- El service worker de la PWA cachea la interfaz en la primera apertura, asi
+  que las siguientes no dependen de que la red este rapida.
+- Si no hay red ni cache, `server.errorPath` muestra `offline.html` (una
+  pantalla propia, en los colores de Rumbo) en vez del error crudo del WebView.
+
+El build de `webDir` se sigue generando y queda dentro del APK como respaldo:
+borrar el bloque `server` alcanza para volver al modo empaquetado.
+
+## Llamadas a la API
+
+Con `server.url` la app corre en el dominio de Vercel, asi que las rutas
+relativas `/api/...` vuelven a resolver solas, igual que en la web.
+
+El soporte para el modo empaquetado sigue en su lugar, porque ahi si haria
+falta: `apps/web/src/lib/api.ts` antepone `VITE_API_BASE_URL` a cualquier ruta
+que empiece con `/` cuando esa variable esta definida (`apps/web/.env.native`,
+que se usa en `vite build --mode native`), y `apps/api/src/app.ts` permite los
+origenes de Capacitor (`https://localhost`, `http://localhost`,
+`capacitor://localhost`) ademas de los de `CORS_ORIGIN`.
 
 ## Archivos relevantes
 
-- `capacitor.config.ts`: `appId`, `appName` y `webDir` (apunta a `apps/web/dist`).
-- `apps/web/.env.native`: define `VITE_API_BASE_URL`. Se versiona a proposito
-  porque no contiene secretos; las claves de Supabase siguen viniendo de
-  `.env.local`, que no se sube.
+- `capacitor.config.ts`: `appId`, `appName`, `webDir` y el bloque `server`.
+- `apps/web/public/offline.html`: pantalla de "sin conexion" del envoltorio.
+- `apps/web/.env.native`: define `VITE_API_BASE_URL` para el modo empaquetado.
+  Se versiona a proposito porque no contiene secretos; las claves de Supabase
+  siguen viniendo de `.env.local`, que no se sube.
 - `android/`: proyecto nativo generado por `npx cap add android`. Se versiona,
   porque ahi viven el icono, el splash y la configuracion de Gradle.
 
