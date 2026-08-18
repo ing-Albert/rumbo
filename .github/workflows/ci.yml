@@ -18,8 +18,12 @@ jobs:
           node-version: 24
           cache: npm
 
+      # `npm install` y no `npm ci`: el package-lock.json se genera en Windows y
+      # no trae resueltos los binarios nativos de Rollup para Linux
+      # (npm/cli#4828). Es el mismo motivo por el que `vercel.json` tampoco usa
+      # `npm ci`, y por el que cambiarlo alli rompio produccion.
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - uses: supabase/setup-cli@v1
         with:

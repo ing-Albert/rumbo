@@ -54,10 +54,13 @@ export function AuthScreen() {
 
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Authentication error:", err);
+      // Supabase lanza errores con `message`, pero aqui puede caer cualquier
+      // cosa: comprobarlo es mas corto que fingir que siempre es un Error.
+      const message = err instanceof Error ? err.message : "";
       setError(
-        err?.message || "No pudimos completar la solicitud. Revisa los datos e intentalo de nuevo."
+        message || "No pudimos completar la solicitud. Revisa los datos e intentalo de nuevo."
       );
     } finally {
       setLoading(false);

@@ -1,3 +1,5 @@
+import type { ContentTypeParserDoneFunction } from "fastify/types/content-type-parser.js";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { buildApp } from "../apps/api/src/app.js";
 import { SupabaseAuthVerifier } from "../apps/api/src/auth/supabase-verifier.js";
 import { createPostgresPool } from "../apps/api/src/database/postgres/pool.js";
@@ -18,16 +20,24 @@ const app = buildApp(persistence, {
 app.addContentTypeParser(
   ["application/json", "text/plain"],
   { parseAs: "string" },
-  (_req: any, body: any, done: any) => {
+  (_request, body: string | Buffer, done: ContentTypeParserDoneFunction) => {
     try {
-      done(null, body ? JSON.parse(body) : null);
-    } catch (err) {
-      done(err, undefined);
+      done(null, body ? JSON.parse(body.toString()) : null);
+    } catch (error) {
+      done(error as Error, undefined);
     }
   }
 );
 
-export default async function handler(req: any, res: any) {
+/**
+ * Vercel entrega su propio par petición/respuesta de Node, no los de Fastify,
+ * asi que se emiten al servidor interno. Se tipan como los de `node:http`, que
+ * es lo que son: `any` no describia nada y ademas apagaba las comprobaciones.
+ */
+export default async function handler(
+  request: IncomingMessage,
+  response: ServerResponse
+): Promise<void> {
   await app.ready();
-  app.server.emit("request", req, res);
+  app.server.emit("request", request, response);
 }
