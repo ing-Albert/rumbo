@@ -11,7 +11,8 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:verify": "tsx src/database/postgres/pglite-harness.mts"
   },
   "dependencies": {
     "@ahorra/domain": "*",
@@ -22,6 +23,8 @@
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.5",
+    "@electric-sql/pglite-socket": "^0.2.8",
     "@types/node": "^24.7.2",
     "@types/pg": "^8.15.5",
     "tsx": "^4.20.6",

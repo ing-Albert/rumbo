@@ -30,6 +30,14 @@ npm run typecheck
 npm run build
 ```
 
+Los tests de `@ahorra/api` necesitan un Postgres local (`supabase start`) y
+`TEST_DATABASE_URL`. Para comprobar solo que las migraciones aplican y que las
+restricciones hacen lo que dicen, sin Docker:
+
+```bash
+npm run db:verify -w @ahorra/api
+```
+
 ## Estructura
 
 - `apps/web`: PWA React y Vite.

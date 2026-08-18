@@ -54,7 +54,9 @@ create table public.debts (
     )
   ),
   constraint debts_non_san_shape check (kind = 'SAN' or principal_cents > 0),
-  unique(id, user_id, space_id),
+  -- Por (id, user_id) y no por la terna con space_id: es la clave que necesita
+  -- la foranea de debt_payments, y Postgres exige una unica que case exacta.
+  unique(id, user_id),
   foreign key (space_id, user_id)
     references public.spaces(id, user_id) on delete cascade
 );

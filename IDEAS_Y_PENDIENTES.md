@@ -8,16 +8,16 @@ desde cero cada vez.
 
 Ordenado por dependencia, no por valor: cada bloque se apoya en el anterior.
 
-| #   | Que                                                               | Estado    |
-| --- | ----------------------------------------------------------------- | --------- |
-| 3   | Metas: cuanto apartar por mes para llegar a la fecha objetivo     | hecho     |
-| 2   | Presupuesto: aviso al acercarse y al pasarse del limite           | hecho     |
-| 1   | Movimientos recurrentes que se registran solos al llegar la fecha | hecho     |
-| 4   | Saldo acumulado real, no solo el flujo del mes                    | hecho     |
-| 5   | Deudas, prestamos y sanes                                         | hecho     |
-| 7   | Foto del recibo adjunta al gasto                                  | hecho     |
-| 8   | Uso sin conexion con sincronizacion posterior                     | hecho     |
-| 6   | Notificaciones (locales; las push siguen pendientes)              | hecho     |
+| #   | Que                                                               | Estado |
+| --- | ----------------------------------------------------------------- | ------ |
+| 3   | Metas: cuanto apartar por mes para llegar a la fecha objetivo     | hecho  |
+| 2   | Presupuesto: aviso al acercarse y al pasarse del limite           | hecho  |
+| 1   | Movimientos recurrentes que se registran solos al llegar la fecha | hecho  |
+| 4   | Saldo acumulado real, no solo el flujo del mes                    | hecho  |
+| 5   | Deudas, prestamos y sanes                                         | hecho  |
+| 7   | Foto del recibo adjunta al gasto                                  | hecho  |
+| 8   | Uso sin conexion con sincronizacion posterior                     | hecho  |
+| 6   | Notificaciones (locales; las push siguen pendientes)              | hecho  |
 
 Notas de dependencia y de bloqueo:
 
