@@ -1583,8 +1583,30 @@ h2 {
   line-height: 1.5;
 }
 /* Reglas de movimientos recurrentes, dentro de la pantalla de Movimientos. */
+/* Un panel de modulo renuncia a su relleno para que tablas y filas lleguen al
+   borde, y cada hijo pone el suyo. La cabecera se quedo sin poner el suyo, asi
+   que su texto tocaba el borde; le pasaba al de recurrencias y al de
+   presupuesto. */
+.module-panel > header {
+  padding: 22px 22px 0;
+}
 .recurrences-panel {
   margin-top: 24px;
+}
+/* El resto de hijos del panel de recurrencias tampoco traia relleno: la lista
+   sirve para que sus separadores lleguen de lado a lado. */
+.recurrences-panel > .recurrences-empty,
+.recurrences-panel > .recurrence-list,
+.recurrences-panel > .recurrence-form,
+.recurrences-panel > .option-cards {
+  padding-left: 22px;
+  padding-right: 22px;
+}
+.recurrences-panel > .recurrences-empty {
+  padding-bottom: 22px;
+}
+.recurrences-panel > .recurrence-form {
+  padding-bottom: 22px;
 }
 .recurrences-empty {
   margin: 0;
