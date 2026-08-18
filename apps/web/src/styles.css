@@ -1595,13 +1595,39 @@ h2 {
   display: grid;
   gap: 4px;
 }
+/* Dos filas: nombre y monto arriba, detalle y botones abajo. En una sola
+   linea el monto y los tres botones se comian el ancho del nombre. */
 .recurrence-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon name amount"
+    "icon meta actions";
   align-items: center;
-  gap: 14px;
+  column-gap: 14px;
+  row-gap: 4px;
   padding: 12px 4px;
   border-bottom: 1px solid var(--border);
+}
+.recurrence-row > .movement-icon {
+  grid-area: icon;
+}
+.recurrence-name {
+  grid-area: name;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recurrence-amount {
+  grid-area: amount;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.recurrence-meta {
+  grid-area: meta;
+}
+.recurrence-row > .recurrence-actions {
+  grid-area: actions;
 }
 .recurrence-row:last-child {
   border-bottom: 0;
@@ -1609,25 +1635,29 @@ h2 {
 .recurrence-row.paused {
   opacity: 0.6;
 }
-.recurrence-row > div:nth-child(2) {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-.recurrence-row strong {
+.recurrence-meta {
+  color: var(--muted);
+  font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.recurrence-row span {
-  color: var(--muted);
-  font-size: var(--text-sm);
 }
 .recurrence-row > .recurrence-actions {
   display: flex;
   align-items: center;
   justify-content: end;
   gap: 8px;
+}
+/* Eliminar a la izquierda, separado de Guardar: no deberian estar juntos. */
+.recurrence-form-actions {
+  justify-content: space-between;
+}
+.recurrence-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-right: auto;
 }
 .recurrence-form {
   margin-top: 18px;
@@ -3260,6 +3290,28 @@ h2 {
 }
 
 @media (max-width: 600px) {
+  /* A 375px no caben nombre, detalle, monto y botones en dos columnas: el
+     nombre se quedaba en 132px y se cortaba. Los botones bajan a su propia
+     linea y el texto recupera todo el ancho. */
+  .recurrence-row {
+    grid-template-areas:
+      "icon name amount"
+      "icon meta meta"
+      "icon actions actions";
+    row-gap: 6px;
+  }
+  .recurrence-row > .recurrence-actions {
+    justify-content: start;
+  }
+  /* Dos lineas antes que puntos suspensivos: "Alquiler del apart..." obliga a
+     abrir la regla para saber cual es, que es justo lo que la lista evita. */
+  .recurrence-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    line-height: 1.3;
+  }
   .filters-toggle {
     display: inline-flex;
   }

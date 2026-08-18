@@ -199,21 +199,30 @@ export function RecurrencesPanel({
         <div className="recurrence-list">
           {recurrences.map((rule) => (
             <article className={`recurrence-row ${rule.active ? "" : "paused"}`} key={rule.id}>
+              {/*
+                Dos filas y no una: con el monto y los tres botones en la misma
+                linea que la descripcion, a 375px el texto se quedaba en 1px de
+                ancho y se leia "Alqu...". El nombre manda arriba, y el detalle
+                y los botones comparten la de abajo.
+              */}
               <span className={`movement-icon ${rule.type.toLowerCase()}`}>
                 {rule.type === "CONTRIBUTION" ? <Target size={16} /> : <Repeat size={16} />}
               </span>
-              <div>
-                <strong>{rule.description}</strong>
-                <span>
-                  {FREQUENCY_LABELS[rule.frequency]} · {rule.category} ·{" "}
-                  {rule.active ? `proxima el ${formatDay(rule.nextRunDate)}` : "en pausa"}
-                </span>
-              </div>
+              <strong className="recurrence-name">{rule.description}</strong>
+              <strong
+                className={`recurrence-amount${rule.type === "INCOME" ? " amount-income" : ""}`}
+              >
+                {rule.type === "INCOME" ? "+" : "−"}
+                {formatDop(rule.amountCents)}
+              </strong>
+              {/* Sin la categoria: el icono ya dice de que tipo es y el nombre
+                  suele decir de que se trata, mientras que cada cuanto y cuando
+                  toca la proxima son los dos datos que se vienen a mirar. */}
+              <span className="recurrence-meta">
+                {FREQUENCY_LABELS[rule.frequency]} ·{" "}
+                {rule.active ? `proxima el ${formatDay(rule.nextRunDate)}` : "en pausa"}
+              </span>
               <div className="recurrence-actions">
-                <strong className={rule.type === "INCOME" ? "amount-income" : ""}>
-                  {rule.type === "INCOME" ? "+" : "−"}
-                  {formatDop(rule.amountCents)}
-                </strong>
                 <button
                   className="table-action"
                   title={rule.active ? "Pausar" : "Reanudar"}
@@ -229,14 +238,6 @@ export function RecurrencesPanel({
                   onClick={() => startEdit(rule)}
                 >
                   <Pencil size={16} />
-                </button>
-                <button
-                  className="table-action danger"
-                  title="Eliminar"
-                  aria-label={`Eliminar ${rule.description}`}
-                  onClick={() => setPendingDelete(rule)}
-                >
-                  <Trash2 size={16} />
                 </button>
               </div>
             </article>
@@ -376,7 +377,18 @@ export function RecurrencesPanel({
             </p>
           )}
           {error && <p role="alert">{error}</p>}
-          <div className="dialog-actions">
+          <div className="dialog-actions recurrence-form-actions">
+            {/* Eliminar vive aqui y no en la fila: es irreversible, y en la
+                lista quedaba pegado al de editar, a un dedo de distancia. */}
+            {editing && (
+              <button
+                type="button"
+                className="text-button danger-text recurrence-delete"
+                onClick={() => setPendingDelete(editing)}
+              >
+                <Trash2 size={15} aria-hidden="true" /> Eliminar
+              </button>
+            )}
             <button type="button" className="secondary" onClick={() => setOpen(false)}>
               Cancelar
             </button>
@@ -397,6 +409,8 @@ export function RecurrencesPanel({
           onConfirm={() => {
             void remove(pendingDelete);
             setPendingDelete(null);
+            setOpen(false);
+            setEditing(null);
           }}
         />
       )}
