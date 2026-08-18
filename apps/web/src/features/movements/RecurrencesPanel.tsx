@@ -239,45 +239,49 @@ export function RecurrencesPanel({
           {recurrences.map((rule) => (
             <article className={`recurrence-row ${rule.active ? "" : "paused"}`} key={rule.id}>
               {/*
-                Dos filas y no una: con el monto y los tres botones en la misma
-                linea que la descripcion, a 375px el texto se quedaba en 1px de
-                ancho y se leia "Alqu...". El nombre manda arriba, y el detalle
-                y los botones comparten la de abajo.
+                Nombre y detalle van juntos en un bloque, y monto y botones en
+                otro. Sueltos en la rejilla los separaba la altura de los
+                botones, y quedaba un hueco entre las dos lineas del texto que
+                lo desligaba del icono.
               */}
               <span className={`movement-icon ${rule.type.toLowerCase()}`}>
                 {rule.type === "CONTRIBUTION" ? <Target size={16} /> : <Repeat size={16} />}
               </span>
-              <strong className="recurrence-name">{rule.description}</strong>
-              <strong
-                className={`recurrence-amount${rule.type === "INCOME" ? " amount-income" : ""}`}
-              >
-                {rule.type === "INCOME" ? "+" : "−"}
-                {formatDop(rule.amountCents)}
-              </strong>
-              {/* Sin la categoria: el icono ya dice de que tipo es y el nombre
-                  suele decir de que se trata, mientras que cada cuanto y cuando
-                  toca la proxima son los dos datos que se vienen a mirar. */}
-              <span className="recurrence-meta">
-                {FREQUENCY_LABELS[rule.frequency]} ·{" "}
-                {rule.active ? `proxima el ${formatDay(rule.nextRunDate)}` : "en pausa"}
-              </span>
-              <div className="recurrence-actions">
-                <button
-                  className="table-action"
-                  title={rule.active ? "Pausar" : "Reanudar"}
-                  aria-label={`${rule.active ? "Pausar" : "Reanudar"} ${rule.description}`}
-                  onClick={() => void toggleActive(rule)}
+              <div className="recurrence-text">
+                <strong className="recurrence-name">{rule.description}</strong>
+                {/* Sin la categoria: el icono ya dice de que tipo es y el
+                    nombre suele decir de que se trata, mientras que cada cuanto
+                    y cuando toca la proxima son los dos datos que se miran. */}
+                <span className="recurrence-meta">
+                  {FREQUENCY_LABELS[rule.frequency]} ·{" "}
+                  {rule.active ? `proxima el ${formatDay(rule.nextRunDate)}` : "en pausa"}
+                </span>
+              </div>
+              <div className="recurrence-side">
+                <strong
+                  className={`recurrence-amount${rule.type === "INCOME" ? " amount-income" : ""}`}
                 >
-                  {rule.active ? <Pause size={16} /> : <Play size={16} />}
-                </button>
-                <button
-                  className="table-action"
-                  title="Editar"
-                  aria-label={`Editar ${rule.description}`}
-                  onClick={() => startEdit(rule)}
-                >
-                  <Pencil size={16} />
-                </button>
+                  {rule.type === "INCOME" ? "+" : "−"}
+                  {formatDop(rule.amountCents)}
+                </strong>
+                <div className="recurrence-actions">
+                  <button
+                    className="table-action"
+                    title={rule.active ? "Pausar" : "Reanudar"}
+                    aria-label={`${rule.active ? "Pausar" : "Reanudar"} ${rule.description}`}
+                    onClick={() => void toggleActive(rule)}
+                  >
+                    {rule.active ? <Pause size={16} /> : <Play size={16} />}
+                  </button>
+                  <button
+                    className="table-action"
+                    title="Editar"
+                    aria-label={`Editar ${rule.description}`}
+                    onClick={() => startEdit(rule)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </div>
               </div>
             </article>
           ))}
