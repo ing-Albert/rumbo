@@ -17,12 +17,20 @@ import {
  */
 export function ReminderCard({
   settings,
-  onChange
+  onChange,
+  initialPermission
 }: {
   settings: ReminderSettings;
   onChange: (next: ReminderSettings) => void;
+  /**
+   * Permiso de partida. Solo lo pasa la pantalla de Novedades, para mostrar la
+   * tarjeta como se ve cuando funciona; si el navegador que mira las novedades
+   * tiene los avisos bloqueados, la vista previa ensenaria un error en vez de
+   * la funcion.
+   */
+  initialPermission?: NotificationPermission;
 }) {
-  const [state, setState] = useState(permission());
+  const [state, setState] = useState(initialPermission ?? permission());
 
   if (!notificationsSupported()) {
     return (

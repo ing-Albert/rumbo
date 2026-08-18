@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { navigate } from "../../app/router";
 import { getUserInitial, getUserName } from "../../lib/format";
@@ -95,6 +95,17 @@ export function UserMenu({
             </div>
           </div>
           <div className="dropdown-divider" />
+          <button
+            className="dropdown-action-btn"
+            onClick={() => {
+              setOpen(false);
+              navigate("/novedades");
+            }}
+            role="menuitem"
+          >
+            <Sparkles size={16} />
+            <span>Novedades</span>
+          </button>
           <button
             className="dropdown-action-btn"
             onClick={() => {

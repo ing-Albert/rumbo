@@ -1,29 +1,35 @@
 import { useEffect, useState } from "react";
+import { LATEST_RELEASE } from "../features/whatsnew/releases";
 
 const SHOW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-const RELEASE_AT_MS = new Date("2026-08-12T00:00:00Z").getTime();
 const STORAGE_PREFIX = "rumbo-whats-new-dismissed-";
 
 /**
- * Shows the "what's new" panel to every signed-in user for a fixed window
- * after this update's release date, until they explicitly dismiss it
- * (persisted per-user in localStorage).
+ * Muestra el aviso de novedades a todo el mundo durante los primeros dias tras
+ * publicar una version, hasta que la persona lo cierre.
+ *
+ * La fecha sale de `LATEST_RELEASE`, no de una constante aparte: asi es
+ * imposible actualizar el texto y olvidar la fecha, que dejaria el aviso sin
+ * aparecer. Lo descartado se recuerda por version, para que la proxima vuelva
+ * a salir aunque ya se hubiera cerrado la anterior.
  */
 export function useWhatsNew(user: { id: string } | null): {
   show: boolean;
   dismiss: () => void;
 } {
   const [dismissed, setDismissed] = useState(true);
+  const storageKey = `${STORAGE_PREFIX}${LATEST_RELEASE.version}-`;
 
   useEffect(() => {
     if (!user) return;
-    setDismissed(localStorage.getItem(STORAGE_PREFIX + user.id) === "1");
-  }, [user]);
+    setDismissed(localStorage.getItem(storageKey + user.id) === "1");
+  }, [user, storageKey]);
 
-  const withinReleaseWindow = Date.now() - RELEASE_AT_MS < SHOW_WINDOW_MS;
+  const releaseAt = new Date(`${LATEST_RELEASE.date}T00:00:00Z`).getTime();
+  const withinReleaseWindow = Date.now() - releaseAt < SHOW_WINDOW_MS;
 
   function dismiss() {
-    if (user) localStorage.setItem(STORAGE_PREFIX + user.id, "1");
+    if (user) localStorage.setItem(storageKey + user.id, "1");
     setDismissed(true);
   }
 

@@ -1,15 +1,14 @@
 import { Sparkles } from "lucide-react";
+import { navigate } from "../app/router";
+import { LATEST_RELEASE } from "../features/whatsnew/releases";
 import { useDialog } from "../hooks/useDialog";
 
-const UPDATES = [
-  "Iconos nuevos en toda la app para reconocer todo de un vistazo.",
-  "Tus metas ahora muestran el progreso en un anillo visual.",
-  "El gráfico de flujo compara tu mes actual con el anterior.",
-  "Los montos se formatean con comas mientras escribís.",
-  "Diálogos más accesibles: ahora se cierran con la tecla Esc.",
-  "Retoques de color, tipografía y espaciado en toda la app."
-];
-
+/**
+ * Aviso de novedades, los primeros dias tras publicar una version.
+ *
+ * Lista solo los titulos y manda al historial para el detalle: nadie lee ocho
+ * parrafos en un cartel que le aparecio encima de lo que estaba haciendo.
+ */
 export function WhatsNewPanel({ onClose }: { onClose: () => void }) {
   const dialogRef = useDialog<HTMLElement>(onClose);
 
@@ -32,15 +31,28 @@ export function WhatsNewPanel({ onClose }: { onClose: () => void }) {
           <Sparkles size={22} />
         </span>
         <h2 id="whats-new-title">Novedades en Rumbo</h2>
-        <p className="muted">Mejoramos varias cosas recientemente:</p>
+        <p className="muted">
+          Version {LATEST_RELEASE.version} · {LATEST_RELEASE.title}
+        </p>
         <ul className="whats-new-list">
-          {UPDATES.map((update) => (
-            <li key={update}>{update}</li>
+          {LATEST_RELEASE.entries.map((entry) => (
+            <li key={entry.title}>{entry.title}</li>
           ))}
         </ul>
-        <button className="primary full-button" onClick={onClose}>
-          Entendido
-        </button>
+        <div className="whats-new-actions">
+          <button
+            className="secondary"
+            onClick={() => {
+              onClose();
+              navigate("/novedades");
+            }}
+          >
+            Ver el detalle
+          </button>
+          <button className="primary" onClick={onClose}>
+            Entendido
+          </button>
+        </div>
       </section>
     </div>
   );

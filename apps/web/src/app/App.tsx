@@ -23,6 +23,7 @@ import { DebtsPage } from "../features/debts/DebtsPage";
 import { GoalsPage } from "../features/goals/GoalsPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
+import { WhatsNewPage } from "../features/whatsnew/WhatsNewPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { useSpaces } from "../hooks/useSpaces";
 import { useMonthlyData } from "../hooks/useMonthlyData";
@@ -278,6 +279,8 @@ export default function App() {
               debts={debts}
               onSaved={() => setRefreshKey((value) => value + 1)}
             />
+          ) : pathname === "/novedades" ? (
+            <WhatsNewPage />
           ) : pathname === "/reportes" ? (
             <ReportsPage
               summary={summary}

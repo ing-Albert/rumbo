@@ -885,6 +885,131 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Historial de novedades. */
+.release-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.release {
+  padding: 0;
+  overflow: hidden;
+}
+.release-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  width: 100%;
+  padding: 22px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.release-badge {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--muted-surface);
+  color: var(--primary);
+}
+.release-heading {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.release-meta {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.release-heading strong {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-xl);
+}
+.release-summary {
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+.release-toggle {
+  flex: none;
+  color: var(--primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.release-entries {
+  display: grid;
+  gap: 20px;
+  padding: 4px 22px 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+}
+.release-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+/*
+   La vista previa monta los componentes reales, asi que hereda sus estilos tal
+   cual. El marco solo la separa del texto y deja claro que es una muestra, no
+   la app en funcionamiento.
+*/
+.release-preview {
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--muted-surface);
+}
+.release-preview-clip {
+  overflow: hidden;
+}
+/* flow-root y no un margin-top: 0 a los hijos: varios paneles traen su propio
+   margen superior, y sin contexto de bloque propio ese margen se escapa del
+   contenedor y empuja la muestra hacia abajo, cortandola por el pie. */
+.release-preview-scale {
+  display: flow-root;
+  transform-origin: top left;
+}
+/* Dentro del marco no hay scroll ni interaccion: es una foto viva. */
+.release-preview .panel {
+  box-shadow: none;
+}
+.preview-goal h2 {
+  margin: 0 0 6px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-xl);
+}
+.release-entry h3 {
+  margin: 0 0 8px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-lg);
+}
+.release-entry p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.release-where {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px !important;
+  color: var(--primary) !important;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.whats-new-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
 /* Recordatorio diario, en Configuracion. */
 .reminder-toggle {
   display: flex;
@@ -2625,6 +2750,15 @@ h2 {
   }
   .button-row {
     justify-content: center;
+  }
+  .release-entry {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .release-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .release-toggle {
+    grid-column: 2;
   }
   .allocation-alert,
   .budget-alert,
