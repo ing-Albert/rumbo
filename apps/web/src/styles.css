@@ -1181,6 +1181,96 @@ h2 {
   color: var(--gold-ink);
 }
 
+/* Selector del tipo de compromiso. Repite el codigo de color de las tarjetas
+   para que elegir aqui y reconocerlo alla sean el mismo gesto. */
+.kind-picker {
+  margin: 4px 0 18px;
+  padding: 0;
+  border: 0;
+}
+.kind-picker legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.kind-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.kind-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.kind-option:hover {
+  border-color: var(--muted);
+}
+/* El radio real sigue ahi, invisible pero enfocable: el teclado y los lectores
+   de pantalla no deberian pagar el precio de un control bonito. */
+.kind-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.kind-option > svg {
+  grid-row: span 2;
+  color: var(--muted);
+}
+.kind-option strong {
+  font-size: var(--text-base);
+}
+.kind-option small {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.kind-option:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.kind-option.selected {
+  border-width: 2px;
+  padding: 11px 13px;
+}
+.kind-option.debt.selected {
+  border-color: var(--terracotta);
+  background: var(--terracotta-bg);
+}
+.kind-option.loan.selected {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+.kind-option.san.selected {
+  border-color: var(--gold-accent);
+  background: var(--gold-bg);
+}
+.kind-option.debt.selected > svg,
+.kind-option.debt.selected strong {
+  color: var(--terracotta);
+}
+.kind-option.loan.selected > svg,
+.kind-option.loan.selected strong {
+  color: var(--success);
+}
+.kind-option.san.selected > svg,
+.kind-option.san.selected strong {
+  color: var(--gold-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kind-option {
+    transition: none;
+  }
+}
 .debts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -2104,7 +2194,9 @@ h2 {
 }
 .filters-row input,
 .filters-row select,
-.inline-form input {
+.inline-form input,
+.inline-form select,
+.inline-form textarea {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--ink);
@@ -2508,6 +2600,13 @@ h2 {
 .form-grid label small {
   color: var(--muted);
   font-weight: 400;
+}
+/* El nombre del campo y su "Opcional" comparten linea. Sueltos dentro del
+   label, que es una rejilla, cada uno se llevaba su propia fila. */
+.field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
 }
 .goals-grid {
   display: grid;

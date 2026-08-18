@@ -28,6 +28,13 @@ const KIND_ICONS: Record<DebtKind, typeof HandCoins> = {
   SAN: Users
 };
 
+/** El orden va de lo mas comun a lo mas raro, no por como se llaman. */
+const KIND_OPTIONS: Array<{ kind: DebtKind; label: string; hint: string }> = [
+  { kind: "DEBT", label: "Debo dinero", hint: "Un prestamo o una tarjeta" },
+  { kind: "LOAN", label: "Me deben", hint: "Le prestaste a alguien" },
+  { kind: "SAN", label: "San", hint: "Una tanda por turnos" }
+];
+
 const EMPTY = {
   kind: "DEBT" as DebtKind,
   name: "",
@@ -138,18 +145,42 @@ export function DebtsPage({
               ×
             </button>
           </header>
+          {/*
+            El tipo decide que campos aparecen despues y de que color sale la
+            tarjeta, asi que va primero, a lo ancho y con los mismos colores
+            que las tarjetas. En un desplegable las tres opciones quedaban
+            escondidas detras de un clic, con el mismo peso que la fecha
+            limite.
+          */}
+          <fieldset className="kind-picker">
+            <legend>Tipo de compromiso</legend>
+            <div className="kind-options">
+              {KIND_OPTIONS.map(({ kind, label, hint }) => {
+                const Icon = KIND_ICONS[kind];
+                return (
+                  <label
+                    key={kind}
+                    className={`kind-option ${kind.toLowerCase()}${
+                      form.kind === kind ? " selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="debt-kind"
+                      value={kind}
+                      checked={form.kind === kind}
+                      onChange={() => setForm({ ...form, kind })}
+                    />
+                    <Icon size={18} aria-hidden="true" />
+                    <strong>{label}</strong>
+                    <small>{hint}</small>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
           <div className="form-grid">
-            <label>
-              Tipo
-              <select
-                value={form.kind}
-                onChange={(event) => setForm({ ...form, kind: event.target.value as DebtKind })}
-              >
-                <option value="DEBT">Debo dinero</option>
-                <option value="LOAN">Me deben dinero</option>
-                <option value="SAN">San (tanda)</option>
-              </select>
-            </label>
             <label>
               Nombre
               <input
@@ -161,8 +192,12 @@ export function DebtsPage({
               />
             </label>
             <label>
-              {isSan ? "Organiza" : form.kind === "DEBT" ? "A quien" : "Quien"}{" "}
-              <small>Opcional</small>
+              {/* El texto y el 'Opcional' van juntos en un span: el label es una
+                  rejilla y sueltos ocupaban una fila cada uno. */}
+              <span className="field-label">
+                {isSan ? "Organiza" : form.kind === "DEBT" ? "A quien" : "Quien"}
+                <small>Opcional</small>
+              </span>
               <input
                 maxLength={120}
                 value={form.counterparty}
@@ -220,7 +255,9 @@ export function DebtsPage({
               </label>
             )}
             <label>
-              Fecha limite <small>Opcional</small>
+              <span className="field-label">
+                Fecha limite <small>Opcional</small>
+              </span>
               <input
                 type="date"
                 value={form.dueDate}
