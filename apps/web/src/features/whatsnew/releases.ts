@@ -1,6 +1,9 @@
 import type { ComponentType } from "react";
 import {
   BalancePreview,
+  DebtKindPickerPreview,
+  DebtsModulePreview,
+  MovementsMobilePreview,
   BudgetAlertPreview,
   GoalPacePreview,
   OfflinePreview,
@@ -40,6 +43,36 @@ export interface Release {
  * Lo mas nuevo va primero.
  */
 export const RELEASES: Release[] = [
+  {
+    version: "0.7",
+    date: "2026-08-18",
+    title: "Se entiende mejor de un vistazo",
+    summary:
+      "Sin funciones nuevas: las que ya estaban ahora se leen mejor. Deudas cambia de aspecto y Movimientos deja de pedirte que arrastres de lado en el telefono.",
+    entries: [
+      {
+        title: "Deudas: el color dice hacia donde va el dinero",
+        description:
+          "Los tres tipos compartian el mismo verde, asi que la pantalla no distinguia lo que debes de lo que te deben. Ahora cada uno lleva su color en el borde de la tarjeta, la etiqueta y la barra. Dentro de cada una manda lo que falta: antes era el texto mas chico y un boton enorme se llevaba la atencion. Y arriba aparece el total, que antes habia que sumar a ojo.",
+        where: "Deudas",
+        Preview: DebtsModulePreview
+      },
+      {
+        title: "Elegir el tipo dejo de ser un desplegable",
+        description:
+          "Esa eleccion decide que campos aparecen y de que color sale la tarjeta, y estaba escondida detras de un clic. Ahora son tres opciones a la vista, con los mismos colores de las tarjetas y una linea que explica cada una.",
+        where: "Deudas, al crear un compromiso",
+        Preview: DebtKindPickerPreview
+      },
+      {
+        title: "Movimientos ya no se arrastra de lado",
+        description:
+          "La tabla necesitaba mas del doble del ancho de un telefono: el monto quedaba fuera de pantalla. En movil ahora es una lista donde cada movimiento se lee entero de una vez. Y los filtros se pliegan detras de un boton, asi la lista empieza mucho mas arriba.",
+        where: "Movimientos, en el telefono",
+        Preview: MovementsMobilePreview
+      }
+    ]
+  },
   {
     version: "0.6",
     date: "2026-08-17",

@@ -9,6 +9,9 @@ import {
   type RecurringMovement
 } from "@ahorra/domain";
 import { OfflineBanner } from "../../components/OfflineBanner";
+import { DebtKindPicker } from "../debts/DebtKindPicker";
+import { DebtsPage } from "../debts/DebtsPage";
+import { MovementCardList } from "../movements/MovementCardList";
 import { ReceiptField } from "../../components/ReceiptField";
 import { BalanceCard } from "../dashboard/BalanceCard";
 import { BudgetAlertBanner } from "../budget/BudgetAlertBanner";
@@ -201,6 +204,103 @@ export function ReceiptPreview() {
 
 export function OfflinePreview() {
   return <OfflineBanner online pending={2} onSync={noop} />;
+}
+
+const sampleDebts: Debt[] = [
+  {
+    id: "deuda-ejemplo",
+    spaceId: SPACE,
+    kind: "DEBT",
+    status: "ACTIVE",
+    name: "Tarjeta de credito",
+    counterparty: "Banco Popular",
+    principalCents: 45_000_00,
+    installmentCents: 0,
+    members: null,
+    turnPosition: null,
+    dueDate: null,
+    notes: null,
+    paidCents: 32_000_00,
+    createdAt: `${monthsFromToday(-5)}T12:00:00.000Z`
+  },
+  {
+    id: "prestamo-ejemplo",
+    spaceId: SPACE,
+    kind: "LOAN",
+    status: "ACTIVE",
+    name: "Prestamo a Juan",
+    counterparty: "Juan",
+    principalCents: 15_000_00,
+    installmentCents: 0,
+    members: null,
+    turnPosition: null,
+    dueDate: null,
+    notes: null,
+    paidCents: 5_000_00,
+    createdAt: `${monthsFromToday(-2)}T12:00:00.000Z`
+  }
+];
+
+const sampleMovements: Movement[] = [
+  {
+    id: "mov-1",
+    spaceId: SPACE,
+    type: "EXPENSE",
+    status: "REGISTERED",
+    amountCents: 1_250_00,
+    effectiveDate: today(),
+    description: "Compra en el supermercado",
+    category: "Alimentacion",
+    createdAt: `${today()}T12:00:00.000Z`,
+    receiptPath: "ejemplo/recibo.jpg"
+  },
+  {
+    id: "mov-2",
+    spaceId: SPACE,
+    type: "INCOME",
+    status: "REGISTERED",
+    amountCents: 65_000_00,
+    effectiveDate: today(),
+    description: "Sueldo de este mes",
+    category: "Salario",
+    createdAt: `${today()}T12:00:00.000Z`,
+    recurringMovementId: "r1"
+  },
+  {
+    id: "mov-3",
+    spaceId: SPACE,
+    type: "EXPENSE",
+    status: "SCHEDULED",
+    amountCents: 25_000_00,
+    effectiveDate: today(),
+    description: "Alquiler",
+    category: "Vivienda",
+    createdAt: `${today()}T12:00:00.000Z`
+  }
+];
+
+export function DebtsModulePreview() {
+  return <DebtsPage accessToken="" spaceId={SPACE} debts={sampleDebts} onSaved={noop} />;
+}
+
+export function DebtKindPickerPreview() {
+  return (
+    <div className="panel">
+      <DebtKindPicker value="DEBT" onChange={noop} />
+    </div>
+  );
+}
+
+export function MovementsMobilePreview() {
+  return (
+    <div className="panel">
+      {/* La lista de movil se dibuja siempre aqui: la vista previa la ensena
+          fuera de su ancho, y ocultarla dejaria el hueco vacio. */}
+      <div className="movement-cards preview-forced">
+        <MovementCardList movements={sampleMovements} onEdit={noop} />
+      </div>
+    </div>
+  );
 }
 
 export function ReminderPreview() {

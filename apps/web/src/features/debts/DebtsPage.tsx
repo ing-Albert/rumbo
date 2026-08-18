@@ -5,7 +5,7 @@ import {
   type Debt,
   type DebtKind
 } from "@ahorra/domain";
-import { HandCoins, Handshake, Plus, Trash2, Users } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
@@ -13,6 +13,7 @@ import { MoneyInput } from "../../components/MoneyInput";
 import { PageTitle } from "../../components/PageTitle";
 import { apiFetch } from "../../lib/api";
 import { today } from "../../lib/format";
+import { DebtKindPicker, KIND_ICONS } from "./DebtKindPicker";
 import { DebtsOverviewStrip } from "./DebtsOverviewStrip";
 import { SanProgress } from "./SanProgress";
 
@@ -21,19 +22,6 @@ const KIND_LABELS: Record<DebtKind, string> = {
   LOAN: "Me deben",
   SAN: "San"
 };
-
-const KIND_ICONS: Record<DebtKind, typeof HandCoins> = {
-  DEBT: HandCoins,
-  LOAN: Handshake,
-  SAN: Users
-};
-
-/** El orden va de lo mas comun a lo mas raro, no por como se llaman. */
-const KIND_OPTIONS: Array<{ kind: DebtKind; label: string; hint: string }> = [
-  { kind: "DEBT", label: "Debo dinero", hint: "Un prestamo o una tarjeta" },
-  { kind: "LOAN", label: "Me deben", hint: "Le prestaste a alguien" },
-  { kind: "SAN", label: "San", hint: "Una tanda por turnos" }
-];
 
 const EMPTY = {
   kind: "DEBT" as DebtKind,
@@ -145,40 +133,7 @@ export function DebtsPage({
               ×
             </button>
           </header>
-          {/*
-            El tipo decide que campos aparecen despues y de que color sale la
-            tarjeta, asi que va primero, a lo ancho y con los mismos colores
-            que las tarjetas. En un desplegable las tres opciones quedaban
-            escondidas detras de un clic, con el mismo peso que la fecha
-            limite.
-          */}
-          <fieldset className="kind-picker">
-            <legend>Tipo de compromiso</legend>
-            <div className="kind-options">
-              {KIND_OPTIONS.map(({ kind, label, hint }) => {
-                const Icon = KIND_ICONS[kind];
-                return (
-                  <label
-                    key={kind}
-                    className={`kind-option ${kind.toLowerCase()}${
-                      form.kind === kind ? " selected" : ""
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="debt-kind"
-                      value={kind}
-                      checked={form.kind === kind}
-                      onChange={() => setForm({ ...form, kind })}
-                    />
-                    <Icon size={18} aria-hidden="true" />
-                    <strong>{label}</strong>
-                    <small>{hint}</small>
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
+          <DebtKindPicker value={form.kind} onChange={(kind) => setForm({ ...form, kind })} />
 
           <div className="form-grid">
             <label>
