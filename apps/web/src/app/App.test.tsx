@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { formatDop } from "@ahorra/domain";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../features/auth/AuthProvider", () => ({
@@ -258,12 +258,19 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("Movimiento 15")).toBeInTheDocument();
-    expect(screen.queryByText("Movimiento 16")).not.toBeInTheDocument();
+    // La pagina dibuja los mismos movimientos dos veces: la tabla para
+    // escritorio y la lista para telefono, y el CSS oculta una segun el ancho.
+    // Aqui no hay CSS, asi que las consultas se acotan a la tabla; comprobar la
+    // paginacion una vez basta, porque ambas reciben la misma pagina ya
+    // recortada.
+    const table = await screen.findByRole("table");
+
+    expect(within(table).getByText("Movimiento 15")).toBeInTheDocument();
+    expect(within(table).queryByText("Movimiento 16")).not.toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(16);
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    expect(await screen.findByText("Movimiento 16")).toBeInTheDocument();
-    expect(screen.queryByText("Movimiento 1")).not.toBeInTheDocument();
+    expect(await within(table).findByText("Movimiento 16")).toBeInTheDocument();
+    expect(within(table).queryByText("Movimiento 1")).not.toBeInTheDocument();
     expect(
       screen.getByText(
         (_, element) => element?.tagName === "SPAN" && element.textContent === "Pagina 2 de 2"

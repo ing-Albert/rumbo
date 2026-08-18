@@ -1,11 +1,12 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
-import { CloudOff, Paperclip, Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
+import { Pencil, SlidersHorizontal, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { PageTitle } from "../../components/PageTitle";
 import { StatusPill } from "../../components/StatusPill";
 import { today } from "../../lib/format";
-import { isPendingMovement } from "../../lib/offline/outbox";
+import { MovementBadges } from "./MovementBadges";
+import { MovementCardList } from "./MovementCardList";
 
 export function MovementsPage({
   movements,
@@ -30,6 +31,7 @@ export function MovementsPage({
   const [rangeFrom, setRangeFrom] = useState("");
   const [rangeTo, setRangeTo] = useState("");
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function getDateBounds(): { from: string; to: string } | null {
     const now = new Date();
@@ -60,6 +62,9 @@ export function MovementsPage({
     }
     return null;
   }
+
+  const activeFilterCount =
+    (type === "ALL" ? 0 : 1) + (status === "ALL" ? 0 : 1) + (period === "ALL" ? 0 : 1);
 
   const bounds = getDateBounds();
   const filtered = movements.filter(
@@ -121,7 +126,7 @@ export function MovementsPage({
           }
         />
       ) : (
-        <section className="panel module-panel">
+        <section className={`panel module-panel${filtersOpen ? " filters-open" : ""}`}>
           <div className="filters-row">
             <label>
               Buscar
@@ -131,7 +136,23 @@ export function MovementsPage({
                 placeholder="Descripcion o categoria"
               />
             </label>
-            <label>
+            {/*
+              En el telefono los filtros ocupaban 348px de una pantalla de 812:
+              casi la mitad del alto antes de ver un solo movimiento. Se pliegan
+              detras de este boton, que lleva la cuenta de los que estan puestos
+              para que plegarlos no esconda el estado.
+            */}
+            <button
+              type="button"
+              className="filters-toggle"
+              aria-expanded={filtersOpen}
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              Filtros
+              {activeFilterCount > 0 && <span className="filters-count">{activeFilterCount}</span>}
+            </button>
+            <label className="filters-advanced-field">
               Tipo
               <select value={type} onChange={(event) => setType(event.target.value)}>
                 <option value="ALL">Todos</option>
@@ -140,7 +161,7 @@ export function MovementsPage({
                 <option value="CONTRIBUTION">Aportes</option>
               </select>
             </label>
-            <label>
+            <label className="filters-advanced-field">
               Estado
               <select value={status} onChange={(event) => setStatus(event.target.value)}>
                 <option value="ALL">Todos</option>
@@ -208,6 +229,7 @@ export function MovementsPage({
             </div>
           ) : (
             <>
+              <MovementCardList movements={paginated} onEdit={onEdit} />
               <div className="data-table-wrap">
                 <table className="data-table">
                   <thead>
@@ -229,21 +251,7 @@ export function MovementsPage({
                         <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
                         <td>
                           <strong>{movement.description}</strong>
-                          {isPendingMovement(movement) && (
-                            <span className="recurrence-badge pending" title="Aun no se ha subido">
-                              <CloudOff size={12} aria-hidden="true" /> Sin subir
-                            </span>
-                          )}
-                          {movement.receiptPath && (
-                            <span className="recurrence-badge" title="Tiene foto del recibo">
-                              <Paperclip size={12} aria-hidden="true" /> Recibo
-                            </span>
-                          )}
-                          {movement.recurringMovementId && (
-                            <span className="recurrence-badge" title="Generado por una recurrencia">
-                              <Repeat size={12} aria-hidden="true" /> Recurrente
-                            </span>
-                          )}
+                          <MovementBadges movement={movement} />
                         </td>
                         <td>{movement.category}</td>
                         <td>

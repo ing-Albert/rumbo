@@ -2270,6 +2270,88 @@ h2 {
 .data-table-wrap {
   overflow-x: auto;
 }
+/* La tabla necesita 760px de ancho minimo, asi que por debajo de eso deja de
+   ser legible por mucho scroll lateral que se le ponga. Ahi entra la lista. */
+.movement-cards {
+  display: none;
+}
+/* El boton de filtros solo existe en el telefono: en escritorio caben todos a
+   la vista y esconderlos seria trabajo de mas para nada. */
+.filters-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+}
+.filters-toggle:hover {
+  border-color: var(--muted);
+}
+.filters-count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--paper);
+  font-size: var(--text-2xs);
+}
+.movement-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.movement-card:last-child {
+  border-bottom: 0;
+}
+.movement-card-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+/* Dos lineas como maximo: una descripcion larga no debe empujar el monto
+   fuera de la fila ni estirar la lista hasta hacerla ilegible. */
+.movement-card-main strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+.movement-card-meta {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.movement-card-side {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+.movement-card-side > strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.movement-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Sin texto, la pastilla se queda en su icono y cabe junto al monto. */
+.recurrence-badge.icon-only {
+  margin-left: 0;
+  padding: 4px;
+  line-height: 0;
+}
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -2951,6 +3033,12 @@ h2 {
 }
 
 @media (max-width: 920px) {
+  .movement-cards {
+    display: block;
+  }
+  .data-table-wrap {
+    display: none;
+  }
   .sidebar {
     display: none;
   }
@@ -3125,6 +3213,14 @@ h2 {
 }
 
 @media (max-width: 600px) {
+  .filters-toggle {
+    display: inline-flex;
+  }
+  .module-panel:not(.filters-open) .filters-advanced-field,
+  .module-panel:not(.filters-open) .period-filter-row {
+    display: none;
+  }
+
   .user-details {
     display: none;
   }
