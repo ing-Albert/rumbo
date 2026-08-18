@@ -7,7 +7,18 @@ import {
   type RecurrenceFrequency,
   type RecurringMovement
 } from "@ahorra/domain";
-import { Pause, Pencil, Play, Plus, Repeat, Target, Trash2 } from "lucide-react";
+import {
+  Pause,
+  Pencil,
+  Play,
+  Plus,
+  Repeat,
+  Target,
+  Trash2,
+  TrendingDown,
+  TrendingUp
+} from "lucide-react";
+import { OptionCards, type OptionCard } from "../../components/OptionCards";
 import { type FormEvent, useState } from "react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { MoneyInput } from "../../components/MoneyInput";
@@ -20,6 +31,25 @@ const FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
   BIWEEKLY: "Cada dos semanas",
   MONTHLY: "Cada mes"
 };
+
+/** El gasto va primero por ser lo que mas se repite. */
+const TYPE_OPTIONS: Array<OptionCard<MovementType>> = [
+  {
+    value: "EXPENSE",
+    label: "Gasto",
+    hint: "Alquiler, servicios",
+    Icon: TrendingDown,
+    tone: "expense"
+  },
+  { value: "INCOME", label: "Ingreso", hint: "Sueldo, renta", Icon: TrendingUp, tone: "income" },
+  {
+    value: "CONTRIBUTION",
+    label: "Aporte a una meta",
+    hint: "Apartar para ahorrar",
+    Icon: Target,
+    tone: "contribution"
+  }
+];
 
 const EMPTY = {
   type: "EXPENSE" as MovementType,
@@ -216,43 +246,48 @@ export function RecurrencesPanel({
 
       {open && (
         <form className="recurrence-form" onSubmit={(event) => void submit(event)}>
+          <OptionCards
+            name="recurrence-type"
+            legend="Que se repite"
+            value={form.type}
+            options={TYPE_OPTIONS.map((option) =>
+              option.value === "CONTRIBUTION"
+                ? { ...option, disabled: openGoals.length === 0 }
+                : option
+            )}
+            onChange={(type) => {
+              // Al pasar a aporte se elige la primera meta abierta, para que el
+              // formulario nunca quede en un estado invalido.
+              const goalId =
+                type === "CONTRIBUTION" ? ((form.goalId || openGoals[0]?.id) ?? "") : "";
+              const chosen = openGoals.find((item) => item.id === goalId);
+              setForm({
+                ...form,
+                type,
+                goalId,
+                description: form.description || (chosen ? `Aporte a ${chosen.name}` : "")
+              });
+            }}
+          />
+
           <div className="form-grid">
-            <label>
-              Tipo
-              <select
-                value={form.type}
-                onChange={(event) => {
-                  const type = event.target.value as MovementType;
-                  setForm({
-                    ...form,
-                    type,
-                    // Al pasar a aporte se elige la primera meta abierta, para
-                    // que el formulario nunca quede en un estado invalido.
-                    goalId: type === "CONTRIBUTION" ? ((form.goalId || openGoals[0]?.id) ?? "") : ""
-                  });
-                }}
-              >
-                <option value="EXPENSE">Gasto</option>
-                <option value="INCOME">Ingreso</option>
-                <option value="CONTRIBUTION" disabled={openGoals.length === 0}>
-                  Aporte a una meta
-                </option>
-              </select>
-            </label>
-            <label>
-              Cada cuanto
-              <select
-                value={form.frequency}
-                onChange={(event) =>
-                  setForm({ ...form, frequency: event.target.value as RecurrenceFrequency })
-                }
-              >
+            <label className="form-grid-wide">
+              <span className="field-label">Cada cuanto</span>
+              {/* Tres opciones caben a la vista; en un desplegable habria que
+                  abrirlo solo para saber cuales son. */}
+              <div className="chip-row">
                 {recurrenceFrequencies.map((frequency) => (
-                  <option key={frequency} value={frequency}>
+                  <button
+                    key={frequency}
+                    type="button"
+                    className={`period-chip${form.frequency === frequency ? " active" : ""}`}
+                    aria-pressed={form.frequency === frequency}
+                    onClick={() => setForm({ ...form, frequency })}
+                  >
                     {FREQUENCY_LABELS[frequency]}
-                  </option>
+                  </button>
                 ))}
-              </select>
+              </div>
             </label>
             <label>
               Descripcion
@@ -280,7 +315,17 @@ export function RecurrencesPanel({
               {isContribution ? (
                 <select
                   value={form.goalId}
-                  onChange={(event) => setForm({ ...form, goalId: event.target.value })}
+                  onChange={(event) => {
+                    const goalId = event.target.value;
+                    const chosen = openGoals.find((item) => item.id === goalId);
+                    setForm({
+                      ...form,
+                      goalId,
+                      // Se propone solo si el campo sigue vacio: nunca pisa lo
+                      // que la persona haya escrito.
+                      description: form.description || (chosen ? `Aporte a ${chosen.name}` : "")
+                    });
+                  }}
                 >
                   {openGoals.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -311,7 +356,9 @@ export function RecurrencesPanel({
               />
             </label>
             <label>
-              Hasta <small>Opcional</small>
+              <span className="field-label">
+                Hasta <small>Opcional</small>
+              </span>
               <input
                 type="date"
                 min={form.startDate}
@@ -320,10 +367,14 @@ export function RecurrencesPanel({
               />
             </label>
           </div>
-          <p className="recurrence-hint">
-            El dia de la primera vez marca el resto de la serie. Si eliges un 31, los meses cortos
-            usan su ultimo dia y luego vuelve al 31.
-          </p>
+          {/* Solo lo mensual tiene el problema del dia 31; en lo semanal el
+              aviso seria ruido sobre algo que no puede pasar. */}
+          {form.frequency === "MONTHLY" && (
+            <p className="recurrence-hint">
+              El dia de la primera vez marca el resto de la serie. Si eliges un 31, los meses cortos
+              usan su ultimo dia y luego vuelve al 31.
+            </p>
+          )}
           {error && <p role="alert">{error}</p>}
           <div className="dialog-actions">
             <button type="button" className="secondary" onClick={() => setOpen(false)}>
