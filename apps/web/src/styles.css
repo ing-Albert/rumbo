@@ -13,6 +13,8 @@
   --primary: #6b2948;
   --primary-active: #512037;
   --terracotta: #a94725;
+  --terracotta-bg: #fdeee6;
+  --terracotta-border: #edc3ac;
   --accent: #e3a72f;
   --success: #267052;
   --success-bg: #e7f4ee;
@@ -1125,39 +1127,202 @@ h2 {
     animation-duration: 2.4s;
   }
 }
-/* Deudas, prestamos y sanes. */
-.debt-card-top {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
+/* Deudas, prestamos y sanes.
+
+   El modulo se organiza por DIRECCION del dinero, que es lo unico que
+   distingue de verdad los tres tipos: sale (deuda), entra (prestamo), o da
+   vueltas dentro del grupo (san). Cada uno tiene su color y lo lleva en el
+   borde izquierdo de la tarjeta, en la etiqueta y en la barra de avance.
+   Antes los tres compartian el mismo verde y la misma barra ciruela, asi que
+   la pantalla no distinguia lo que debes de lo que te deben. */
+.debts-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
+  margin-top: 20px;
 }
-.debt-card h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 0;
+.debts-overview-figure {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.debts-overview-figure strong {
   font-family: "Fraunces", Georgia, serif;
   font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+.debts-overview-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.debts-overview-figure.debt {
+  border-left-color: var(--terracotta);
+}
+.debts-overview-figure.debt .debts-overview-label {
+  color: var(--terracotta);
+}
+.debts-overview-figure.loan {
+  border-left-color: var(--success);
+}
+.debts-overview-figure.loan .debts-overview-label {
+  color: var(--success);
+}
+.debts-overview-figure.san {
+  border-left-color: var(--gold-accent);
+}
+.debts-overview-figure.san .debts-overview-label {
+  color: var(--gold-ink);
+}
+
+.debts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.debt-card {
+  border-left: 3px solid var(--border);
+}
+.debt-card.debt {
+  border-left-color: var(--terracotta);
+}
+.debt-card.loan {
+  border-left-color: var(--success);
+}
+.debt-card.san {
+  border-left-color: var(--gold-accent);
+}
+/* Lo saldado se retira sin desaparecer: sigue consultable, deja de competir. */
+.debt-card.settled {
+  border-left-color: var(--border);
+  background: var(--muted-surface);
+}
+.debt-card.settled h2,
+.debt-card.settled .debt-figure strong {
+  color: var(--muted);
+}
+/* Un compromiso saldado deja de tener direccion: ya no sale ni entra dinero,
+   asi que pierde el color del tipo en vez de seguir pintado como activo. */
+.debt-card.settled .debt-kind {
+  background: var(--border-soft);
+  color: var(--muted);
+}
+.debt-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.debt-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--muted-surface);
+  color: var(--muted);
+}
+.debt-kind.debt {
+  background: var(--terracotta-bg);
+  color: var(--terracotta);
+}
+.debt-kind.loan {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.debt-kind.san {
+  background: var(--gold-bg);
+  color: var(--gold-ink);
+}
+/* .panel h2 se define mas abajo con la misma especificidad y ganaria por
+   orden; .panel.debt-card la supera y de paso dice lo que la tarjeta es. */
+.panel.debt-card h2 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-lg);
+  line-height: 1.25;
+  text-wrap: balance;
 }
 .debt-counterparty {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: var(--muted);
   font-size: var(--text-sm);
 }
-.debt-amounts {
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-size: var(--text-base);
+/* La cifra que manda: lo que falta. Gana por tamano y por el aire de arriba,
+   no por color, para que el color siga significando el tipo de compromiso. */
+.debt-figure {
+  display: grid;
+  gap: 2px;
+  margin: 18px 0 10px;
 }
-.debt-remaining {
-  margin: 10px 0 16px;
+.debt-figure-label {
   color: var(--muted);
   font-size: var(--text-sm);
+}
+.debt-figure strong {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.debt-bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--muted-surface);
+  overflow: hidden;
+}
+.debt-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--border);
+  transition: width 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.debt-card.debt .debt-bar > span {
+  background: var(--terracotta);
+}
+.debt-card.loan .debt-bar > span {
+  background: var(--success);
+}
+/* Va despues de las barras por tipo a proposito: misma especificidad, asi que
+   el orden es lo que decide. */
+.debt-card.settled .debt-bar > span {
+  background: var(--border);
+}
+@media (prefers-reduced-motion: reduce) {
+  .debt-bar > span {
+    transition: none;
+  }
+}
+.debt-progress-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.debt-action {
+  margin-top: 16px;
+}
+.debt-card .contribution-form {
+  margin-top: 16px;
 }
 /* La rueda del san: una casilla por ronda, con la propia marcada. Ver de un
    vistazo cuanto falta para tu turno es el dato que la gente busca. */
+.san-progress {
+  margin-top: 16px;
+}
 .san-wheel {
   display: flex;
   flex-wrap: wrap;
@@ -1172,11 +1337,11 @@ h2 {
   background: var(--muted-surface);
 }
 .san-round.paid {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--gold-accent);
+  border-color: var(--gold-accent);
 }
 .san-round.mine {
-  border: 2px solid var(--gold-accent);
+  border: 2px solid var(--primary);
 }
 .san-net {
   display: flex;
@@ -1199,9 +1364,20 @@ h2 {
   border-color: var(--success-border);
 }
 .san-net.owing {
-  color: var(--warning);
-  background: var(--warning-bg);
-  border-color: var(--warning-border);
+  color: var(--terracotta);
+  background: var(--terracotta-bg);
+  border-color: var(--terracotta-border);
+}
+.debt-amounts {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+.debt-remaining {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 /* Saldo acumulado del espacio, en el inicio. */
 .balance-card {
@@ -1657,7 +1833,8 @@ h2 {
 .dialog-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(43, 33, 30, 0.52);
+  background: rgba(43, 33, 30, 0.34);
+  backdrop-filter: blur(3px);
   z-index: 50;
   display: flex;
   justify-content: end;
@@ -3031,7 +3208,12 @@ h2 {
     grid-template-columns: 1fr;
     gap: 18px;
   }
-  .dialog-actions {
+  /* La barra fija al pie es solo para el panel de movimientos, que en movil
+     ocupa la pantalla entera. Aplicada a todo .dialog-actions se llevaba
+     tambien los botones del dialogo de confirmacion y los de los formularios
+     que viven dentro de la pagina, sacandolos de su tarjeta: en el de
+     confirmacion acababan encima del propio titulo. */
+  .movement-dialog .dialog-actions {
     position: fixed;
     inset: auto 0 0;
     padding: 12px 18px max(12px, env(safe-area-inset-bottom));

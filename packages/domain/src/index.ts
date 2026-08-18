@@ -374,6 +374,63 @@ export function calculateDebtProgress(
   };
 }
 
+export interface DebtsOverview {
+  /** Lo que falta pagar de las deudas activas. */
+  owedByMeCents: number;
+  /** Lo que falta cobrar de los prestamos activos. */
+  owedToMeCents: number;
+  /** Lo que falta poner en los sanes en curso. */
+  sanPendingCents: number;
+  activeCount: number;
+  settledCount: number;
+}
+
+/**
+ * Los tres numeros que responde esta pantalla de un vistazo: cuanto debo,
+ * cuanto me deben y cuanto me falta poner en sanes.
+ *
+ * Lo saldado no suma en ninguno: ya no es un compromiso, y contarlo inflaria
+ * las cifras justo despues de terminar de pagar algo, que es cuando uno espera
+ * verlas bajar.
+ */
+export function summarizeDebts(
+  debts: Array<
+    Pick<
+      Debt,
+      | "kind"
+      | "status"
+      | "principalCents"
+      | "installmentCents"
+      | "members"
+      | "turnPosition"
+      | "paidCents"
+    >
+  >
+): DebtsOverview {
+  const overview: DebtsOverview = {
+    owedByMeCents: 0,
+    owedToMeCents: 0,
+    sanPendingCents: 0,
+    activeCount: 0,
+    settledCount: 0
+  };
+
+  for (const debt of debts) {
+    if (debt.status === "SETTLED") {
+      overview.settledCount += 1;
+      continue;
+    }
+    overview.activeCount += 1;
+
+    const { remainingCents } = calculateDebtProgress(debt);
+    if (debt.kind === "DEBT") overview.owedByMeCents += remainingCents;
+    else if (debt.kind === "LOAN") overview.owedToMeCents += remainingCents;
+    else overview.sanPendingCents += remainingCents;
+  }
+
+  return overview;
+}
+
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }

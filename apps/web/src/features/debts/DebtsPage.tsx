@@ -11,9 +11,9 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { MoneyInput } from "../../components/MoneyInput";
 import { PageTitle } from "../../components/PageTitle";
-import { StatusPill } from "../../components/StatusPill";
 import { apiFetch } from "../../lib/api";
 import { today } from "../../lib/format";
+import { DebtsOverviewStrip } from "./DebtsOverviewStrip";
 import { SanProgress } from "./SanProgress";
 
 const KIND_LABELS: Record<DebtKind, string> = {
@@ -247,6 +247,8 @@ export function DebtsPage({
         </form>
       )}
 
+      <DebtsOverviewStrip debts={debts} />
+
       {debts.length === 0 ? (
         <IllustratedEmptyState
           eyebrow="Sin compromisos"
@@ -259,23 +261,22 @@ export function DebtsPage({
           }
         />
       ) : (
-        <div className="goals-grid">
+        <div className="debts-grid">
           {debts.map((debt) => {
             const progress = calculateDebtProgress(debt);
             const Icon = KIND_ICONS[debt.kind];
             return (
-              <article className="panel debt-card" key={debt.id}>
+              <article
+                className={`panel debt-card ${debt.kind.toLowerCase()}${
+                  debt.status === "SETTLED" ? " settled" : ""
+                }`}
+                key={debt.id}
+              >
                 <div className="debt-card-top">
-                  <div>
-                    <StatusPill
-                      tone={debt.status === "SETTLED" ? "completed" : "active"}
-                      label={debt.status === "SETTLED" ? "Saldado" : KIND_LABELS[debt.kind]}
-                    />
-                    <h2>
-                      <Icon size={18} aria-hidden="true" /> {debt.name}
-                    </h2>
-                    {debt.counterparty && <p className="debt-counterparty">{debt.counterparty}</p>}
-                  </div>
+                  <span className={`debt-kind ${debt.kind.toLowerCase()}`}>
+                    <Icon size={13} aria-hidden="true" />
+                    {debt.status === "SETTLED" ? "Saldado" : KIND_LABELS[debt.kind]}
+                  </span>
                   <button
                     className="table-action danger"
                     title="Eliminar"
@@ -286,21 +287,47 @@ export function DebtsPage({
                   </button>
                 </div>
 
+                <h2>{debt.name}</h2>
+                {debt.counterparty && <p className="debt-counterparty">{debt.counterparty}</p>}
+
                 {debt.kind === "SAN" ? (
                   <SanProgress debt={debt} progress={progress} />
                 ) : (
                   <>
-                    <p className="debt-amounts">
-                      <strong>{formatDop(progress.paidCents)}</strong> de{" "}
-                      {formatDop(progress.totalCents)}
+                    {/*
+                      Lo que falta manda: es lo que la persona vino a saber. Lo
+                      ya pagado y el total quedan como contexto debajo, no
+                      compitiendo con la cifra en la misma linea.
+                    */}
+                    <p className="debt-figure">
+                      <span className="debt-figure-label">
+                        {progress.remainingCents === 0
+                          ? debt.kind === "LOAN"
+                            ? "Te lo devolvieron todo"
+                            : "Lo pagaste todo"
+                          : debt.kind === "LOAN"
+                            ? "Te falta cobrar"
+                            : "Te falta pagar"}
+                      </span>
+                      {/*
+                        Ya saldado, lo que falta es cero y anunciarlo en grande
+                        no dice nada. La cifra que importa entonces es la que se
+                        termino de mover.
+                      */}
+                      <strong>
+                        {formatDop(
+                          progress.remainingCents === 0
+                            ? progress.totalCents
+                            : progress.remainingCents
+                        )}
+                      </strong>
                     </p>
-                    <div className="budget-progress">
+                    <div className="debt-bar">
                       <span style={{ width: `${progress.percent}%` }} />
                     </div>
-                    <p className="debt-remaining">
-                      {progress.remainingCents === 0
-                        ? "Sin saldo pendiente"
-                        : `Faltan ${formatDop(progress.remainingCents)}`}
+                    <p className="debt-progress-note">
+                      {formatDop(progress.paidCents)} de {formatDop(progress.totalCents)} ·{" "}
+                      {progress.percent}%
                     </p>
                   </>
                 )}
@@ -329,13 +356,20 @@ export function DebtsPage({
                       </button>
                     </div>
                   ) : (
+                    /*
+                      Secundario y del ancho de su texto: en esta pantalla lo
+                      que se viene a hacer es entender como se esta, no pagar.
+                      Un boton lleno y a todo lo ancho se comia la cifra, que es
+                      lo unico que de verdad tenia que destacar.
+                    */
                     <button
-                      className="primary full-button"
+                      className="secondary debt-action"
                       onClick={() => {
                         setPayingId(debt.id);
                         setPayment(debt.kind === "SAN" ? String(debt.installmentCents / 100) : "");
                       }}
                     >
+                      <Plus size={15} aria-hidden="true" />
                       {debt.kind === "LOAN"
                         ? "Registrar cobro"
                         : debt.kind === "SAN"

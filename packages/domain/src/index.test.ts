@@ -7,6 +7,7 @@ import {
   calculateBalance,
   calculateDebtProgress,
   nextRecurrenceDate,
+  summarizeDebts,
   type BalanceTotals,
   type Movement
 } from "./index.js";
@@ -408,5 +409,66 @@ describe("calculateDebtProgress", () => {
 
     expect(progress.turnReached).toBe(true);
     expect(progress.netCents).toBe(-45_000_00);
+  });
+});
+
+describe("summarizeDebts", () => {
+  const debt = (overrides: Partial<Parameters<typeof summarizeDebts>[0][number]> = {}) => ({
+    kind: "DEBT" as const,
+    status: "ACTIVE" as const,
+    principalCents: 10_000_00,
+    installmentCents: 0,
+    members: null,
+    turnPosition: null,
+    paidCents: 0,
+    ...overrides
+  });
+
+  it("separates what is owed from what is owed to you", () => {
+    const overview = summarizeDebts([
+      debt({ kind: "DEBT", principalCents: 45_000_00, paidCents: 32_000_00 }),
+      debt({ kind: "LOAN", principalCents: 15_000_00, paidCents: 5_000_00 })
+    ]);
+
+    expect(overview.owedByMeCents).toBe(13_000_00);
+    expect(overview.owedToMeCents).toBe(10_000_00);
+  });
+
+  it("counts what is left to put into a san on its own line", () => {
+    const overview = summarizeDebts([
+      debt({
+        kind: "SAN",
+        principalCents: 0,
+        installmentCents: 5_000_00,
+        members: 10,
+        turnPosition: 7,
+        paidCents: 20_000_00
+      })
+    ]);
+
+    expect(overview.sanPendingCents).toBe(30_000_00);
+    expect(overview.owedByMeCents).toBe(0);
+  });
+
+  it("leaves settled commitments out of every total", () => {
+    // Contarlos inflaria las cifras justo despues de terminar de pagar algo.
+    const overview = summarizeDebts([
+      debt({ status: "SETTLED", principalCents: 80_000_00, paidCents: 80_000_00 }),
+      debt({ principalCents: 10_000_00, paidCents: 4_000_00 })
+    ]);
+
+    expect(overview.owedByMeCents).toBe(6_000_00);
+    expect(overview.settledCount).toBe(1);
+    expect(overview.activeCount).toBe(1);
+  });
+
+  it("reports zeros for an empty list instead of failing", () => {
+    expect(summarizeDebts([])).toEqual({
+      owedByMeCents: 0,
+      owedToMeCents: 0,
+      sanPendingCents: 0,
+      activeCount: 0,
+      settledCount: 0
+    });
   });
 });
