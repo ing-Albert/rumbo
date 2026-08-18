@@ -2269,17 +2269,35 @@ h2 {
   font-size: var(--text-sm);
   font-weight: 700;
 }
-.filters-row input,
-.filters-row select,
-.inline-form input,
-.inline-form select,
-.inline-form textarea {
+/* Aspecto de los campos, en un solo sitio.
+   Estaba repetido contenedor por contenedor, asi que cada formulario nuevo
+   nacia con los controles crudos del navegador hasta que alguien se acordaba
+   de sumarlo a la lista: al de recurrencias le pasaba justo eso, cuatro de sus
+   cinco campos con el borde gris del sistema al lado de los de la app.
+   `.panel form` cubre a los que vengan sin que haya que acordarse. */
+/* `form.panel` ademas de `.panel form`: algunos formularios no van dentro de
+   un panel, son el panel (los de crear meta y compromiso). */
+:is(.panel form, form.panel, .filters-row)
+  :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--ink);
   min-height: 44px;
   padding: 9px 12px;
   border-radius: var(--radius-md);
+}
+:is(.panel form, form.panel, .filters-row)
+  :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea):hover {
+  border-color: var(--muted);
+}
+/* El desplegable trae su propia flecha, distinta en cada sistema. Se apaga y
+   se dibuja la misma en todos. */
+:is(.panel form, form.panel, .filters-row) select {
+  appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23665851' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
 }
 .filters-row label:first-child {
   min-width: min(320px, 35vw);

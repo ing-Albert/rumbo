@@ -190,12 +190,16 @@ export function RecurrencesPanel({
         </button>
       </header>
 
-      {recurrences.length === 0 && !open ? (
+      {recurrences.length === 0 && !open && (
         <p className="recurrences-empty">
           El alquiler, el sueldo o una suscripcion no hace falta anotarlos cada mes. Declara la
           regla una vez y Rumbo los registra el dia que toca.
         </p>
-      ) : (
+      )}
+
+      {/* Sin reglas no se dibuja la lista: vacia solo aportaba un hueco entre
+          el titulo y el formulario. */}
+      {recurrences.length > 0 && (
         <div className="recurrence-list">
           {recurrences.map((rule) => (
             <article className={`recurrence-row ${rule.active ? "" : "paused"}`} key={rule.id}>
@@ -290,7 +294,7 @@ export function RecurrencesPanel({
                 ))}
               </div>
             </label>
-            <label>
+            <label className="form-grid-wide">
               Descripcion
               <input
                 required
