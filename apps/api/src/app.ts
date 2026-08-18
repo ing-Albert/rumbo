@@ -5,7 +5,9 @@ import {
   createExpenseCategorySchema,
   updateExpenseCategorySchema,
   createMovementSchema,
+  createDebtSchema,
   createRecurringMovementSchema,
+  debtPaymentSchema,
   dominicanDate,
   entityIdSchema,
   goalContributionSchema,
@@ -302,6 +304,59 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
     const deleted = await database.deleteExpenseCategory(idResult.data);
     if (!deleted) return reply.code(404).send({ message: "Categoria no encontrada." });
     return reply.code(204).send();
+  });
+
+  app.get<{ Querystring: { spaceId?: string } }>("/api/debts", async (request, reply) => {
+    const spaceId = request.query.spaceId;
+    if (!spaceId || !entityIdSchema.safeParse(spaceId).success) {
+      return reply.code(400).send({ message: "Selecciona un espacio valido." });
+    }
+    const database = repositoryFor(request);
+    if (!(await database.spaceExists(spaceId))) {
+      return reply.code(404).send({ message: "El espacio no existe." });
+    }
+    return await database.listDebts(spaceId);
+  });
+
+  app.post("/api/debts", async (request, reply) => {
+    const database = repositoryFor(request);
+    const parsed = createDebtSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ message: "Revisa los datos del compromiso.", issues: parsed.error.issues });
+    }
+    if (!(await database.spaceExists(parsed.data.spaceId))) {
+      return reply.code(404).send({ message: "El espacio no existe." });
+    }
+    const created = await database.createDebt(parsed.data);
+    if (!created) return reply.code(400).send({ message: "No pudimos crear el compromiso." });
+    return reply.code(201).send(created);
+  });
+
+  app.delete<{ Params: { id: string } }>("/api/debts/:id", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID invalido." });
+    const database = repositoryFor(request);
+    const deleted = await database.deleteDebt(idResult.data);
+    if (!deleted) return reply.code(404).send({ message: "Compromiso no encontrado." });
+    return reply.code(204).send();
+  });
+
+  app.get<{ Params: { id: string } }>("/api/debts/:id/payments", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID invalido." });
+    return await repositoryFor(request).listDebtPayments(idResult.data);
+  });
+
+  app.post<{ Params: { id: string } }>("/api/debts/:id/payments", async (request, reply) => {
+    const idResult = entityIdSchema.safeParse(request.params.id);
+    if (!idResult.success) return reply.code(400).send({ message: "ID invalido." });
+    const parsed = debtPaymentSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ message: "Revisa el monto y la fecha." });
+    const debt = await repositoryFor(request).addDebtPayment(idResult.data, parsed.data);
+    if (!debt) return reply.code(404).send({ message: "Compromiso no encontrado." });
+    return reply.code(201).send(debt);
   });
 
   app.get<{ Querystring: { spaceId?: string } }>("/api/balance", async (request, reply) => {

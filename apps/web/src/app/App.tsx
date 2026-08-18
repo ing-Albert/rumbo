@@ -19,6 +19,7 @@ import { MovementsPage } from "../features/movements/MovementsPage";
 import { RecurrencesPanel } from "../features/movements/RecurrencesPanel";
 import { BudgetAlertBanner } from "../features/budget/BudgetAlertBanner";
 import { BudgetPage } from "../features/budget/BudgetPage";
+import { DebtsPage } from "../features/debts/DebtsPage";
 import { GoalsPage } from "../features/goals/GoalsPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
@@ -57,6 +58,7 @@ export default function App() {
     goals,
     customCategories,
     recurrences,
+    debts,
     error: moduleError
   } = useModuleData(accessToken, spaceId, month, refreshKey, auth.user?.id);
 
@@ -254,6 +256,13 @@ export default function App() {
               accessToken={accessToken}
               spaceId={spaceId}
               goals={goals}
+              onSaved={() => setRefreshKey((value) => value + 1)}
+            />
+          ) : pathname === "/deudas" ? (
+            <DebtsPage
+              accessToken={accessToken}
+              spaceId={spaceId}
+              debts={debts}
               onSaved={() => setRefreshKey((value) => value + 1)}
             />
           ) : pathname === "/reportes" ? (

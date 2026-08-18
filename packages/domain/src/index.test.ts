@@ -5,6 +5,7 @@ import {
   calculateSummary,
   dominicanDate,
   calculateBalance,
+  calculateDebtProgress,
   nextRecurrenceDate,
   type BalanceTotals,
   type Movement
@@ -324,5 +325,88 @@ describe("calculateBalance", () => {
     const balance = calculateBalance(totals({ openingCents: -1_000_00, incomeCents: 4_000_00 }));
 
     expect(balance.totalCents).toBe(3_000_00);
+  });
+});
+
+describe("calculateDebtProgress", () => {
+  const debt = (overrides: Partial<Parameters<typeof calculateDebtProgress>[0]> = {}) => ({
+    kind: "DEBT" as const,
+    principalCents: 100_000_00,
+    installmentCents: 0,
+    members: null,
+    turnPosition: null,
+    paidCents: 0,
+    ...overrides
+  });
+
+  it("measures a plain debt against what was borrowed", () => {
+    const progress = calculateDebtProgress(debt({ paidCents: 25_000_00 }));
+
+    expect(progress.totalCents).toBe(100_000_00);
+    expect(progress.remainingCents).toBe(75_000_00);
+    expect(progress.percent).toBe(25);
+    expect(progress.potCents).toBeNull();
+  });
+
+  it("does not report a negative remainder when overpaid", () => {
+    const progress = calculateDebtProgress(debt({ paidCents: 120_000_00 }));
+
+    expect(progress.remainingCents).toBe(0);
+    expect(progress.percent).toBe(100);
+  });
+
+  const san = (overrides = {}) =>
+    debt({
+      kind: "SAN" as const,
+      principalCents: 0,
+      installmentCents: 5_000_00,
+      members: 10,
+      turnPosition: 7,
+      ...overrides
+    });
+
+  it("derives the pot of a san from the instalment and the members", () => {
+    const progress = calculateDebtProgress(san());
+
+    expect(progress.potCents).toBe(50_000_00);
+    expect(progress.roundsTotal).toBe(10);
+  });
+
+  it("counts the rounds already paid", () => {
+    const progress = calculateDebtProgress(san({ paidCents: 15_000_00 }));
+
+    expect(progress.roundsPaid).toBe(3);
+    expect(progress.turnReached).toBe(false);
+  });
+
+  it("shows money lent to the group while the turn has not arrived", () => {
+    const progress = calculateDebtProgress(san({ paidCents: 30_000_00 }));
+
+    expect(progress.turnReached).toBe(false);
+    expect(progress.netCents).toBe(30_000_00);
+  });
+
+  it("flips the sign once the turn is collected", () => {
+    // Ronda 7 de 10: se cobraron 50,000 tras haber puesto 35,000.
+    const progress = calculateDebtProgress(san({ paidCents: 35_000_00 }));
+
+    expect(progress.roundsPaid).toBe(7);
+    expect(progress.turnReached).toBe(true);
+    expect(progress.netCents).toBe(-15_000_00);
+  });
+
+  it("comes back to zero when the wheel finishes", () => {
+    const progress = calculateDebtProgress(san({ paidCents: 50_000_00 }));
+
+    expect(progress.netCents).toBe(0);
+    expect(progress.remainingCents).toBe(0);
+    expect(progress.percent).toBe(100);
+  });
+
+  it("treats collecting first as owing the group from round one", () => {
+    const progress = calculateDebtProgress(san({ turnPosition: 1, paidCents: 5_000_00 }));
+
+    expect(progress.turnReached).toBe(true);
+    expect(progress.netCents).toBe(-45_000_00);
   });
 });

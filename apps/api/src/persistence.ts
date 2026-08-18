@@ -5,7 +5,11 @@ import type {
   CreateExpenseCategory,
   CreateGoal,
   CreateMovement,
+  CreateDebt,
   CreateRecurringMovement,
+  Debt,
+  DebtPayment,
+  DebtPaymentInput,
   ExpenseCategory,
   Goal,
   GoalContribution,
@@ -40,6 +44,11 @@ export interface UserFinanceRepository {
     contributionId: string,
     input: GoalContributionInput
   ): Awaitable<GoalContribution | undefined>;
+  listDebts(spaceId: string): Awaitable<Debt[]>;
+  createDebt(input: CreateDebt): Awaitable<Debt | undefined>;
+  deleteDebt(id: string): Awaitable<boolean>;
+  addDebtPayment(debtId: string, input: DebtPaymentInput): Awaitable<Debt | undefined>;
+  listDebtPayments(debtId: string): Awaitable<DebtPayment[]>;
   getBalance(spaceId: string): Awaitable<Balance | undefined>;
   setOpeningBalance(spaceId: string, openingCents: number): Awaitable<Balance | undefined>;
   listRecurringMovements(spaceId: string): Awaitable<RecurringMovement[]>;

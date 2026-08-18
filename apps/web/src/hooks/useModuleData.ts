@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { BudgetLimit, ExpenseCategory, Goal, RecurringMovement } from "@ahorra/domain";
+import type { BudgetLimit, Debt, ExpenseCategory, Goal, RecurringMovement } from "@ahorra/domain";
 import { apiFetch } from "../lib/api";
 import { readJson } from "../lib/format";
 
@@ -14,6 +14,7 @@ export function useModuleData(
   const [goals, setGoals] = useState<Goal[]>([]);
   const [customCategories, setCustomCategories] = useState<ExpenseCategory[]>([]);
   const [recurrences, setRecurrences] = useState<RecurringMovement[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function useModuleData(
     setGoals([]);
     setCustomCategories([]);
     setRecurrences([]);
+    setDebts([]);
   }, [userId]);
 
   useEffect(() => {
@@ -38,13 +40,17 @@ export function useModuleData(
       }).then((response) => readJson<ExpenseCategory[]>(response)),
       apiFetch(accessToken, `/api/recurrences?spaceId=${encodeURIComponent(spaceId)}`, {
         signal: controller.signal
-      }).then((response) => readJson<RecurringMovement[]>(response))
+      }).then((response) => readJson<RecurringMovement[]>(response)),
+      apiFetch(accessToken, `/api/debts?spaceId=${encodeURIComponent(spaceId)}`, {
+        signal: controller.signal
+      }).then((response) => readJson<Debt[]>(response))
     ])
-      .then(([limits, nextGoals, nextCategories, nextRecurrences]) => {
+      .then(([limits, nextGoals, nextCategories, nextRecurrences, nextDebts]) => {
         setBudgetLimits(limits);
         setGoals(nextGoals);
         setCustomCategories(nextCategories);
         setRecurrences(nextRecurrences);
+        setDebts(nextDebts);
       })
       .catch((reason: unknown) => {
         if (!(reason instanceof DOMException && reason.name === "AbortError"))
@@ -53,5 +59,5 @@ export function useModuleData(
     return () => controller.abort();
   }, [accessToken, spaceId, month, refreshKey]);
 
-  return { budgetLimits, goals, customCategories, recurrences, error };
+  return { budgetLimits, goals, customCategories, recurrences, debts, error };
 }

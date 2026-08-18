@@ -8,7 +8,12 @@ import {
   type CreateExpenseCategory,
   type CreateGoal,
   type CreateMovement,
+  type CreateDebt,
   type CreateRecurringMovement,
+  type Debt,
+  type DebtKind,
+  type DebtPayment,
+  type DebtPaymentInput,
   type ExpenseCategory,
   type Goal,
   type GoalContribution,
@@ -90,6 +95,53 @@ const RECURRING_SELECT = `select r.id, r.space_id, r.type, r.frequency, r.amount
                             on c.id = r.category_id and c.user_id = r.user_id
                            and c.space_id = r.space_id`;
 
+interface DebtRow {
+  id: string;
+  space_id: string;
+  kind: DebtKind;
+  status: Debt["status"];
+  name: string;
+  counterparty: string | null;
+  principal_cents: DatabaseNumber;
+  installment_cents: DatabaseNumber;
+  members: number | null;
+  turn_position: number | null;
+  due_date: DatabaseDate | null;
+  notes: string | null;
+  paid_cents: DatabaseNumber;
+  created_at: DatabaseDate;
+}
+
+interface DebtPaymentRow {
+  id: string;
+  debt_id: string;
+  movement_id: string | null;
+  amount_cents: DatabaseNumber;
+  effective_date: DatabaseDate;
+  created_at: DatabaseDate;
+}
+
+/** Categoria bajo la que aparece el movimiento que genera cada tipo. */
+const DEBT_CATEGORY: Record<DebtKind, string> = {
+  DEBT: "Deudas",
+  LOAN: "Prestamos",
+  SAN: "San"
+};
+
+const DEBT_MOVEMENT_PREFIX: Record<DebtKind, string> = {
+  DEBT: "Pago de",
+  LOAN: "Cobro de",
+  SAN: "Cuota de"
+};
+
+const DEBT_SELECT = `select d.id, d.space_id, d.kind, d.status, d.name, d.counterparty,
+                            d.principal_cents, d.installment_cents, d.members, d.turn_position,
+                            d.due_date, d.notes, d.created_at,
+                            coalesce(sum(p.amount_cents), 0) as paid_cents
+                     from public.debts d
+                     left join public.debt_payments p
+                       on p.debt_id = d.id and p.user_id = d.user_id`;
+
 function safeInteger(value: DatabaseNumber): number {
   const number = typeof value === "number" ? value : Number(value);
   if (!Number.isSafeInteger(number))
@@ -133,6 +185,36 @@ function mapRecurringMovement(row: RecurringMovementRow): RecurringMovement {
     endDate: row.end_date === null ? null : dateOnly(row.end_date),
     nextRunDate: dateOnly(row.next_run_date),
     active: row.active,
+    createdAt: timestamp(row.created_at)
+  };
+}
+
+function mapDebt(row: DebtRow): Debt {
+  return {
+    id: row.id,
+    spaceId: row.space_id,
+    kind: row.kind,
+    status: row.status,
+    name: row.name,
+    counterparty: row.counterparty,
+    principalCents: safeInteger(row.principal_cents),
+    installmentCents: safeInteger(row.installment_cents),
+    members: row.members,
+    turnPosition: row.turn_position,
+    dueDate: row.due_date === null ? null : dateOnly(row.due_date),
+    notes: row.notes,
+    paidCents: safeInteger(row.paid_cents),
+    createdAt: timestamp(row.created_at)
+  };
+}
+
+function mapDebtPayment(row: DebtPaymentRow): DebtPayment {
+  return {
+    id: row.id,
+    debtId: row.debt_id,
+    movementId: row.movement_id,
+    amountCents: safeInteger(row.amount_cents),
+    effectiveDate: dateOnly(row.effective_date),
     createdAt: timestamp(row.created_at)
   };
 }
@@ -618,6 +700,154 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
       return mapContribution(updated.rows[0]!);
     });
+  }
+
+  async listDebts(spaceId: string): Promise<Debt[]> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query<DebtRow>(
+        `${DEBT_SELECT}
+         where d.user_id = $1 and d.space_id = $2
+         group by d.id
+         order by d.status, d.due_date nulls last, d.created_at`,
+        [this.userId, spaceId]
+      );
+      return result.rows.map(mapDebt);
+    });
+  }
+
+  async createDebt(input: CreateDebt): Promise<Debt | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      if (!(await ownedSpaceExists(client, this.userId, input.spaceId))) return undefined;
+      const created = await client.query<{ id: string }>(
+        `insert into public.debts (
+           user_id, space_id, kind, name, counterparty, principal_cents,
+           installment_cents, members, turn_position, due_date, notes
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11)
+         returning id`,
+        [
+          this.userId,
+          input.spaceId,
+          input.kind,
+          input.name,
+          input.counterparty,
+          input.principalCents,
+          input.installmentCents,
+          input.members,
+          input.turnPosition,
+          input.dueDate,
+          input.notes
+        ]
+      );
+      return this.readDebt(client, created.rows[0]!.id);
+    });
+  }
+
+  async deleteDebt(id: string): Promise<boolean> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query("delete from public.debts where id = $1 and user_id = $2", [
+        id,
+        this.userId
+      ]);
+      return result.rowCount === 1;
+    });
+  }
+
+  async addDebtPayment(debtId: string, input: DebtPaymentInput): Promise<Debt | undefined> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const debt = await client.query<{ space_id: string; kind: DebtKind; name: string }>(
+        "select space_id, kind, name from public.debts where id = $1 and user_id = $2",
+        [debtId, this.userId]
+      );
+      const current = debt.rows[0];
+      if (!current) return undefined;
+
+      // Pagar una deuda o poner la cuota de un san es dinero que sale, y cobrar
+      // un prestamo es dinero que entra: se registra tambien como movimiento
+      // para que el saldo y el resumen no se queden cortos.
+      const movementType = current.kind === "LOAN" ? "INCOME" : "EXPENSE";
+      const categoryId = await resolveCategory(client, this.userId, {
+        spaceId: current.space_id,
+        type: movementType,
+        category: DEBT_CATEGORY[current.kind]
+      });
+
+      const movement = await client.query<{ id: string }>(
+        `insert into public.movements (
+           user_id, space_id, category_id, type, status, amount_cents,
+           effective_date, description
+         ) values ($1, $2, $3, $4, 'REGISTERED', $5, $6::date, $7)
+         returning id`,
+        [
+          this.userId,
+          current.space_id,
+          categoryId,
+          movementType,
+          input.amountCents,
+          input.effectiveDate,
+          `${DEBT_MOVEMENT_PREFIX[current.kind]} ${current.name}`.slice(0, 160)
+        ]
+      );
+
+      await client.query(
+        `insert into public.debt_payments (user_id, debt_id, movement_id, amount_cents, effective_date)
+         values ($1, $2, $3, $4, $5::date)`,
+        [this.userId, debtId, movement.rows[0]!.id, input.amountCents, input.effectiveDate]
+      );
+
+      // Una deuda cubierta se cierra sola: obligar a marcarla a mano solo
+      // consigue listas llenas de deudas ya pagadas.
+      await client.query(
+        `update public.debts d
+         set status = case
+               when d.kind <> 'SAN' and $3 >= d.principal_cents then 'SETTLED'::public.debt_status
+               when d.kind = 'SAN' and $3 >= d.installment_cents * coalesce(d.members, 0)
+                 then 'SETTLED'::public.debt_status
+               else 'ACTIVE'::public.debt_status
+             end,
+             settled_at = case
+               when d.kind <> 'SAN' and $3 >= d.principal_cents then now()
+               when d.kind = 'SAN' and $3 >= d.installment_cents * coalesce(d.members, 0) then now()
+               else null
+             end,
+             updated_at = now()
+         where d.id = $1 and d.user_id = $2`,
+        [
+          debtId,
+          this.userId,
+          (
+            await client.query<{ paid: DatabaseNumber }>(
+              `select coalesce(sum(amount_cents), 0) as paid from public.debt_payments
+               where debt_id = $1 and user_id = $2`,
+              [debtId, this.userId]
+            )
+          ).rows[0]!.paid
+        ]
+      );
+
+      return this.readDebt(client, debtId);
+    });
+  }
+
+  async listDebtPayments(debtId: string): Promise<DebtPayment[]> {
+    return withUserTransaction(this.pool, this.userId, async (client) => {
+      const result = await client.query<DebtPaymentRow>(
+        `select id, debt_id, movement_id, amount_cents, effective_date, created_at
+         from public.debt_payments
+         where debt_id = $1 and user_id = $2
+         order by effective_date desc, created_at desc`,
+        [debtId, this.userId]
+      );
+      return result.rows.map(mapDebtPayment);
+    });
+  }
+
+  private async readDebt(client: PoolClient, id: string): Promise<Debt | undefined> {
+    const result = await client.query<DebtRow>(
+      `${DEBT_SELECT} where d.id = $1 and d.user_id = $2 group by d.id`,
+      [id, this.userId]
+    );
+    const row = result.rows[0];
+    return row ? mapDebt(row) : undefined;
   }
 
   async getBalance(spaceId: string): Promise<Balance | undefined> {

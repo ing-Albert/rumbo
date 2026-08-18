@@ -29,6 +29,9 @@
   --warning-border: #e2b970;
   --gold-bg: #fff1c9;
   --gold-ink: #765000;
+  /* Dorado de marca, el del punto del logo. Se usa para senalar el turno
+     propio dentro de la rueda de un san. */
+  --gold-accent: #e3a72f;
 
   /* Radius scale: small controls -> large surfaces -> full/pill.
      Signature tokens preserve the app's asymmetric "cut corner" motif
@@ -881,6 +884,84 @@ h2 {
 .budget-alert .button-row {
   flex-wrap: nowrap;
   margin-top: 0;
+}
+/* Deudas, prestamos y sanes. */
+.debt-card-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.debt-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-xl);
+}
+.debt-counterparty {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.debt-amounts {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+.debt-remaining {
+  margin: 10px 0 16px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+/* La rueda del san: una casilla por ronda, con la propia marcada. Ver de un
+   vistazo cuanto falta para tu turno es el dato que la gente busca. */
+.san-wheel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 12px 0;
+}
+.san-round {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--muted-surface);
+}
+.san-round.paid {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.san-round.mine {
+  border: 2px solid var(--gold-accent);
+}
+.san-net {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  margin: 14px 0 10px;
+  padding: 11px 13px;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.san-net > svg {
+  flex: none;
+  margin-top: 1px;
+}
+.san-net.lending {
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+.san-net.owing {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
 }
 /* Saldo acumulado del espacio, en el inicio. */
 .balance-card {
@@ -2463,10 +2544,13 @@ h2 {
   .bottom-nav {
     position: fixed;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    /* Una columna por entrada. Con seis, a 375px cada una queda en 62px y la
+       mas larga (Movimientos) cabe justo, asi que el margen lateral baja a 2px
+       en vez de recortar la palabra. */
+    grid-template-columns: repeat(6, 1fr);
     inset: auto 0 0;
     min-height: 70px;
-    padding: 7px 4px max(7px, env(safe-area-inset-bottom));
+    padding: 7px 2px max(7px, env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 20;
@@ -2483,6 +2567,13 @@ h2 {
   .bottom-nav a span {
     font-size: 20px;
     line-height: 1;
+  }
+  .bottom-nav a small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: inherit;
   }
   .bottom-nav a.active {
     color: var(--primary);

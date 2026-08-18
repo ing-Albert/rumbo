@@ -55,6 +55,61 @@ export const updateRecurringMovementSchema = createRecurringMovementSchema
   .omit({ spaceId: true })
   .extend({ active: z.boolean().default(true) });
 
+export const debtKinds = ["DEBT", "LOAN", "SAN"] as const;
+
+export const createDebtSchema = z
+  .object({
+    spaceId: entityIdSchema,
+    kind: z.enum(debtKinds),
+    name: z.string().trim().min(1).max(120),
+    counterparty: z.string().trim().max(120).nullable().default(null),
+    principalCents: amountCentsSchema.default(0),
+    installmentCents: amountCentsSchema.default(0),
+    members: z.number().int().min(2).max(100).nullable().default(null),
+    turnPosition: z.number().int().min(1).max(100).nullable().default(null),
+    dueDate: z.iso.date().nullable().default(null),
+    notes: z.string().trim().max(1000).nullable().default(null)
+  })
+  .superRefine((value, context) => {
+    if (value.kind === "SAN") {
+      // Un san sin cuota, sin miembros o con un turno fuera de la rueda no se
+      // puede calcular. Mejor rechazarlo que devolver una cifra inventada.
+      if (value.installmentCents <= 0) {
+        context.addIssue({
+          code: "custom",
+          path: ["installmentCents"],
+          message: "Indica la cuota."
+        });
+      }
+      if (value.members === null) {
+        context.addIssue({ code: "custom", path: ["members"], message: "Indica cuantos son." });
+      }
+      if (value.turnPosition === null) {
+        context.addIssue({ code: "custom", path: ["turnPosition"], message: "Indica tu turno." });
+      }
+      if (
+        value.members !== null &&
+        value.turnPosition !== null &&
+        value.turnPosition > value.members
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["turnPosition"],
+          message: "El turno no puede pasar del numero de miembros."
+        });
+      }
+      return;
+    }
+    if (value.principalCents <= 0) {
+      context.addIssue({ code: "custom", path: ["principalCents"], message: "Indica el monto." });
+    }
+  });
+
+export const debtPaymentSchema = z.object({
+  amountCents: amountCentsSchema.positive(),
+  effectiveDate: z.iso.date()
+});
+
 export const createExpenseCategorySchema = z.object({
   spaceId: entityIdSchema,
   name: z.string().trim().min(2).max(80)
@@ -101,6 +156,25 @@ export interface Goal {
 
 export interface ExpenseCategory extends CreateExpenseCategory {
   id: string;
+  createdAt: string;
+}
+
+export type DebtKind = (typeof debtKinds)[number];
+export type CreateDebt = z.infer<typeof createDebtSchema>;
+export type DebtPaymentInput = z.infer<typeof debtPaymentSchema>;
+
+export interface Debt extends CreateDebt {
+  id: string;
+  status: "ACTIVE" | "SETTLED";
+  /** Suma de los pagos o cobros ya registrados. */
+  paidCents: number;
+  createdAt: string;
+}
+
+export interface DebtPayment extends DebtPaymentInput {
+  id: string;
+  debtId: string;
+  movementId: string | null;
   createdAt: string;
 }
 
@@ -221,6 +295,78 @@ export function calculateBalance(totals: BalanceTotals): Balance {
     totalCents,
     earmarkedCents: totals.contributionCents,
     freeCents: totalCents - totals.contributionCents
+  };
+}
+
+export interface DebtProgress {
+  /** Lo que hay que poner en total. En un san, la cuota por todas las rondas. */
+  totalCents: number;
+  paidCents: number;
+  remainingCents: number;
+  /** Avance de 0 a 100. */
+  percent: number;
+  /** Solo san: lo que se cobra el dia del turno. */
+  potCents: number | null;
+  roundsPaid: number | null;
+  roundsTotal: number | null;
+  /** Solo san: si el turno de cobrar ya paso. */
+  turnReached: boolean | null;
+  /**
+   * Solo san: puesto menos cobrado. Positivo mientras se esta prestando al
+   * grupo; negativo despues de cobrar, cuando lo que queda es devolver.
+   */
+  netCents: number | null;
+}
+
+/**
+ * Traduce una deuda a cuanto falta, y un san a en que punto de la rueda se esta.
+ *
+ * Un san no es una deuda ni un ahorro: cada miembro pone la misma cuota cada
+ * ronda y por turnos se lleva todo lo recaudado. Quien cobra al final le presta
+ * al grupo durante casi toda la rueda; quien cobra al principio termina
+ * debiendo. Ese cambio de signo es lo unico que de verdad hay que mostrar, y es
+ * justo lo que se pierde si se fuerza dentro del molde de "prestamo".
+ */
+export function calculateDebtProgress(
+  debt: Pick<
+    Debt,
+    "kind" | "principalCents" | "installmentCents" | "members" | "turnPosition" | "paidCents"
+  >
+): DebtProgress {
+  const paidCents = debt.paidCents;
+
+  if (debt.kind !== "SAN") {
+    const totalCents = debt.principalCents;
+    const remainingCents = Math.max(0, totalCents - paidCents);
+    return {
+      totalCents,
+      paidCents,
+      remainingCents,
+      percent: totalCents > 0 ? Math.min(100, Math.round((paidCents / totalCents) * 100)) : 0,
+      potCents: null,
+      roundsPaid: null,
+      roundsTotal: null,
+      turnReached: null,
+      netCents: null
+    };
+  }
+
+  const roundsTotal = debt.members ?? 0;
+  const potCents = debt.installmentCents * roundsTotal;
+  const totalCents = potCents;
+  const roundsPaid = debt.installmentCents > 0 ? Math.floor(paidCents / debt.installmentCents) : 0;
+  const turnReached = debt.turnPosition !== null && roundsPaid >= debt.turnPosition;
+
+  return {
+    totalCents,
+    paidCents,
+    remainingCents: Math.max(0, totalCents - paidCents),
+    percent: totalCents > 0 ? Math.min(100, Math.round((paidCents / totalCents) * 100)) : 0,
+    potCents,
+    roundsPaid,
+    roundsTotal,
+    turnReached,
+    netCents: paidCents - (turnReached ? potCents : 0)
   };
 }
 

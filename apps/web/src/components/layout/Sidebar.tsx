@@ -22,15 +22,18 @@ export function Sidebar({
         <Plus size={18} /> Agregar
       </button>
       <nav aria-label="Navegacion principal">
-        {NAV_ITEMS.map(([path, icon, label]) => (
+        {NAV_ITEMS.map(({ path, Icon, label }) => (
           <RouteLink
             key={path}
-            to={path!}
+            to={path}
             className={
               pathname === path || (path === "/" && pathname === "/inicio") ? "active" : ""
             }
           >
-            <span>{icon}</span> {label}
+            <span>
+              <Icon size={18} />
+            </span>{" "}
+            {label}
           </RouteLink>
         ))}
       </nav>
