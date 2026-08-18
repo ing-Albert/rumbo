@@ -63,3 +63,41 @@ hoy.
 **Por que no ahora:** cada banco exporta en su propio formato, y varios solo dan
 PDF. Es trabajo sin fin y sin garantia de que funcione. Si algun dia se hace,
 conviene empezar por un CSV generico y documentado, no por "leer lo que sea".
+
+## Version de pago
+
+Aplazado: primero se sigue mejorando la version gratis. Se deja escrito lo
+hablado para no reconstruirlo desde cero.
+
+**El bloqueo real no son las funciones, es cobrar.** Stripe no opera en
+Republica Dominicana. Google Play cobra 15% y ademas la app todavia no esta
+publicada ahi, con el riesgo de que la rechacen por parecer "solo un sitio
+web". Quedan las pasarelas locales (Azul, CardNet, que piden empresa formal),
+PayPal con limitaciones para recibir en RD, o un intermediario tipo Paddle o
+Lemon Squeezy que factura desde fuera: mas comision, menos papeleo. **Conviene
+resolver esto antes de construir una sola funcion de pago**, porque la
+respuesta puede cambiar el plan entero.
+
+**La funcion con mas sentido: el san visto por quien lo organiza.** Hoy la app
+sigue _tu_ san; falta la otra mitad, la de quien lleva la rueda de diez
+personas en una libreta o en un grupo de WhatsApp. Ninguna app internacional lo
+entiende, quien organiza maneja el dinero de todos, y se lo ensena a diez
+personas cada ronda. Vale construirla aunque al principio sea gratis: es lo que
+trae gente.
+
+Otras candidatas: espacios ilimitados (hoy son dos fijos), compartir espacio
+con la pareja, apartar a una meta automaticamente al cobrar el sueldo, analisis
+comparando varios meses, y las notificaciones push, que necesitan
+infraestructura de pago igualmente.
+
+**Lo que no se puede cobrar nunca**, porque esto es una app de dinero y la
+confianza es el producto: registrar y ver movimientos, exportar los propios
+datos, y consultar meses viejos. El analisis entre meses si es cobrable —
+gratis nunca se pierde acceso a nada, se paga por la comparacion, no por la
+propia historia. Un limite de recibos al mes tambien es honesto, porque el
+almacenamiento cuesta de verdad.
+
+**Sobre el precio:** 3.99 USD al mes ronda el 1.5% de un salario minimo
+dominicano, mas caro de lo que suena. Conviene cobrar en pesos y no en dolares,
+empujar el anual antes que el mensual, y considerar un pago unico, que en RD
+convierte mucho mejor que una suscripcion.
