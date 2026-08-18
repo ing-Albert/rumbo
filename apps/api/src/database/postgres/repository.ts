@@ -41,6 +41,7 @@ interface MovementRow {
   category: string;
   created_at: DatabaseDate;
   recurring_movement_id?: string | null;
+  receipt_path?: string | null;
 }
 
 interface RecurringMovementRow {
@@ -168,7 +169,8 @@ function mapMovement(row: MovementRow): Movement {
     description: row.description,
     category: row.category,
     createdAt: timestamp(row.created_at),
-    recurringMovementId: row.recurring_movement_id ?? null
+    recurringMovementId: row.recurring_movement_id ?? null,
+    receiptPath: row.receipt_path ?? null
   };
 }
 
@@ -357,7 +359,7 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       }
       const result = await client.query<MovementRow>(
         `select m.id, m.space_id, m.type, m.status, m.amount_cents,
-                m.effective_date, m.description, m.created_at, m.recurring_movement_id,
+                m.effective_date, m.description, m.created_at, m.recurring_movement_id, m.receipt_path,
                 coalesce(c.name, case when m.type = 'CONTRIBUTION' then 'Ahorro' else 'Sin categoria' end) as category
          from public.movements m
          left join public.categories c
@@ -381,10 +383,10 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       const result = await client.query<Omit<MovementRow, "category">>(
         `insert into public.movements (
            user_id, space_id, category_id, type, status, amount_cents,
-           effective_date, description
-         ) values ($1, $2, $3, $4, $5, $6, $7::date, $8)
+           effective_date, description, receipt_path
+         ) values ($1, $2, $3, $4, $5, $6, $7::date, $8, $9)
          returning id, space_id, type, status, amount_cents,
-                   effective_date, description, created_at`,
+                   effective_date, description, created_at, receipt_path`,
         [
           this.userId,
           input.spaceId,
@@ -393,7 +395,8 @@ class PostgresFinanceRepository implements UserFinanceRepository {
           input.status,
           input.amountCents,
           input.effectiveDate,
-          input.description
+          input.description,
+          input.receiptPath
         ]
       );
       return mapMovement({ ...result.rows[0]!, category: input.category });
@@ -409,7 +412,8 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       const result = await client.query<Omit<MovementRow, "category">>(
         `update public.movements as movement set
            space_id = $3, category_id = $4, type = $5, status = $6,
-           amount_cents = $7, effective_date = $8::date, description = $9
+           amount_cents = $7, effective_date = $8::date, description = $9,
+           receipt_path = $10
          where movement.id = $1 and movement.user_id = $2 and movement.deleted_at is null
            and not exists (
              select 1 from public.goal_contributions contribution
@@ -417,7 +421,7 @@ class PostgresFinanceRepository implements UserFinanceRepository {
            )
          returning movement.id, movement.space_id, movement.type, movement.status,
                    movement.amount_cents, movement.effective_date,
-                   movement.description, movement.created_at`,
+                   movement.description, movement.created_at, movement.receipt_path`,
         [
           id,
           this.userId,
@@ -427,7 +431,8 @@ class PostgresFinanceRepository implements UserFinanceRepository {
           input.status,
           input.amountCents,
           input.effectiveDate,
-          input.description
+          input.description,
+          input.receiptPath
         ]
       );
       return result.rows[0]

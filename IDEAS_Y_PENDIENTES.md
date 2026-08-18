@@ -15,7 +15,7 @@ Ordenado por dependencia, no por valor: cada bloque se apoya en el anterior.
 | 1   | Movimientos recurrentes que se registran solos al llegar la fecha | hecho     |
 | 4   | Saldo acumulado real, no solo el flujo del mes                    | hecho     |
 | 5   | Deudas, prestamos y sanes                                         | hecho     |
-| 7   | Foto del recibo adjunta al gasto                                  | pendiente |
+| 7   | Foto del recibo adjunta al gasto                                  | hecho     |
 | 8   | Uso sin conexion con sincronizacion posterior                     | pendiente |
 | 6   | Notificaciones                                                    | pendiente |
 

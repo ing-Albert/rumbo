@@ -2,6 +2,7 @@ import { formatDop, type Movement, type MovementStatus, type MovementType } from
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { MoneyInput } from "../../components/MoneyInput";
+import { ReceiptField } from "../../components/ReceiptField";
 import { useDialog } from "../../hooks/useDialog";
 import { expenseCategories, incomeCategories } from "../../lib/categories";
 import { today } from "../../lib/format";
@@ -9,6 +10,7 @@ import { apiFetch } from "../../lib/api";
 
 export function MovementDialog({
   accessToken,
+  userId,
   initialType,
   movement,
   expenseOptions,
@@ -18,6 +20,7 @@ export function MovementDialog({
   onSaved
 }: {
   accessToken: string;
+  userId: string;
   initialType: MovementType;
   movement?: Movement;
   expenseOptions: string[];
@@ -35,6 +38,7 @@ export function MovementDialog({
   );
   const [description, setDescription] = useState(movement?.description ?? "");
   const [date, setDate] = useState(movement?.effectiveDate ?? today());
+  const [receiptPath, setReceiptPath] = useState<string | null>(movement?.receiptPath ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -77,7 +81,8 @@ export function MovementDialog({
             amountCents,
             effectiveDate: date,
             description: description.trim() || category,
-            category
+            category,
+            receiptPath
           })
         }
       );
@@ -187,6 +192,9 @@ export function MovementDialog({
               Programado
             </label>
           </fieldset>
+          {type === "EXPENSE" && (
+            <ReceiptField userId={userId} value={receiptPath} onChange={setReceiptPath} />
+          )}
           {amountCents > 0 && status === "REGISTERED" && (
             <div className="impact-card">
               <span>Disponible despues de guardar</span>

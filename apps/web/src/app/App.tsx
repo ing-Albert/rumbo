@@ -300,6 +300,7 @@ export default function App() {
       {formOpen && (
         <MovementDialog
           accessToken={accessToken}
+          userId={auth.user?.id ?? ""}
           initialType={formType}
           movement={editingMovement ?? undefined}
           expenseOptions={[

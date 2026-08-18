@@ -13,7 +13,11 @@ export const createMovementSchema = z.object({
   amountCents: amountCentsSchema.positive(),
   effectiveDate: z.iso.date(),
   description: z.string().trim().min(1).max(160),
-  category: z.string().trim().min(1).max(80)
+  category: z.string().trim().min(1).max(80),
+  /** Ruta de la foto del recibo dentro del bucket, no la imagen. */
+  // nullish y no default(null): asi la clave queda opcional en el tipo, y los
+  // movimientos sin recibo no tienen que declararlo en cada sitio.
+  receiptPath: z.string().trim().max(400).nullish()
 });
 
 export const budgetLimitSchema = z.object({

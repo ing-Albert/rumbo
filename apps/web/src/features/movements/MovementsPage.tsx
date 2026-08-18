@@ -1,5 +1,5 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
-import { Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
+import { Paperclip, Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { PageTitle } from "../../components/PageTitle";
@@ -228,6 +228,11 @@ export function MovementsPage({
                         <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
                         <td>
                           <strong>{movement.description}</strong>
+                          {movement.receiptPath && (
+                            <span className="recurrence-badge" title="Tiene foto del recibo">
+                              <Paperclip size={12} aria-hidden="true" /> Recibo
+                            </span>
+                          )}
                           {movement.recurringMovementId && (
                             <span className="recurrence-badge" title="Generado por una recurrencia">
                               <Repeat size={12} aria-hidden="true" /> Recurrente
