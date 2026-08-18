@@ -17,7 +17,7 @@ Ordenado por dependencia, no por valor: cada bloque se apoya en el anterior.
 | 5   | Deudas, prestamos y sanes                                         | hecho     |
 | 7   | Foto del recibo adjunta al gasto                                  | hecho     |
 | 8   | Uso sin conexion con sincronizacion posterior                     | hecho     |
-| 6   | Notificaciones                                                    | pendiente |
+| 6   | Notificaciones (locales; las push siguen pendientes)              | hecho     |
 
 Notas de dependencia y de bloqueo:
 
@@ -29,11 +29,11 @@ Notas de dependencia y de bloqueo:
   proposito, porque sin conexion la app abria vacia. Cuando funcione sin
   conexion, ese bloqueo pasa a estorbar: hay que dejar entrar y avisar que lo
   registrado se subira despues.
-- **6 depende de cuentas de terceros.** Las notificaciones push necesitan
-  Firebase (Android) y APNs (iOS), y esas cuentas las tiene que crear el
-  dueno del proyecto. Las locales (recordatorios programados en el propio
-  telefono) no dependen de nadie y cubren buena parte del valor, asi que van
-  primero.
+- **6 quedo a medias, a proposito.** El recordatorio diario ya funciona: lo
+  lanza el propio aparato, sin servidor. Lo que falta son las notificaciones
+  push, que necesitan cuentas de Firebase (Android) y APNs (iOS) que solo puede
+  crear el dueno del proyecto, mas un backend que las envie. Hasta entonces el
+  aviso solo suena mientras Rumbo sigue abierta.
 - **7 necesita un bucket de Supabase Storage** con sus politicas de acceso por
   usuario, equivalentes a las de RLS que ya protegen las tablas.
 

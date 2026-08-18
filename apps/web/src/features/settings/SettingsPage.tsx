@@ -5,6 +5,8 @@ import { StatusPill } from "../../components/StatusPill";
 import { supabase } from "../../lib/supabase";
 import { getUserName } from "../../lib/format";
 import { OpeningBalanceCard } from "./OpeningBalanceCard";
+import { ReminderCard } from "./ReminderCard";
+import type { ReminderSettings } from "../../lib/notifications";
 import type { Balance } from "@ahorra/domain";
 
 type Space = { id: string; name: string; type: "PERSONAL" | "BUSINESS" };
@@ -14,6 +16,8 @@ export function SettingsPage({
   spaces,
   spaceId,
   balance,
+  reminder,
+  onReminderChange,
   user,
   onSaved
 }: {
@@ -21,6 +25,8 @@ export function SettingsPage({
   spaces: Space[];
   spaceId: string;
   balance: Balance;
+  reminder: ReminderSettings;
+  onReminderChange: (next: ReminderSettings) => void;
   user: { email?: string; user_metadata?: Record<string, unknown> } | null;
   onSaved: () => void;
 }) {
@@ -162,6 +168,7 @@ export function SettingsPage({
           balance={balance}
           onSaved={onSaved}
         />
+        <ReminderCard settings={reminder} onChange={onReminderChange} />
         <section className="panel privacy-card">
           <p className="eyebrow">Privacidad</p>
           <h2>

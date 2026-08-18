@@ -885,6 +885,28 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Recordatorio diario, en Configuracion. */
+.reminder-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.reminder-toggle input {
+  width: 20px;
+  height: 20px;
+}
+.reminder-time {
+  display: grid;
+  gap: 6px;
+  max-width: 200px;
+  margin: 12px 0 14px;
+}
+.settings-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 /* Estado de la cola sin conexion. */
 .offline-banner {
   display: flex;

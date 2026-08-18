@@ -32,6 +32,7 @@ import { useCountUp } from "../hooks/useCountUp";
 import { usePreviousMonthSummary } from "../hooks/usePreviousMonthSummary";
 import { useWhatsNew } from "../hooks/useWhatsNew";
 import { useOfflineSync } from "../hooks/useOfflineSync";
+import { useReminder } from "../hooks/useReminder";
 import { WhatsNewPanel } from "../components/WhatsNewPanel";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { expenseCategories } from "../lib/categories";
@@ -72,6 +73,7 @@ export default function App() {
   const offline = useOfflineSync(auth.user?.id, accessToken, () =>
     setRefreshKey((value) => value + 1)
   );
+  const reminder = useReminder(auth.user?.id, offline.pending);
 
   function openForm(type: MovementType) {
     setFormType(type);
@@ -290,6 +292,8 @@ export default function App() {
               spaces={spaces}
               spaceId={spaceId}
               balance={balance}
+              reminder={reminder.settings}
+              onReminderChange={reminder.save}
               user={auth.user}
               onSaved={() => setRefreshKey((value) => value + 1)}
             />
