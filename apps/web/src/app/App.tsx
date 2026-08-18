@@ -251,6 +251,7 @@ export default function App() {
                   spaceId={spaceId}
                   recurrences={recurrences}
                   customCategories={customCategories}
+                  goals={goals}
                   onSaved={() => setRefreshKey((value) => value + 1)}
                 />
               }

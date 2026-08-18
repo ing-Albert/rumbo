@@ -96,6 +96,7 @@ const recurrences: RecurringMovement[] = [
     category: "Vivienda",
     startDate: monthsFromToday(-3),
     endDate: null,
+    goalId: null,
     nextRunDate: monthsFromToday(1),
     active: true,
     createdAt: `${monthsFromToday(-3)}T12:00:00.000Z`
@@ -110,6 +111,7 @@ const recurrences: RecurringMovement[] = [
     category: "Salario",
     startDate: monthsFromToday(-3),
     endDate: null,
+    goalId: null,
     nextRunDate: monthsFromToday(1),
     active: true,
     createdAt: `${monthsFromToday(-3)}T12:00:00.000Z`
@@ -124,6 +126,7 @@ const recurrences: RecurringMovement[] = [
     category: "Otros gastos",
     startDate: monthsFromToday(-3),
     endDate: null,
+    goalId: null,
     nextRunDate: monthsFromToday(1),
     active: false,
     createdAt: `${monthsFromToday(-3)}T12:00:00.000Z`
@@ -154,6 +157,7 @@ export function RecurrencePreview() {
       spaceId={SPACE}
       recurrences={recurrences}
       customCategories={[]}
+      goals={[goal]}
       onSaved={noop}
     />
   );

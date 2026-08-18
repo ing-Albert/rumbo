@@ -5,6 +5,7 @@ import {
   calculateSummary,
   dominicanDate,
   calculateBalance,
+  createRecurringMovementSchemaChecked,
   calculateDebtProgress,
   nextRecurrenceDate,
   summarizeDebts,
@@ -470,5 +471,54 @@ describe("summarizeDebts", () => {
       activeCount: 0,
       settledCount: 0
     });
+  });
+});
+
+describe("createRecurringMovementSchemaChecked", () => {
+  const base = {
+    spaceId: "3f1a6d2e-8c4b-4a1e-9f0d-2b7c5e8a1d34",
+    frequency: "MONTHLY" as const,
+    amountCents: 6_000_00,
+    description: "Ahorro mensual",
+    category: "Ahorro",
+    startDate: "2026-08-18"
+  };
+  const goalId = "9c2e5b7a-1d3f-4e6a-8b0c-5f7d9a2e4c16";
+
+  it("accepts a contribution that names its goal", () => {
+    const parsed = createRecurringMovementSchemaChecked.safeParse({
+      ...base,
+      type: "CONTRIBUTION",
+      goalId
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects a contribution with no goal, instead of losing the money", () => {
+    const parsed = createRecurringMovementSchemaChecked.safeParse({
+      ...base,
+      type: "CONTRIBUTION"
+    });
+
+    expect(parsed.success).toBe(false);
+    expect(parsed.error?.issues[0]?.path).toEqual(["goalId"]);
+  });
+
+  it("rejects an expense pointing at a goal, which would fake a saving", () => {
+    const parsed = createRecurringMovementSchemaChecked.safeParse({
+      ...base,
+      type: "EXPENSE",
+      goalId
+    });
+
+    expect(parsed.success).toBe(false);
+    expect(parsed.error?.issues[0]?.path).toEqual(["goalId"]);
+  });
+
+  it("still accepts a plain expense with no goal", () => {
+    expect(
+      createRecurringMovementSchemaChecked.safeParse({ ...base, type: "EXPENSE" }).success
+    ).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import {
   updateExpenseCategorySchema,
   createMovementSchema,
   createDebtSchema,
-  createRecurringMovementSchema,
+  createRecurringMovementSchemaChecked,
   debtPaymentSchema,
   dominicanDate,
   entityIdSchema,
@@ -402,7 +402,7 @@ export function buildApp(persistence: FinancePersistence, options: BuildAppOptio
 
   app.post("/api/recurrences", async (request, reply) => {
     const database = repositoryFor(request);
-    const parsed = createRecurringMovementSchema.safeParse(request.body);
+    const parsed = createRecurringMovementSchemaChecked.safeParse(request.body);
     if (!parsed.success) {
       return reply
         .code(400)

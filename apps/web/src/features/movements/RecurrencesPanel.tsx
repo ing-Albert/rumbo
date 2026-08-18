@@ -1,12 +1,13 @@
 import {
   formatDop,
   recurrenceFrequencies,
-  type CreateRecurringMovement,
   type ExpenseCategory,
+  type Goal,
+  type MovementType,
   type RecurrenceFrequency,
   type RecurringMovement
 } from "@ahorra/domain";
-import { Pause, Pencil, Play, Plus, Repeat, Trash2 } from "lucide-react";
+import { Pause, Pencil, Play, Plus, Repeat, Target, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { MoneyInput } from "../../components/MoneyInput";
@@ -21,7 +22,8 @@ const FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
 };
 
 const EMPTY = {
-  type: "EXPENSE" as CreateRecurringMovement["type"],
+  type: "EXPENSE" as MovementType,
+  goalId: "",
   frequency: "MONTHLY" as RecurrenceFrequency,
   amount: "",
   description: "",
@@ -42,12 +44,14 @@ export function RecurrencesPanel({
   spaceId,
   recurrences,
   customCategories,
+  goals,
   onSaved
 }: {
   accessToken: string;
   spaceId: string;
   recurrences: RecurringMovement[];
   customCategories: ExpenseCategory[];
+  goals: Goal[];
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -58,6 +62,9 @@ export function RecurrencesPanel({
   const [pendingDelete, setPendingDelete] = useState<RecurringMovement | null>(null);
 
   const categories = [...expenseCategories, ...customCategories.map((item) => item.name)];
+  // Una meta ya cumplida no deberia seguir recibiendo aportes automaticos.
+  const openGoals = goals.filter((item) => item.status !== "COMPLETED");
+  const isContribution = form.type === "CONTRIBUTION";
 
   function startCreate() {
     setEditing(null);
@@ -70,6 +77,7 @@ export function RecurrencesPanel({
     setEditing(rule);
     setForm({
       type: rule.type,
+      goalId: rule.goalId ?? "",
       frequency: rule.frequency,
       amount: String(rule.amountCents / 100),
       description: rule.description,
@@ -87,6 +95,7 @@ export function RecurrencesPanel({
     setError("");
     const body = {
       type: form.type,
+      goalId: isContribution ? form.goalId : null,
       frequency: form.frequency,
       amountCents: Math.round(Number(form.amount) * 100),
       description: form.description,
@@ -119,6 +128,7 @@ export function RecurrencesPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: rule.type,
+        goalId: rule.goalId,
         frequency: rule.frequency,
         amountCents: rule.amountCents,
         description: rule.description,
@@ -160,7 +170,7 @@ export function RecurrencesPanel({
           {recurrences.map((rule) => (
             <article className={`recurrence-row ${rule.active ? "" : "paused"}`} key={rule.id}>
               <span className={`movement-icon ${rule.type.toLowerCase()}`}>
-                <Repeat size={16} />
+                {rule.type === "CONTRIBUTION" ? <Target size={16} /> : <Repeat size={16} />}
               </span>
               <div>
                 <strong>{rule.description}</strong>
@@ -211,12 +221,22 @@ export function RecurrencesPanel({
               Tipo
               <select
                 value={form.type}
-                onChange={(event) =>
-                  setForm({ ...form, type: event.target.value as CreateRecurringMovement["type"] })
-                }
+                onChange={(event) => {
+                  const type = event.target.value as MovementType;
+                  setForm({
+                    ...form,
+                    type,
+                    // Al pasar a aporte se elige la primera meta abierta, para
+                    // que el formulario nunca quede en un estado invalido.
+                    goalId: type === "CONTRIBUTION" ? ((form.goalId || openGoals[0]?.id) ?? "") : ""
+                  });
+                }}
               >
                 <option value="EXPENSE">Gasto</option>
                 <option value="INCOME">Ingreso</option>
+                <option value="CONTRIBUTION" disabled={openGoals.length === 0}>
+                  Aporte a una meta
+                </option>
               </select>
             </label>
             <label>
@@ -256,17 +276,30 @@ export function RecurrencesPanel({
               </div>
             </label>
             <label>
-              Categoria
-              <select
-                value={form.category}
-                onChange={(event) => setForm({ ...form, category: event.target.value })}
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+              {isContribution ? "Meta" : "Categoria"}
+              {isContribution ? (
+                <select
+                  value={form.goalId}
+                  onChange={(event) => setForm({ ...form, goalId: event.target.value })}
+                >
+                  {openGoals.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={form.category}
+                  onChange={(event) => setForm({ ...form, category: event.target.value })}
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              )}
             </label>
             <label>
               Primera vez

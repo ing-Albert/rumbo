@@ -57,6 +57,7 @@ interface RecurringMovementRow {
   next_run_date: DatabaseDate;
   active: boolean;
   created_at: DatabaseDate;
+  goal_id: string | null;
 }
 
 interface GoalRow {
@@ -89,8 +90,8 @@ const MAX_OCCURRENCES_PER_RUN = 240;
 
 const RECURRING_SELECT = `select r.id, r.space_id, r.type, r.frequency, r.amount_cents,
                                  r.description, r.start_date, r.end_date, r.next_run_date,
-                                 r.active, r.created_at,
-                                 coalesce(c.name, 'Sin categoria') as category
+                                 r.active, r.created_at, r.goal_id,
+                                 coalesce(c.name, 'Ahorro') as category
                           from public.recurring_movements r
                           left join public.categories c
                             on c.id = r.category_id and c.user_id = r.user_id
@@ -187,7 +188,8 @@ function mapRecurringMovement(row: RecurringMovementRow): RecurringMovement {
     endDate: row.end_date === null ? null : dateOnly(row.end_date),
     nextRunDate: dateOnly(row.next_run_date),
     active: row.active,
-    createdAt: timestamp(row.created_at)
+    createdAt: timestamp(row.created_at),
+    goalId: row.goal_id
   };
 }
 
@@ -920,14 +922,16 @@ class PostgresFinanceRepository implements UserFinanceRepository {
   ): Promise<RecurringMovement | undefined> {
     return withUserTransaction(this.pool, this.userId, async (client) => {
       if (!(await ownedSpaceExists(client, this.userId, input.spaceId))) return undefined;
+      // Un aporte a meta no tiene categoria propia, igual que el manual: su
+      // destino es la meta, no una bolsa de gastos.
       const categoryId = await resolveCategory(client, this.userId, input);
-      if (!categoryId) return undefined;
+      if (input.type !== "CONTRIBUTION" && !categoryId) return undefined;
 
       const created = await client.query<{ id: string }>(
         `insert into public.recurring_movements (
            user_id, space_id, category_id, type, frequency, amount_cents,
-           description, start_date, end_date, next_run_date
-         ) values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9::date, $8::date)
+           description, start_date, end_date, next_run_date, goal_id
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9::date, $8::date, $10)
          returning id`,
         [
           this.userId,
@@ -938,7 +942,8 @@ class PostgresFinanceRepository implements UserFinanceRepository {
           input.amountCents,
           input.description,
           input.startDate,
-          input.endDate
+          input.endDate,
+          input.goalId
         ]
       );
       return this.readRecurring(client, created.rows[0]!.id);
@@ -963,7 +968,7 @@ class PostgresFinanceRepository implements UserFinanceRepository {
         type: input.type,
         category: input.category
       });
-      if (!categoryId) return undefined;
+      if (input.type !== "CONTRIBUTION" && !categoryId) return undefined;
 
       // Cambiar la fecha de inicio redefine el ancla de la serie, asi que la
       // proxima ejecucion se recalcula desde ahi. Mientras el inicio no cambia,
@@ -973,7 +978,7 @@ class PostgresFinanceRepository implements UserFinanceRepository {
         `update public.recurring_movements
          set category_id = $3, type = $4, frequency = $5, amount_cents = $6,
              description = $7, start_date = $8::date, end_date = $9::date,
-             active = $10, updated_at = now(),
+             active = $10, goal_id = $12, updated_at = now(),
              next_run_date = case when $11 then $8::date else next_run_date end
          where id = $1 and user_id = $2
          returning id`,
@@ -988,7 +993,8 @@ class PostgresFinanceRepository implements UserFinanceRepository {
           input.startDate,
           input.endDate,
           input.active,
-          startChanged
+          startChanged,
+          input.goalId
         ]
       );
       if (updated.rowCount !== 1) return undefined;
@@ -1023,9 +1029,10 @@ class PostgresFinanceRepository implements UserFinanceRepository {
         start_date: DatabaseDate;
         end_date: DatabaseDate | null;
         next_run_date: DatabaseDate;
+        goal_id: string | null;
       }>(
         `select id, category_id, type, frequency, amount_cents, description,
-                start_date, end_date, next_run_date
+                start_date, end_date, next_run_date, goal_id
          from public.recurring_movements
          where user_id = $1 and space_id = $2 and active and next_run_date <= $3::date
          for update`,
@@ -1033,6 +1040,10 @@ class PostgresFinanceRepository implements UserFinanceRepository {
       );
 
       let generated = 0;
+      // Las metas tocadas se revisan al final y no dentro del bucle: una misma
+      // meta puede recibir varias ocurrencias de golpe, y solo importa si el
+      // total termino alcanzando el objetivo.
+      const touchedGoals = new Set<string>();
 
       for (const rule of due.rows) {
         const startDate = dateOnly(rule.start_date);
@@ -1046,12 +1057,13 @@ class PostgresFinanceRepository implements UserFinanceRepository {
           // generar se recupera en la siguiente lectura.
           if (guard >= MAX_OCCURRENCES_PER_RUN) break;
 
-          const inserted = await client.query(
+          const inserted = await client.query<{ id: string }>(
             `insert into public.movements (
                user_id, space_id, category_id, type, status, source,
                amount_cents, effective_date, description, recurring_movement_id
              ) values ($1, $2, $3, $4, 'REGISTERED', 'RECURRENCE', $5, $6::date, $7, $8)
-             on conflict do nothing`,
+             on conflict do nothing
+             returning id`,
             [
               this.userId,
               spaceId,
@@ -1064,6 +1076,26 @@ class PostgresFinanceRepository implements UserFinanceRepository {
             ]
           );
           generated += inserted.rowCount ?? 0;
+
+          // Un aporte no termina en el movimiento: la meta lleva su propia
+          // cuenta, y sin esta fila el dinero saldria del disponible sin que
+          // la meta avanzara un peso.
+          if (rule.goal_id && inserted.rows[0]) {
+            await client.query(
+              `insert into public.goal_contributions (
+                 user_id, space_id, goal_id, movement_id, amount_cents, effective_date
+               ) values ($1, $2, $3, $4, $5, $6::date)`,
+              [
+                this.userId,
+                spaceId,
+                rule.goal_id,
+                inserted.rows[0].id,
+                safeInteger(rule.amount_cents),
+                occurrence
+              ]
+            );
+            touchedGoals.add(rule.goal_id);
+          }
           occurrence = nextRecurrenceDate(startDate, rule.frequency, occurrence);
           guard += 1;
         }
@@ -1074,6 +1106,20 @@ class PostgresFinanceRepository implements UserFinanceRepository {
            set next_run_date = $3::date, active = $4, updated_at = now()
            where id = $1 and user_id = $2`,
           [rule.id, this.userId, occurrence, !finished]
+        );
+      }
+
+      for (const goalId of touchedGoals) {
+        await client.query(
+          `update public.goals g
+           set status = 'COMPLETED'
+           where g.id = $1 and g.user_id = $2 and g.archived_at is null
+             and g.status <> 'COMPLETED'
+             and (
+               select coalesce(sum(c.amount_cents), 0) from public.goal_contributions c
+               where c.goal_id = g.id and c.user_id = g.user_id and c.deleted_at is null
+             ) >= g.target_cents`,
+          [goalId, this.userId]
         );
       }
 

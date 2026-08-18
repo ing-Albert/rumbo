@@ -45,8 +45,13 @@ export const recurrenceFrequencies = ["WEEKLY", "BIWEEKLY", "MONTHLY"] as const;
 
 export const createRecurringMovementSchema = z.object({
   spaceId: entityIdSchema,
-  // Los aportes a metas se registran por su propio flujo, no como recurrencia.
-  type: z.enum(["INCOME", "EXPENSE"]),
+  type: z.enum(movementTypes),
+  /**
+   * Meta a la que va el aporte. Obligatoria para CONTRIBUTION y prohibida para
+   * el resto: sin ella no se sabria a donde va el dinero, y con ella un gasto
+   * corriente fingiria ser un ahorro.
+   */
+  goalId: entityIdSchema.nullable().default(null),
   frequency: z.enum(recurrenceFrequencies),
   amountCents: amountCentsSchema.positive(),
   description: z.string().trim().min(1).max(160),
@@ -55,9 +60,29 @@ export const createRecurringMovementSchema = z.object({
   endDate: z.iso.date().nullable().default(null)
 });
 
+function checkRecurringGoal(
+  value: { type: string; goalId: string | null },
+  context: z.RefinementCtx
+) {
+  if (value.type === "CONTRIBUTION" && !value.goalId) {
+    context.addIssue({ code: "custom", path: ["goalId"], message: "Elige la meta." });
+  }
+  if (value.type !== "CONTRIBUTION" && value.goalId) {
+    context.addIssue({
+      code: "custom",
+      path: ["goalId"],
+      message: "Solo un aporte puede apuntar a una meta."
+    });
+  }
+}
+
+export const createRecurringMovementSchemaChecked =
+  createRecurringMovementSchema.superRefine(checkRecurringGoal);
+
 export const updateRecurringMovementSchema = createRecurringMovementSchema
   .omit({ spaceId: true })
-  .extend({ active: z.boolean().default(true) });
+  .extend({ active: z.boolean().default(true) })
+  .superRefine(checkRecurringGoal);
 
 export const debtKinds = ["DEBT", "LOAN", "SAN"] as const;
 
