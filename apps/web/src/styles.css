@@ -1593,14 +1593,19 @@ h2 {
 .recurrences-panel {
   margin-top: 20px;
 }
+/* Centrado: con los extremos alineados arriba, el boton quedaba 13px por
+   encima del titulo y la cabecera se veia torcida. */
+.panel.recurrences-panel > header {
+  align-items: center;
+}
 /* La cabecera entera abre y cierra: el area de toque es la linea completa, no
    un icono de 18px. */
 .recurrences-toggle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  flex: 1;
+  /* Ajustada al texto y no estirada: con flex:1 la flecha acababa flotando en
+     mitad de la cabecera, lejos del titulo y lejos del boton. */
+  gap: 10px;
   min-width: 0;
   min-height: 44px;
   padding: 0;
@@ -1682,7 +1687,7 @@ h2 {
   align-items: center;
   column-gap: 14px;
   row-gap: 4px;
-  padding: 12px 4px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
 .recurrence-row > .movement-icon {
