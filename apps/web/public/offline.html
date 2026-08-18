@@ -70,6 +70,14 @@
         opacity: 0.75;
         cursor: progress;
       }
+      a#enter {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        color: var(--plum);
+        font-size: 15px;
+        font-weight: 700;
+      }
       /* El disco gira solo mientras se comprueba la conexion. */
       #spinner {
         display: none;
@@ -117,11 +125,17 @@
       <circle cx="365" cy="152" r="42" fill="#E3A72F" />
     </svg>
     <h1>Sin conexion</h1>
-    <p>Rumbo necesita internet para mostrarte tus cuentas.</p>
+    <p>No pudimos cargar Rumbo. Puedes reintentar, o entrar y registrar gastos igual.</p>
     <button id="retry" type="button">
       <span id="spinner" aria-hidden="true"></span>
       <span id="label">Reintentar</span>
     </button>
+    <!--
+      Entrar sin conexion dejo de ser un callejon sin salida cuando la app
+      aprendio a guardar los gastos en el aparato y subirlos despues. Antes
+      llevaba a una pantalla vacia, y por eso esta pagina bloqueaba el paso.
+    -->
+    <a id="enter" href="./index.html">Entrar sin conexion</a>
     <p id="status" role="status" aria-live="polite"></p>
 
     <script>

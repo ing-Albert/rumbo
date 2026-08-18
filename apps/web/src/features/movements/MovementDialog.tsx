@@ -7,6 +7,7 @@ import { useDialog } from "../../hooks/useDialog";
 import { expenseCategories, incomeCategories } from "../../lib/categories";
 import { today } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
+import { queueMovement } from "../../lib/offline/outbox";
 
 export function MovementDialog({
   accessToken,
@@ -67,6 +68,17 @@ export function MovementDialog({
     setSaving(true);
     setError("");
 
+    const payload = {
+      spaceId,
+      type,
+      status,
+      amountCents,
+      effectiveDate: date,
+      description: description.trim() || category,
+      category,
+      receiptPath
+    };
+
     try {
       const response = await apiFetch(
         accessToken,
@@ -74,22 +86,22 @@ export function MovementDialog({
         {
           method: movement ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            spaceId,
-            type,
-            status,
-            amountCents,
-            effectiveDate: date,
-            description: description.trim() || category,
-            category,
-            receiptPath
-          })
+          body: JSON.stringify(payload)
         }
       );
       if (!response.ok) throw new Error("No pudimos guardar el movimiento.");
       onSaved();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "No pudimos guardar el movimiento.");
+      // Un fetch que revienta es falta de red; un 4xx habria devuelto una
+      // respuesta. Solo lo primero se guarda para despues: un dato que el
+      // servidor rechaza seguiria siendo invalido dentro de una hora.
+      const offline = reason instanceof TypeError && !movement;
+      if (offline) {
+        await queueMovement(userId, payload);
+        onSaved();
+      } else {
+        setError(reason instanceof Error ? reason.message : "No pudimos guardar el movimiento.");
+      }
     } finally {
       setSaving(false);
     }

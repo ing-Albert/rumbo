@@ -1,7 +1,8 @@
 import { startTransition, useEffect, useState } from "react";
-import type { Movement, Summary } from "@ahorra/domain";
+import { calculateSummary, type Movement, type Summary } from "@ahorra/domain";
 import { apiFetch } from "../lib/api";
 import { readJson } from "../lib/format";
+import { pendingMovements } from "../lib/offline/outbox";
 
 const emptySummary: Summary = {
   incomeCents: 0,
@@ -40,30 +41,41 @@ export function useMonthlyData(
     setError("");
 
     Promise.all([
-      apiFetch(accessToken, `/api/summary?spaceId=${encodeURIComponent(spaceId)}&month=${month}`, {
-        signal: controller.signal
-      }).then((response) => readJson<Summary>(response)),
       apiFetch(
         accessToken,
         `/api/movements?spaceId=${encodeURIComponent(spaceId)}&month=${month}`,
         { signal: controller.signal }
-      ).then((response) => readJson<Movement[]>(response))
+      ).then((response) => readJson<Movement[]>(response)),
+      userId ? pendingMovements(userId, spaceId, month) : Promise.resolve<Movement[]>([])
     ])
-      .then(([nextSummary, nextMovements]) => {
+      .then(([serverMovements, queued]) => {
+        // Lo pendiente se mezcla con lo del servidor y el resumen se recalcula
+        // aqui en vez de pedirlo: el servidor no sabe nada de lo que aun no ha
+        // recibido, y ver un gasto en la lista que no descuenta del disponible
+        // haria dudar de todas las cifras.
+        const all = [...queued, ...serverMovements];
         startTransition(() => {
-          setSummary(nextSummary);
-          setMovements(nextMovements);
+          setMovements(all);
+          setSummary(calculateSummary(all));
         });
       })
       .catch((reason: unknown) => {
-        if (!(reason instanceof DOMException && reason.name === "AbortError")) {
-          setError(reason instanceof Error ? reason.message : "Ocurrio un error inesperado.");
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        // Sin servidor, al menos se muestra lo que hay guardado en el aparato.
+        if (userId) {
+          void pendingMovements(userId, spaceId, month).then((queued) => {
+            startTransition(() => {
+              setMovements(queued);
+              setSummary(calculateSummary(queued));
+            });
+          });
         }
+        setError(reason instanceof Error ? reason.message : "Ocurrio un error inesperado.");
       })
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [accessToken, spaceId, month, refreshKey]);
+  }, [accessToken, spaceId, month, refreshKey, userId]);
 
   return { summary, movements, loading, error };
 }

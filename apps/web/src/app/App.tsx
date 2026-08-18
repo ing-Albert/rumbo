@@ -31,7 +31,9 @@ import { useBalance } from "../hooks/useBalance";
 import { useCountUp } from "../hooks/useCountUp";
 import { usePreviousMonthSummary } from "../hooks/usePreviousMonthSummary";
 import { useWhatsNew } from "../hooks/useWhatsNew";
+import { useOfflineSync } from "../hooks/useOfflineSync";
 import { WhatsNewPanel } from "../components/WhatsNewPanel";
+import { OfflineBanner } from "../components/OfflineBanner";
 import { expenseCategories } from "../lib/categories";
 import { currentMonth, monthLabel } from "../lib/format";
 import { navigate, usePathname } from "./router";
@@ -67,6 +69,9 @@ export default function App() {
   const animatedAvailable = useCountUp(summary.availableAfterSavingsCents);
   const previousSummary = usePreviousMonthSummary(accessToken, spaceId, month);
   const whatsNew = useWhatsNew(auth.user);
+  const offline = useOfflineSync(auth.user?.id, accessToken, () =>
+    setRefreshKey((value) => value + 1)
+  );
 
   function openForm(type: MovementType) {
     setFormType(type);
@@ -195,6 +200,12 @@ export default function App() {
                   </div>
                 </section>
               )}
+
+              <OfflineBanner
+                online={offline.online}
+                pending={offline.pending}
+                onSync={() => void offline.sync()}
+              />
 
               {!loading && <BalanceCard balance={balance} />}
 

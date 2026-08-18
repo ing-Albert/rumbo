@@ -8,6 +8,9 @@ export interface LocalMovement {
   userId: string;
   spaceId: string;
   categoryId: string | null;
+  /** Nombre de la categoria. Sin conexion no hay forma de resolver su id, y
+      es lo que la pantalla necesita para pintar la fila. */
+  category: string;
   type: "INCOME" | "EXPENSE" | "CONTRIBUTION";
   status: "REGISTERED" | "SCHEDULED" | "VOIDED";
   amountCents: number;

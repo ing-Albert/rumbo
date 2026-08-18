@@ -885,6 +885,47 @@ h2 {
   flex-wrap: nowrap;
   margin-top: 0;
 }
+/* Estado de la cola sin conexion. */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 18px;
+  padding: 16px 20px;
+  border: 1px solid;
+  border-left-width: 5px;
+  border-radius: var(--radius-md);
+}
+.offline-banner.offline {
+  background: var(--muted-surface);
+  border-color: var(--border);
+  border-left-color: var(--muted);
+}
+.offline-banner.pending {
+  background: var(--info-bg);
+  border-color: var(--info);
+  border-left-color: var(--info);
+}
+.offline-banner > div:first-child {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+.offline-banner p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.offline-banner .button-row {
+  flex-wrap: nowrap;
+  margin-top: 0;
+}
+.recurrence-badge.pending {
+  background: var(--info-bg);
+  color: var(--info);
+}
 /* Foto del recibo dentro del dialogo de movimiento. */
 .receipt-field {
   display: grid;
@@ -2564,12 +2605,14 @@ h2 {
     justify-content: center;
   }
   .allocation-alert,
-  .budget-alert {
+  .budget-alert,
+  .offline-banner {
     align-items: stretch;
     display: grid;
   }
   .allocation-alert .button-row,
-  .budget-alert .button-row {
+  .budget-alert .button-row,
+  .offline-banner .button-row {
     justify-content: start;
   }
   .page-title {

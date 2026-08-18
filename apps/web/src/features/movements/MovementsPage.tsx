@@ -1,10 +1,11 @@
 import { formatDop, type Movement, type MovementType } from "@ahorra/domain";
-import { Paperclip, Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
+import { CloudOff, Paperclip, Pencil, Repeat, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { IllustratedEmptyState } from "../../components/IllustratedEmptyState";
 import { PageTitle } from "../../components/PageTitle";
 import { StatusPill } from "../../components/StatusPill";
 import { today } from "../../lib/format";
+import { isPendingMovement } from "../../lib/offline/outbox";
 
 export function MovementsPage({
   movements,
@@ -228,6 +229,11 @@ export function MovementsPage({
                         <td>{movement.effectiveDate.split("-").reverse().join("/")}</td>
                         <td>
                           <strong>{movement.description}</strong>
+                          {isPendingMovement(movement) && (
+                            <span className="recurrence-badge pending" title="Aun no se ha subido">
+                              <CloudOff size={12} aria-hidden="true" /> Sin subir
+                            </span>
+                          )}
                           {movement.receiptPath && (
                             <span className="recurrence-badge" title="Tiene foto del recibo">
                               <Paperclip size={12} aria-hidden="true" /> Recibo

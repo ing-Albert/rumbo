@@ -15,6 +15,27 @@ vi.mock("../features/auth/AuthProvider", () => ({
 
 import App from "./App";
 
+/** Movimiento minimo, para que las pruebas digan solo lo que les importa. */
+function movementFixture(
+  id: string,
+  type: "INCOME" | "EXPENSE" | "CONTRIBUTION",
+  amountCents: number,
+  category: string,
+  description = category
+) {
+  return {
+    id,
+    spaceId: "personal",
+    type,
+    status: "REGISTERED",
+    amountCents,
+    effectiveDate: "2026-08-07",
+    description,
+    category,
+    createdAt: "2026-08-07T12:00:00.000Z"
+  };
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -175,6 +196,17 @@ describe("App", () => {
             expenseByCategory: [{ category: "Transporte", amountCents: 200_000 }]
           })
         );
+      // El resumen se calcula en el cliente a partir de estos movimientos, para
+      // que lo registrado sin conexion cuente. Tienen que cuadrar con las
+      // cifras de arriba o la prueba estaria comprobando una imposibilidad.
+      if (url.includes("/api/movements"))
+        return new Response(
+          JSON.stringify([
+            movementFixture("income-1", "INCOME", 1_324_000, "Sueldo"),
+            movementFixture("expense-1", "EXPENSE", 200_000, "Transporte"),
+            movementFixture("expense-2", "EXPENSE", 1_040_000, "Otros gastos")
+          ])
+        );
       return new Response(JSON.stringify([]));
     });
 
@@ -290,17 +322,9 @@ describe("App", () => {
       if (url.includes("/api/movements"))
         return new Response(
           JSON.stringify([
-            {
-              id: "1",
-              spaceId: "personal",
-              type: "CONTRIBUTION",
-              status: "REGISTERED",
-              amountCents: 100_000,
-              effectiveDate: "2026-08-07",
-              description: "Aporte",
-              category: "Ahorro",
-              createdAt: "2026-08-07T12:00:00.000Z"
-            }
+            movementFixture("income-1", "INCOME", 1_324_000, "Sueldo"),
+            movementFixture("expense-1", "EXPENSE", 1_270_000, "Otros gastos"),
+            movementFixture("1", "CONTRIBUTION", 100_000, "Ahorro", "Aporte")
           ])
         );
       return new Response(JSON.stringify([]));

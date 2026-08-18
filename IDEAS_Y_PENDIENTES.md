@@ -16,7 +16,7 @@ Ordenado por dependencia, no por valor: cada bloque se apoya en el anterior.
 | 4   | Saldo acumulado real, no solo el flujo del mes                    | hecho     |
 | 5   | Deudas, prestamos y sanes                                         | hecho     |
 | 7   | Foto del recibo adjunta al gasto                                  | hecho     |
-| 8   | Uso sin conexion con sincronizacion posterior                     | pendiente |
+| 8   | Uso sin conexion con sincronizacion posterior                     | hecho     |
 | 6   | Notificaciones                                                    | pendiente |
 
 Notas de dependencia y de bloqueo:
