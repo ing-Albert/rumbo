@@ -1591,7 +1591,61 @@ h2 {
   padding: 22px 22px 0;
 }
 .recurrences-panel {
-  margin-top: 24px;
+  margin-top: 20px;
+}
+/* La cabecera entera abre y cierra: el area de toque es la linea completa, no
+   un icono de 18px. */
+.recurrences-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.recurrences-toggle-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+/* Plegado no tiene nada debajo, asi que ni el margen de la cabecera ni su
+   relleno inferior separan de nada: solo hacen mas alto algo que esta cerrado. */
+.recurrences-panel.collapsed > header {
+  margin-bottom: 0;
+  padding: 14px 22px;
+}
+.recurrences-panel.collapsed .recurrences-toggle strong {
+  font-size: var(--text-lg);
+}
+.recurrences-toggle strong {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: var(--text-xl);
+  line-height: 1.2;
+}
+.recurrences-summary {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.recurrences-chevron {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.recurrences-chevron.open {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .recurrences-chevron {
+    transition: none;
+  }
 }
 /* El resto de hijos del panel de recurrencias tampoco traia relleno: la lista
    sirve para que sus separadores lleguen de lado a lado. */
@@ -3342,6 +3396,17 @@ h2 {
   }
   .recurrence-row > .recurrence-actions {
     justify-content: start;
+  }
+  /* A 375px el titulo y "Nueva recurrencia" no caben en la misma linea: el
+     boton se montaba encima del texto. Se apilan, y el boton ocupa el ancho
+     para que no quede colgando a la derecha. */
+  .recurrences-panel > header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .recurrences-panel > header > .secondary {
+    justify-content: center;
   }
   /* Dos lineas antes que puntos suspensivos: "Alquiler del apart..." obliga a
      abrir la regla para saber cual es, que es justo lo que la lista evita. */

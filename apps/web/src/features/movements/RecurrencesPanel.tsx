@@ -12,6 +12,7 @@ import {
   Pencil,
   Play,
   Plus,
+  ChevronDown,
   Repeat,
   Target,
   Trash2,
@@ -85,6 +86,7 @@ export function RecurrencesPanel({
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState<RecurringMovement | null>(null);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -97,6 +99,7 @@ export function RecurrencesPanel({
   const isContribution = form.type === "CONTRIBUTION";
 
   function startCreate() {
+    setExpanded(true);
     setEditing(null);
     setForm({ ...EMPTY, category: categories[0] ?? "", startDate: today() });
     setError("");
@@ -178,19 +181,51 @@ export function RecurrencesPanel({
     if (response.ok) onSaved();
   }
 
+  const activas = recurrences.filter((rule) => rule.active);
+  // La proxima de todas: es el dato que resume el panel de un vistazo.
+  const proxima = activas
+    .map((rule) => rule.nextRunDate)
+    .sort()
+    .at(0);
+
+  const resumen =
+    recurrences.length === 0
+      ? "Ninguna configurada todavia"
+      : `${activas.length} activa${activas.length === 1 ? "" : "s"}${
+          proxima ? ` · proxima el ${formatDay(proxima)}` : ""
+        }`;
+
   return (
-    <section className="panel module-panel recurrences-panel">
+    <section className={`panel module-panel recurrences-panel${expanded ? "" : " collapsed"}`}>
       <header>
-        <div>
-          <p className="eyebrow">Se registran solos</p>
-          <h2>Movimientos recurrentes</h2>
-        </div>
-        <button className="secondary" onClick={startCreate}>
-          <Plus size={16} /> Nueva recurrencia
+        {/*
+          Plegado por defecto y encima de la lista de movimientos. Debajo habia
+          que bajar 2.4 pantallas en un telefono para encontrarlo, y una funcion
+          que existe para ahorrar trabajo no puede estar escondida detras de
+          toda la pagina. Plegado ocupa una linea, asi que apenas empuja la
+          lista.
+        */}
+        <button
+          type="button"
+          className="recurrences-toggle"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <span className="recurrences-toggle-text">
+            {expanded && <span className="eyebrow">Se registran solos</span>}
+            <strong>Movimientos recurrentes</strong>
+            <span className="recurrences-summary">{resumen}</span>
+          </span>
+          <ChevronDown className={`recurrences-chevron${expanded ? " open" : ""}`} size={18} />
         </button>
+        {expanded && (
+          <button className="secondary" onClick={startCreate}>
+            <Plus size={16} /> Nueva recurrencia
+          </button>
+        )}
       </header>
 
-      {recurrences.length === 0 && !open && (
+      {expanded && recurrences.length === 0 && !open && (
         <p className="recurrences-empty">
           El alquiler, el sueldo o una suscripcion no hace falta anotarlos cada mes. Declara la
           regla una vez y Rumbo los registra el dia que toca.
@@ -199,7 +234,7 @@ export function RecurrencesPanel({
 
       {/* Sin reglas no se dibuja la lista: vacia solo aportaba un hueco entre
           el titulo y el formulario. */}
-      {recurrences.length > 0 && (
+      {expanded && recurrences.length > 0 && (
         <div className="recurrence-list">
           {recurrences.map((rule) => (
             <article className={`recurrence-row ${rule.active ? "" : "paused"}`} key={rule.id}>
@@ -249,7 +284,7 @@ export function RecurrencesPanel({
         </div>
       )}
 
-      {open && (
+      {expanded && open && (
         <form className="recurrence-form" onSubmit={(event) => void submit(event)}>
           <OptionCards
             name="recurrence-type"

@@ -109,6 +109,8 @@ export function MovementsPage({
           </div>
         }
       />
+      {recurrencesSlot}
+
       {movements.length === 0 ? (
         <IllustratedEmptyState
           eyebrow="Aun no hay movimientos"
@@ -321,7 +323,6 @@ export function MovementsPage({
           )}
         </section>
       )}
-      {recurrencesSlot}
     </>
   );
 }
